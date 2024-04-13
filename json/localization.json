@@ -1,0 +1,34 @@
+{
+    "main": [
+		["&File","&文件"],
+		["New &repository…","新建仓库"],
+		["Add &local repository…","添加本地仓库"],
+		["Clo&ne repository…","克隆仓库"],
+		["&Options…","选项"],
+		["E&xit","退出"],
+		["&Edit","编辑"],
+		["&Undo","撤销"],
+		["&Redo","恢复"],
+		["Cu&t","剪切"],
+		["&Copy","复制"],
+		["&Paste","粘贴"],
+		["Select &all","全选"],
+		["&Find","查找"],
+		["&View","视图"],
+		["&Changes","更改"],
+		["&History","历史"],
+		["Repository &list","仓库列表"],
+		["&Branches list","分支列表"],
+		["Go to &Summary","转到摘要"],
+		["Toggle &full screen","切换全屏"],
+		["Reset zoom","重置缩放"],
+		["Zoom in","放大"],
+		["Zoom out","缩小"],
+		["&Reload","重载"],
+		["&Toggle developer tools","切换开发工具"],
+		["return e?t?\"Force P&ush…\":\"Force P&ush\":\"P&ush\"","return e?t?\"强制推送…\":\"强制推送\":\"推送\""]
+	],
+    "renderer": [
+		["&FileXXXX","文件XXXX"]
+	]
+}
