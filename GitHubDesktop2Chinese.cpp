@@ -1,6 +1,8 @@
 ﻿// GitHubDesktop2Chinese.cpp: 定义应用程序的入口点。
 //
 #define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING	//消除 converter.to_bytes的警告
+#define _CRT_SECURE_NO_WARNINGS								//消除 sprintf的警告
 
 #include "GitHubDesktop2Chinese.h"
 #include <string>
@@ -148,7 +150,7 @@ int main()
 	}
 
 
-
+	system("pause");
 	return 0;
 }
 
@@ -216,9 +218,25 @@ bool GetBasePath(std::string& out) {
 	}
 	fs::path base = out;
 	fs::path mainjs = "main.js";
+	fs::path mainjsbak = "main.js.bak";
 	if (!fs::exists(base / mainjs)) {
-		spdlog::warn("目录有误，找不到目录下的main.js. ");
-		return false;
+		if (!fs::exists(base / mainjsbak)) {
+			spdlog::warn("目录有误，找不到目录下的main.js. ");
+			return false;
+		}
+		fs::copy_file(base / "main.js.bak", base / "main.js");
+		spdlog::warn("main.js 未找到, 但已从备份main.js.bak中还原");
+	}
+
+	fs::path rendererjs = "renderer.js";
+	fs::path rendererjsbak = "renderer.js.bak";
+	if (!fs::exists(base / rendererjs)) {
+		if (!fs::exists(base / rendererjsbak)) {
+			spdlog::warn("目录有误，找不到目录下的renderer.js. ");
+			return false;
+		}
+		fs::copy_file(base / "renderer.js.bak", base / "renderer.js");
+		spdlog::warn("renderer.js 未找到, 但已从备份renderer.js.bak中还原");
 	}
 	return true;
 }
