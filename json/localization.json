@@ -1,6 +1,6 @@
 {
     "main": [
-		["&File","&文件"],
+		["&File","文件"],
 		["New &repository…","新建仓库"],
 		["Add &local repository…","添加本地仓库"],
 		["Clo&ne repository…","克隆仓库"],
@@ -26,7 +26,7 @@
 		["Zoom out","缩小"],
 		["&Reload","重载"],
 		["&Toggle developer tools","切换开发工具"],
-		["return e?t?\"Force P&ush…\":\"Force P&ush\":\"P&ush\"","return e?t?\"强制推送…\":\"强制推送\":\"推送\""]
+		["e\\?t\\?\"Force P&ush…\":\"Force P&ush\":\"P&ush\"","e?t?\"强制推送...\":\"强制推送\":\"推送\""]
 	],
     "renderer": [
 		["&FileXXXX","文件XXXX"]
