@@ -90,6 +90,32 @@ int main()
 			return 0;
 		}
 	}
+
+	// 如果没有js文件却有备份文件 则从备份恢复
+	fs::path mainjs = "main.js";
+	fs::path mainjsbak = "main.js.bak";
+	if (!fs::exists(Base / mainjs)) {
+		if (!fs::exists(Base / mainjsbak)) {
+			spdlog::warn("目录有误，找不到目录下的main.js. ");
+			return false;
+		}
+		fs::copy_file(Base / "main.js.bak", Base / "main.js");
+		spdlog::warn("main.js 未找到, 但已从备份main.js.bak中还原");
+	}
+
+	fs::path rendererjs = "renderer.js";
+	fs::path rendererjsbak = "renderer.js.bak";
+	if (!fs::exists(Base / rendererjs)) {
+		if (!fs::exists(Base / rendererjsbak)) {
+			spdlog::warn("目录有误，找不到目录下的renderer.js. ");
+			return false;
+		}
+		fs::copy_file(Base / "renderer.js.bak", Base / "renderer.js");
+		spdlog::warn("renderer.js 未找到, 但已从备份renderer.js.bak中还原");
+	}
+
+
+
 	// TODO 备份main.js 和 renderer.js 文件
 	// 仅在备份文件不存在时备份
 	if (!fs::exists(Base / "main.js.bak")) {
@@ -116,10 +142,11 @@ int main()
 		std::string main_str = ReadFile(fs::path(Base / "main.js").string());
 		for (auto& item : localization["main"].items())
 		{
-			if (item.value()[0].get<std::string>().empty()) {
+			std::string rege = item.value()[0].get<std::string>();
+			if (rege.empty() || rege == "\"\"") {
 				continue;
 			}
-			std::regex pattern(item.value()[0]);
+			std::regex pattern(rege);
 			main_str = std::regex_replace(main_str, pattern, item.value()[1].get<std::string>());
 		}
 		// 写入
@@ -139,10 +166,11 @@ int main()
 		std::string renderer_str = ReadFile(fs::path(Base / "renderer.js").string());
 		for (auto& item : localization["renderer"].items())
 		{
-			if (item.value()[0].get<std::string>().empty()) {
+			std::string rege = item.value()[0].get<std::string>();
+			if (rege.empty() || rege == "\"\"") {
 				continue;
 			}
-			std::regex pattern(item.value()[0]);
+			std::regex pattern(rege);
 			renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
 		}
 		// 写入
