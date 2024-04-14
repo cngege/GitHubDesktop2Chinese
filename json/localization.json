@@ -65,9 +65,9 @@
 		["e\\?\"H&ide stashed changes\":\"Sho&w stashed changes\"","e?\"隐藏暂存的更改\":\"显示暂存的更改\""],
 		["\"&Remove…\":\"&Remove\"","\"删除…\":\"删除\""],
 		["\"View &pull request on GitHub\":\"Create &pull request\"","\"在GitHub上查看拉取请求\":\"创建拉取请求\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
+		["\"Expand active resizable\"","\"展开可调大小的活动项\""],
+		["\"Contract active resizable\"","\"折叠可调大小的活动项\""],
+		["\"\"","\"\""]
 	],
     "renderer": [
 		["&FileXXXX","文件XXXX"]
