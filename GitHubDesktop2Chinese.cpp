@@ -116,6 +116,9 @@ int main()
 		std::string main_str = ReadFile(fs::path(Base / "main.js").string());
 		for (auto& item : localization["main"].items())
 		{
+			if (item.value()[0].get<std::string>().empty()) {
+				continue;
+			}
 			std::regex pattern(item.value()[0]);
 			main_str = std::regex_replace(main_str, pattern, item.value()[1].get<std::string>());
 		}
@@ -136,6 +139,9 @@ int main()
 		std::string renderer_str = ReadFile(fs::path(Base / "renderer.js").string());
 		for (auto& item : localization["renderer"].items())
 		{
+			if (item.value()[0].get<std::string>().empty()) {
+				continue;
+			}
 			std::regex pattern(item.value()[0]);
 			renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
 		}
