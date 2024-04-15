@@ -4,6 +4,8 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING	//消除 converter.to_bytes的警告
 #define _CRT_SECURE_NO_WARNINGS								//消除 sprintf的警告
 
+#define PAUSE system("pause")
+
 #include "GitHubDesktop2Chinese.h"
 #include <string>
 #include <filesystem>
@@ -45,6 +47,7 @@ int main()
 		std::ofstream io("localization.json");
 		io << std::setw(4) << localization << std::endl;
 		spdlog::warn("没有发现本地化文件: {}, 已创建,请先编辑创建翻译映射", "localization.json");
+		PAUSE;
 		return 0;
 	}
 
@@ -87,6 +90,7 @@ int main()
 		catch (const winreg::RegException& regerr)
 		{
 			spdlog::error("{} at line: {}",regerr.what(), __LINE__);
+			PAUSE;
 			return 0;
 		}
 	}
@@ -97,7 +101,8 @@ int main()
 	if (!fs::exists(Base / mainjs)) {
 		if (!fs::exists(Base / mainjsbak)) {
 			spdlog::warn("目录有误，找不到目录下的main.js. ");
-			return false;
+			PAUSE;
+			return 0;
 		}
 		fs::copy_file(Base / "main.js.bak", Base / "main.js");
 		spdlog::warn("main.js 未找到, 但已从备份main.js.bak中还原");
@@ -108,7 +113,8 @@ int main()
 	if (!fs::exists(Base / rendererjs)) {
 		if (!fs::exists(Base / rendererjsbak)) {
 			spdlog::warn("目录有误，找不到目录下的renderer.js. ");
-			return false;
+			PAUSE;
+			return 0;
 		}
 		fs::copy_file(Base / "renderer.js.bak", Base / "renderer.js");
 		spdlog::warn("renderer.js 未找到, 但已从备份renderer.js.bak中还原");
@@ -134,7 +140,17 @@ int main()
 		if (!config) {
 			spdlog::error("localization.json 打开失败,无法读取");
 		}
-		config >> localization;
+		try
+		{
+			config >> localization;
+		}
+		catch (const std::exception& e)
+		{
+			spdlog::error("{} at line {}",e.what(), __LINE__);
+			PAUSE;
+			return 0;
+		}
+		
 	}
 
 	// TODO 读取main.js文件
@@ -184,7 +200,7 @@ int main()
 	}
 
 
-	system("pause");
+	PAUSE;
 	return 0;
 }
 
