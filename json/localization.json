@@ -202,6 +202,19 @@
 		["`Open in \\$\\{n\\}`","`使用 ${n} 打开`"],
 		["`Open in \\$\\{e.shellLabel\\}`","`使用 ${e.shellLabel} 打开`"],
 		["`Open in \\$\\{e.externalEditorLabel\\}`","`使用 ${e.externalEditorLabel} 打开`"],
-		["\"\"","\"\""]
+		["`Pushing to \\$\\{s\\}`","`推送至 ${s}`"],
+		["label:\"Copy repo name\"","label:\"复制存储库名字\""],
+		["label:\"Copy repo path\"","label:\"复制存储库路径\""],
+		["label:\"View on GitHub\"","label:\"在GitHub中显示\""],
+		["\"Create\":\"Change\"\\)+\" alias\"","\"创建\":\"更改\")+\" 别名\""],
+		["\"Remove…\":\"Remove\"","\"移除…\":\"移除\""],
+		["label:\"Rename…\"","label:\"重命名…\""],
+		["label:\"Copy branch name\"","label:\"复制分支名字\""],
+		["label:\"Delete…\"","label:\"删除…\""],
+		["label:\"Ignore file \\(add to .gitignore\\)\"","label:\"忽略文件 (添加到 .gitignore)\""],
+		["label:\"Ignore folder \\(add to .gitignore\\)\"","label:\"忽略文件夹 (添加到 .gitignore)\""],
+		["label:`Ignore \\$\\{c.length\\} selected files \\(add to .gitignore\\)`","label:`忽略 ${c.length} 个选择的文件 (添加到 .gitignore)`"],
+		["label:`Ignore all \\$\\{e\\} files \\(add to .gitignore\\)`","label:`忽略所有 ${e} 文件 (添加到 .gitignore)`"],
+		["\"Discard changes\":`Discard \\$\\{e.length\\} selected changes`","\"放弃更改\":`放弃 ${e.length} 个选择的更改`"]
 	]
 }
