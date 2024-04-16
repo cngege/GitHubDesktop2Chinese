@@ -21,3 +21,9 @@
 > 只需要克隆仓库，阅读`json/关于一些注意事项.txt`，注意一些编写时的事项, 然后在`json/localization.json` 文件中参照已经写过的格式补充要汉化的条目即可
   将此文件放在程序目录下,确保程序可以读取运行 然后提交PR
   
+
+
+
+
+
+![图片](https://github.com/lkyero/GitHubDesktop_zh/assets/28597788/3023d028-8f63-4919-8900-ab3e953a1f76)
