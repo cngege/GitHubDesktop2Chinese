@@ -17,11 +17,19 @@
 #include "WinReg/WinReg.hpp"		// 注册表操作库
 
 
+#if _DEBUG
+#define NO_REPLACE 1
+#endif // _DEBUG
+
+
+
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 // 设置一个路径的全局变量  指向要修改JS的目录
 fs::path Base;
+fs::path LocalizationJSON;
 json localization = R"(
 						{
 							"main": [
@@ -34,66 +42,94 @@ json localization = R"(
 					)"_json;
 
 
-
-int main()
+// argv[0] 是程序路径
+int main(int argc, char* argv[])
 {
 	// 设置控制台打印日志输出等级
+#if _DEBUG
 	spdlog::set_level(spdlog::level::debug);
+#endif // _DEBUG
+
 	// 开发者声明
-	spdlog::info("开发者：CNGEGE<2024/04/13");
+	spdlog::info("开发者：CNGEGE>2024/04/13");
+	
+	//检查参数
+	for (int i = 1; i < argc; i++)
+	{
+		std::string sPath = argv[i];
+		std::regex pattern("\\\\");
+		std::string fpath = std::regex_replace(sPath,pattern,"/");
+		if (fpath.ends_with("/localization.json")) {
+			LocalizationJSON = sPath;
+			spdlog::info("已手动指定本地化文件位置:{}", sPath);
+		}
+		if (fs::is_directory(fs::path(sPath)) && fs::exists(fs::path(sPath) / "index.html")) {
+			Base = sPath;
+			spdlog::info("已手动指定GitHubDesktop目录:{}", sPath);
+		}
+	}
+
+	if (LocalizationJSON.empty()) {
+		LocalizationJSON = "localization.json";
+	}
 
 	// 判断汉化映射文件是否存在, 不存在则创建一个
-	if (!fs::exists("localization.json")) {
-		std::ofstream io("localization.json");
+	if (!fs::exists(LocalizationJSON)) {
+		std::ofstream io(LocalizationJSON);
 		io << std::setw(4) << localization << std::endl;
+		io.close();
 		spdlog::warn("没有发现本地化文件: {}, 已创建,请先编辑创建翻译映射", "localization.json");
 		PAUSE;
 		return 0;
 	}
 
+	// Github Desktop 存在目录没有提前设置
+	if (!fs::exists(Base) || !fs::exists(Base / "index.html")) {
 
-	// 首先要能够成功读取注册表
-	
-	//	拿到当前用户sid
-	std::string sid = GetCurrentUserSid();
-	spdlog::debug("sid:{}", sid);
 
-	//	检查注册表中是否存在GithubDesktop
-    winreg::RegKey key;
-	winreg::RegResult result = key.TryOpen(HKEY_USERS, to_wide_string(sid) + L"\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
-    if (!result)
-    {
-        spdlog::warn("你可能没有安装GithubDesktop，请先安装然后打开此程序或者手动指定main.js所在的文件夹目录");
-        spdlog::info("请输入目录.");
-		Base = LoopGetBasePath();
-	}
-	else {
-		try
+		// 首先要能够成功读取注册表
+		//	拿到当前用户sid
+		std::string sid = GetCurrentUserSid();
+		spdlog::debug("sid:{}", sid);
+
+		//	检查注册表中是否存在GithubDesktop
+		winreg::RegKey key;
+		winreg::RegResult result = key.TryOpen(HKEY_USERS, to_wide_string(sid) + L"\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
+		if (!result)
 		{
-			// 首先要从注册表中拿到GithubDesktop相关信息
-			// 任务就是将Base 中写入路径
-			std::wstring ver = key.GetStringValue(L"DisplayVersion");
-			std::wstring path = key.GetStringValue(L"InstallLocation");
-			Base = path + L"\\" + L"app-" + ver + L"\\resources\\app";
+			spdlog::warn("你可能没有安装GithubDesktop，请先安装然后打开此程序或者手动指定main.js所在的文件夹目录");
+			spdlog::info("请输入目录.");
+			Base = LoopGetBasePath();
+		}
+		else {
+			try
+			{
+				// 首先要从注册表中拿到GithubDesktop相关信息
+				// 任务就是将Base 中写入路径
+				std::wstring ver = key.GetStringValue(L"DisplayVersion");
+				std::wstring path = key.GetStringValue(L"InstallLocation");
+				Base = path + L"\\" + L"app-" + ver + L"\\resources\\app";
 
-			spdlog::info("已从注册表中读取信息:");
-			spdlog::info("Github Desktop 版本: {}", to_byte_string(ver));
-			spdlog::info("安装目录: {}", to_byte_string(path));
-			spdlog::info("最后拼接完整目录: {}", Base.string());
+				spdlog::info("已从注册表中读取信息:");
+				spdlog::info("Github Desktop 版本: {}", to_byte_string(ver));
+				spdlog::info("安装目录: {}", to_byte_string(path));
+				spdlog::info("最后拼接完整目录: {}", Base.string());
 
-			if (!fs::exists(Base)) {
-				spdlog::warn("注册表最终获取到的目录不存在,请手动输入");
-				Base = LoopGetBasePath();
+				if (!fs::exists(Base)) {
+					spdlog::warn("注册表最终获取到的目录不存在,请手动输入");
+					Base = LoopGetBasePath();
+				}
+
 			}
-
-		}
-		catch (const winreg::RegException& regerr)
-		{
-			spdlog::error("{} at line: {}",regerr.what(), __LINE__);
-			PAUSE;
-			return 0;
+			catch (const winreg::RegException& regerr)
+			{
+				spdlog::error("{} at line: {}", regerr.what(), __LINE__);
+				PAUSE;
+				return 0;
+			}
 		}
 	}
+
 
 	// 如果没有js文件却有备份文件 则从备份恢复
 	fs::path mainjs = "main.js";
@@ -136,7 +172,7 @@ int main()
 
 	// 本地读取汉化文件到json中
 	{
-		std::ifstream config("localization.json");
+		std::ifstream config(LocalizationJSON);
 		if (!config) {
 			spdlog::error("localization.json 打开失败,无法读取");
 		}
@@ -158,6 +194,9 @@ int main()
 		std::string main_str = ReadFile(fs::path(Base / "main.js").string());
 		for (auto& item : localization["main"].items())
 		{
+#if NO_REPLACE
+			continue;
+#endif // NO_REPLACE
 			std::string rege = item.value()[0].get<std::string>();
 			if (rege.empty() || rege == "\"\"") {
 				continue;
@@ -182,6 +221,10 @@ int main()
 		std::string renderer_str = ReadFile(fs::path(Base / "renderer.js").string());
 		for (auto& item : localization["renderer"].items())
 		{
+#if NO_REPLACE
+			continue;
+#endif // NO_REPLACE
+
 			std::string rege = item.value()[0].get<std::string>();
 			if (rege.empty() || rege == "\"\"") {
 				continue;
