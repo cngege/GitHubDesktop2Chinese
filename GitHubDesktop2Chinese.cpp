@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-		if (_debug_invalid_check_mode) {
+		if (!_debug_invalid_check_mode) {
 			// 写入
 			std::ofstream override_main(fs::path(Base / "main.js").string(), std::ios::binary);
 			override_main.write(main_str.c_str(), main_str.size());
