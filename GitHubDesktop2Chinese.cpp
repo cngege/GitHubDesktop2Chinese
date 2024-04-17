@@ -18,7 +18,7 @@
 
 
 #if _DEBUG
-#define NO_REPLACE 1
+#define NO_REPLACE 0
 #endif // _DEBUG
 
 
@@ -40,6 +40,9 @@ json localization = R"(
 							]
 						}
 					)"_json;
+bool _debug_error_check_mode_main = false;
+bool _debug_error_check_mode_renderer = false;
+
 
 
 // argv[0] 是程序路径
@@ -53,6 +56,14 @@ int main(int argc, char* argv[])
 	// 开发者声明
 	spdlog::info("开发者：CNGEGE>2024/04/13");
 	
+	if (GetKeyState(VK_SHIFT) & 0x8000) {
+		// 如果Shift按下, 则进入开发者选项
+		SetConsoleTitle("开发者模式");
+		spdlog::info("您已进入开发者模式");
+		DeveloperOptions();
+	}
+
+
 	//检查参数
 	for (int i = 1; i < argc; i++)
 	{
@@ -191,18 +202,34 @@ int main(int argc, char* argv[])
 
 	// TODO 读取main.js文件
 	{
+		int out = 0;
 		std::string main_str = ReadFile(fs::path(Base / "main.js").string());
 		for (auto& item : localization["main"].items())
 		{
 #if NO_REPLACE
 			continue;
 #endif // NO_REPLACE
+
 			std::string rege = item.value()[0].get<std::string>();
 			if (rege.empty() || rege == "\"\"") {
 				continue;
 			}
 			std::regex pattern(rege);
 			main_str = std::regex_replace(main_str, pattern, item.value()[1].get<std::string>());
+			if (_debug_error_check_mode_main) {
+				spdlog::info("[main][out:{}]已经替换:{}->{}", out, rege, utf8ToAnsi(item.value()[1].get<std::string>()));
+				out--;
+				if (out <= 0) {
+					std::ofstream override_main(fs::path(Base / "main.js").string(), std::ios::binary);
+					override_main.write(main_str.c_str(), main_str.size());
+					if (!override_main) {
+						spdlog::error("打开并写入目标文件:{} 时失败", "main.js");
+					}
+					override_main.close();
+					spdlog::info("已写入. 你希望下次替换多少条后写入:");
+					std::cin >> out;
+				}
+			}
 		}
 		// 写入
 		std::ofstream override_main(fs::path(Base / "main.js").string(), std::ios::binary);
@@ -218,6 +245,7 @@ int main(int argc, char* argv[])
 
 	// TODO 读取renderer.js文件
 	{
+		int out = 0;
 		std::string renderer_str = ReadFile(fs::path(Base / "renderer.js").string());
 		for (auto& item : localization["renderer"].items())
 		{
@@ -231,6 +259,20 @@ int main(int argc, char* argv[])
 			}
 			std::regex pattern(rege);
 			renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
+			if (_debug_error_check_mode_renderer) {
+				spdlog::info("[renderer][out:{}]已经替换:{}->{}",out , rege, utf8ToAnsi(item.value()[1].get<std::string>()));
+				out--;
+				if (out <= 0) {
+					std::ofstream override_renderer(fs::path(Base / "renderer.js").string(), std::ios::binary);
+					override_renderer.write(renderer_str.c_str(), renderer_str.size());
+					if (!override_renderer) {
+						spdlog::error("打开并写入目标文件:{} 时失败", "renderer.js");
+					}
+					override_renderer.close();
+					spdlog::info("已写入. 你希望下次替换多少条后写入:");
+					std::cin >> out;
+				}
+			}
 		}
 		// 写入
 		std::ofstream override_renderer(fs::path(Base / "renderer.js").string(), std::ios::binary);
@@ -354,4 +396,59 @@ std::string ReadFile(const std::string& filename) {
 	buffer << fin.rdbuf();
 	std::string str(buffer.str());
 	return str;
+}
+
+void DeveloperOptions() {
+	while (true)
+	{
+		system("cls");
+		spdlog::info("选择你要修改的功能");
+		spdlog::info("0) 跳出.");
+		spdlog::info("1) main崩溃调试.");
+		spdlog::info("2) renderer崩溃调试.");
+		std::cout << std::endl;
+
+		int sys = 0;
+		int sw = 0;	//功能开关
+		spdlog::info("请输入你要修改的功能:");
+		std::cin >> sys;
+		switch (sys)
+		{
+		case 0:
+			return;
+		case 1: 
+			spdlog::info("[{}] 输入你要切换的状态(0关 1开):", _debug_error_check_mode_main);
+			std::cin >> sw;
+			_debug_error_check_mode_main = (bool)sw;
+			break;
+		case 2:
+			spdlog::info("[{}] 输入你要切换的状态(0关 1开):", _debug_error_check_mode_renderer);
+			std::cin >> sw;
+			_debug_error_check_mode_renderer = (bool)sw;
+			break;
+		}
+	}
+	
+}
+
+std::string ansiToUtf8(const std::string& ansiString) {
+	int ansiSize = ansiString.size();
+	int utf8Size = MultiByteToWideChar(CP_ACP, 0, ansiString.c_str(), ansiSize, nullptr, 0);
+	std::vector<wchar_t> wideString(utf8Size);
+	MultiByteToWideChar(CP_ACP, 0, ansiString.c_str(), ansiSize, wideString.data(), utf8Size);
+	utf8Size = WideCharToMultiByte(CP_UTF8, 0, wideString.data(), utf8Size, nullptr, 0, nullptr, nullptr);
+	std::vector<char> utf8String(utf8Size);
+	WideCharToMultiByte(CP_UTF8, 0, wideString.data(), utf8Size, utf8String.data(), utf8Size, nullptr, nullptr);
+	return std::string(utf8String.begin(), utf8String.end());
+}
+
+std::string utf8ToAnsi(const std::string& utf8String) {
+	int utf8Size = static_cast<int>(utf8String.size());
+	int ansiSize = MultiByteToWideChar(CP_UTF8, 0, utf8String.c_str(), utf8Size, nullptr, 0);
+	std::vector<wchar_t> wideString(ansiSize);
+	MultiByteToWideChar(CP_UTF8, 0, utf8String.c_str(), utf8Size, wideString.data(), ansiSize);
+	ansiSize = WideCharToMultiByte(CP_ACP, 0, wideString.data(), ansiSize, nullptr, 0, nullptr, nullptr);
+	std::vector<char> ansiString(ansiSize);
+	WideCharToMultiByte(CP_ACP, 0, wideString.data(), ansiSize, ansiString.data(), ansiSize, nullptr, nullptr);
+	return std::string(ansiString.begin(), ansiString.end());
 }
