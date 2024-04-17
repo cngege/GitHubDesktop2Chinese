@@ -249,6 +249,7 @@
 		["\"Choose a branch to merge into \"","\"选择一个分支合并到\""],
 		["\"1 local commit\":`\\$\\{n.ahead\\} local commits`","\"1 个本地提交\":`${n.ahead} 个本地提交`"],
 		["a.push\\(\"commits\"\\)","a.push(\"更改\")"],
-		["Push \\$\\{a.join\\(\" and \"\\)\\} to the \\$\\{t.name\\} remote","推送 ${a.join(\" and \")} 到远程${t.name}仓库"]
+		["Push \\$\\{a.join\\(\" and \"\\)\\} to the \\$\\{t.name\\} remote","推送 ${a.join(\" and \")} 到远程${t.name}仓库"],
+		["p=`Push \\$\\{t.name\\}`","p=`推送到${t.name}`"]
 	]
 }
