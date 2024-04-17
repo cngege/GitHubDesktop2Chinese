@@ -42,7 +42,7 @@ json localization = R"(
 					)"_json;
 bool _debug_error_check_mode_main = false;
 bool _debug_error_check_mode_renderer = false;
-
+bool _debug_invalid_check_mode = false;
 
 
 // argv[0] 是程序路径
@@ -215,6 +215,17 @@ int main(int argc, char* argv[])
 				continue;
 			}
 			std::regex pattern(rege);
+
+			// 开发者选项 失效检测
+			if (_debug_invalid_check_mode) {
+				bool found = std::regex_search(main_str, pattern);
+				if (!found) {
+					spdlog::warn("[main] 检测到失效项: {}", rege);
+				}
+				continue;
+			}
+
+			// 替换
 			main_str = std::regex_replace(main_str, pattern, item.value()[1].get<std::string>());
 			if (_debug_error_check_mode_main) {
 				spdlog::info("[main][out:{}]已经替换:{}->{}", out, rege, utf8ToAnsi(item.value()[1].get<std::string>()));
@@ -231,13 +242,15 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-		// 写入
-		std::ofstream override_main(fs::path(Base / "main.js").string(), std::ios::binary);
-		override_main.write(main_str.c_str(), main_str.size());
-		if (!override_main) {
-			spdlog::error("打开并写入目标文件:{} 时失败", "main.js");
+		if (_debug_invalid_check_mode) {
+			// 写入
+			std::ofstream override_main(fs::path(Base / "main.js").string(), std::ios::binary);
+			override_main.write(main_str.c_str(), main_str.size());
+			if (!override_main) {
+				spdlog::error("打开并写入目标文件:{} 时失败", "main.js");
+			}
+			override_main.close();
 		}
-		override_main.close();
 		spdlog::info("{} 汉化结束.", "main.js");
 	}
 
@@ -258,6 +271,16 @@ int main(int argc, char* argv[])
 				continue;
 			}
 			std::regex pattern(rege);
+
+			// 开发者选项 失效检测
+			if (_debug_invalid_check_mode) {
+				bool found = std::regex_search(renderer_str, pattern);
+				if (!found) {
+					spdlog::warn("[renderer] 检测到失效项: {}", rege);
+				}
+				continue;
+			}
+
 			renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
 			if (_debug_error_check_mode_renderer) {
 				spdlog::info("[renderer][out:{}]已经替换:{}->{}",out , rege, utf8ToAnsi(item.value()[1].get<std::string>()));
@@ -274,13 +297,15 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-		// 写入
-		std::ofstream override_renderer(fs::path(Base / "renderer.js").string(), std::ios::binary);
-		override_renderer.write(renderer_str.c_str(), renderer_str.size());
-		if (!override_renderer) {
-			spdlog::error("打开并写入目标文件:{} 时失败", "renderer.js");
+		if (!_debug_invalid_check_mode) {
+			// 写入
+			std::ofstream override_renderer(fs::path(Base / "renderer.js").string(), std::ios::binary);
+			override_renderer.write(renderer_str.c_str(), renderer_str.size());
+			if (!override_renderer) {
+				spdlog::error("打开并写入目标文件:{} 时失败", "renderer.js");
+			}
+			override_renderer.close();
 		}
-		override_renderer.close();
 		spdlog::info("{} 汉化结束.", "renderer.js");
 	}
 
@@ -404,8 +429,9 @@ void DeveloperOptions() {
 		system("cls");
 		spdlog::info("选择你要修改的功能");
 		spdlog::info("0) 跳出.");
-		spdlog::info("1) main崩溃调试.");
-		spdlog::info("2) renderer崩溃调试.");
+		spdlog::info("1) [{}] main崩溃调试.", _debug_error_check_mode_main);
+		spdlog::info("2) [{}] renderer崩溃调试.", _debug_error_check_mode_renderer);
+		spdlog::info("3) [{}] 翻译项失效检测.", _debug_invalid_check_mode);
 		std::cout << std::endl;
 
 		int sys = 0;
@@ -416,15 +442,20 @@ void DeveloperOptions() {
 		{
 		case 0:
 			return;
-		case 1: 
-			spdlog::info("[{}] 输入你要切换的状态(0关 1开):", _debug_error_check_mode_main);
+		case 1:
+			spdlog::info("输入你要切换的状态(0关 1开):");
 			std::cin >> sw;
 			_debug_error_check_mode_main = (bool)sw;
 			break;
 		case 2:
-			spdlog::info("[{}] 输入你要切换的状态(0关 1开):", _debug_error_check_mode_renderer);
+			spdlog::info("输入你要切换的状态(0关 1开):");
 			std::cin >> sw;
 			_debug_error_check_mode_renderer = (bool)sw;
+			break;
+		case 3:
+			spdlog::info("输入你要切换的状态(0关 1开):");
+			std::cin >> sw;
+			_debug_invalid_check_mode = (bool)sw;
 			break;
 		}
 	}
