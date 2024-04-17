@@ -246,6 +246,7 @@
 		["\"create a pull request\"","\"创建一个拉取请求\""],
 		["\"from the current branch\\?\"","\"从当前分支中?\""],
 		["`Choose a branch to merge into \\$\\{e.name\\}`","`选择一个分支合并到 ${e.name}`"],
-		["\"Choose a branch to merge into \"","\"选择一个分支合并到\""]
+		["\"Choose a branch to merge into \"","\"选择一个分支合并到\""],
+		["\"1 local commit\":`\\$\\{n.ahead\\} local commits`","\"1 个本地提交\":`${n.ahead} 个本地提交`"]
 	]
 }
