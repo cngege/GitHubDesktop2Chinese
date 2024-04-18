@@ -9,12 +9,13 @@
 #include "GitHubDesktop2Chinese.h"
 #include <string>
 #include <filesystem>
-#include <codecvt>
+
 #include <regex>
 
 #include "spdlog/spdlog.h"			// 日志式输出库
 #include "nlohmann/json.hpp"		// JSON读取本地配置库
 #include "WinReg/WinReg.hpp"		// 注册表操作库
+#include "Utils/utils.hpp"
 
 
 #if _DEBUG
@@ -43,7 +44,7 @@ json localization = R"(
 bool _debug_error_check_mode_main = false;
 bool _debug_error_check_mode_renderer = false;
 bool _debug_invalid_check_mode = false;
-
+bool _debug_no_replace_res = false;
 
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
@@ -86,12 +87,40 @@ int main(int argc, char* argv[])
 
 	// 判断汉化映射文件是否存在, 不存在则创建一个
 	if (!fs::exists(LocalizationJSON)) {
-		std::ofstream io(LocalizationJSON);
-		io << std::setw(4) << localization << std::endl;
-		io.close();
-		spdlog::warn("没有发现本地化文件: {}, 已创建,请先编辑创建翻译映射", "localization.json");
-		PAUSE;
-		return 0;
+		// 没有发现json文件,尝试从远程开源项目中获取
+		spdlog::warn("没有指定,或从指定位置没有发现 {} 文件", "localization.json");
+		spdlog::info("尝试从远程开源项目中获取");
+		std::string httpjson;
+		if (utils::ReadHttpDataString("https://raw.kkgithub.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+			localization = json::parse(httpjson);
+			spdlog::info("远程读取成功");
+		}
+		else {
+			spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
+			std::ofstream io(LocalizationJSON);
+			io << std::setw(4) << localization << std::endl;
+			io.close();
+			PAUSE;
+			return 0;
+		}
+
+	}else
+	{
+		// 本地读取汉化文件到json中
+		std::ifstream config(LocalizationJSON);
+		if (!config) {
+			spdlog::error("localization.json 打开失败,无法读取");
+		}
+		try
+		{
+			config >> localization;
+		}
+		catch (const std::exception& e)
+		{
+			spdlog::error("{} at line {}", e.what(), __LINE__);
+			PAUSE;
+			return 0;
+		}
 	}
 
 	// Github Desktop 存在目录没有提前设置
@@ -105,7 +134,7 @@ int main(int argc, char* argv[])
 
 		//	检查注册表中是否存在GithubDesktop
 		winreg::RegKey key;
-		winreg::RegResult result = key.TryOpen(HKEY_USERS, to_wide_string(sid) + L"\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
+		winreg::RegResult result = key.TryOpen(HKEY_USERS, utils::to_wide_string(sid) + L"\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
 		if (!result)
 		{
 			spdlog::warn("你可能没有安装GithubDesktop，请先安装然后打开此程序或者手动指定main.js所在的文件夹目录");
@@ -122,8 +151,8 @@ int main(int argc, char* argv[])
 				Base = path + L"\\" + L"app-" + ver + L"\\resources\\app";
 
 				spdlog::info("已从注册表中读取信息:");
-				spdlog::info("Github Desktop 版本: {}", to_byte_string(ver));
-				spdlog::info("安装目录: {}", to_byte_string(path));
+				spdlog::info("Github Desktop 版本: {}", utils::to_byte_string(ver));
+				spdlog::info("安装目录: {}", utils::to_byte_string(path));
 				spdlog::info("最后拼接完整目录: {}", Base.string());
 
 				if (!fs::exists(Base)) {
@@ -181,29 +210,12 @@ int main(int argc, char* argv[])
 		spdlog::info("已新建备份 renderer.js -> renderer.js.bak");
 	}
 
-	// 本地读取汉化文件到json中
-	{
-		std::ifstream config(LocalizationJSON);
-		if (!config) {
-			spdlog::error("localization.json 打开失败,无法读取");
-		}
-		try
-		{
-			config >> localization;
-		}
-		catch (const std::exception& e)
-		{
-			spdlog::error("{} at line {}",e.what(), __LINE__);
-			PAUSE;
-			return 0;
-		}
-		
-	}
+
 
 	// TODO 读取main.js文件
 	{
 		int out = 0;
-		std::string main_str = ReadFile(fs::path(Base / "main.js").string());
+		std::string main_str = utils::ReadFile(fs::path(Base / "main.js").string());
 		for (auto& item : localization["main"].items())
 		{
 #if NO_REPLACE
@@ -228,28 +240,18 @@ int main(int argc, char* argv[])
 			// 替换
 			main_str = std::regex_replace(main_str, pattern, item.value()[1].get<std::string>());
 			if (_debug_error_check_mode_main) {
-				spdlog::info("[main][out:{}]已经替换:{}->{}", out, rege, utf8ToAnsi(item.value()[1].get<std::string>()));
+				spdlog::info("[main][out:{}]已经替换:{}->{}", out, rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
 				out--;
 				if (out <= 0) {
-					std::ofstream override_main(fs::path(Base / "main.js").string(), std::ios::binary);
-					override_main.write(main_str.c_str(), main_str.size());
-					if (!override_main) {
-						spdlog::error("打开并写入目标文件:{} 时失败", "main.js");
-					}
-					override_main.close();
+					utils::WriteFile(fs::path(Base / "main.js").string(), main_str);
 					spdlog::info("已写入. 你希望下次替换多少条后写入:");
 					std::cin >> out;
 				}
 			}
 		}
-		if (!_debug_invalid_check_mode) {
+		if (!_debug_invalid_check_mode && !_debug_no_replace_res) {
 			// 写入
-			std::ofstream override_main(fs::path(Base / "main.js").string(), std::ios::binary);
-			override_main.write(main_str.c_str(), main_str.size());
-			if (!override_main) {
-				spdlog::error("打开并写入目标文件:{} 时失败", "main.js");
-			}
-			override_main.close();
+			utils::WriteFile(fs::path(Base / "main.js").string(), main_str);
 		}
 		spdlog::info("{} 汉化结束.", "main.js");
 	}
@@ -259,7 +261,7 @@ int main(int argc, char* argv[])
 	// TODO 读取renderer.js文件
 	{
 		int out = 0;
-		std::string renderer_str = ReadFile(fs::path(Base / "renderer.js").string());
+		std::string renderer_str = utils::ReadFile(fs::path(Base / "renderer.js").string());
 		for (auto& item : localization["renderer"].items())
 		{
 #if NO_REPLACE
@@ -283,28 +285,18 @@ int main(int argc, char* argv[])
 
 			renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
 			if (_debug_error_check_mode_renderer) {
-				spdlog::info("[renderer][out:{}]已经替换:{}->{}",out , rege, utf8ToAnsi(item.value()[1].get<std::string>()));
+				spdlog::info("[renderer][out:{}]已经替换:{}->{}",out , rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
 				out--;
 				if (out <= 0) {
-					std::ofstream override_renderer(fs::path(Base / "renderer.js").string(), std::ios::binary);
-					override_renderer.write(renderer_str.c_str(), renderer_str.size());
-					if (!override_renderer) {
-						spdlog::error("打开并写入目标文件:{} 时失败", "renderer.js");
-					}
-					override_renderer.close();
+					utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str);
 					spdlog::info("已写入. 你希望下次替换多少条后写入:");
 					std::cin >> out;
 				}
 			}
 		}
-		if (!_debug_invalid_check_mode) {
+		if (!_debug_invalid_check_mode && !_debug_no_replace_res) {
 			// 写入
-			std::ofstream override_renderer(fs::path(Base / "renderer.js").string(), std::ios::binary);
-			override_renderer.write(renderer_str.c_str(), renderer_str.size());
-			if (!override_renderer) {
-				spdlog::error("打开并写入目标文件:{} 时失败", "renderer.js");
-			}
-			override_renderer.close();
+			utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str);
 		}
 		spdlog::info("{} 汉化结束.", "renderer.js");
 	}
@@ -358,18 +350,6 @@ std::string GetCurrentUserSid() {
 	return std::string(sid);
 }
 
-inline std::wstring to_wide_string(const std::string& input)
-{
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	return converter.from_bytes(input);
-}
-
-inline std::string to_byte_string(const std::wstring& input)
-{
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	return converter.to_bytes(input);
-}
-
 bool GetBasePath(std::string& out) {
 	getline(std::cin, out);
 	if (!fs::exists(out)) {
@@ -415,14 +395,6 @@ std::string LoopGetBasePath() {
 	}
 }
 
-std::string ReadFile(const std::string& filename) {
-	std::ifstream fin(filename);
-	std::stringstream buffer;
-	buffer << fin.rdbuf();
-	std::string str(buffer.str());
-	return str;
-}
-
 void DeveloperOptions() {
 	while (true)
 	{
@@ -432,6 +404,7 @@ void DeveloperOptions() {
 		spdlog::info("1) [{}] main崩溃调试.", _debug_error_check_mode_main);
 		spdlog::info("2) [{}] renderer崩溃调试.", _debug_error_check_mode_renderer);
 		spdlog::info("3) [{}] 翻译项失效检测.", _debug_invalid_check_mode);
+		spdlog::info("4) [{}] 不替换资源.不干预其他开发者选项.", _debug_no_replace_res);
 		std::cout << std::endl;
 
 		int sys = 0;
@@ -457,29 +430,12 @@ void DeveloperOptions() {
 			std::cin >> sw;
 			_debug_invalid_check_mode = (bool)sw;
 			break;
+		case 4:
+			spdlog::info("输入你要切换的状态(0关 1开):");
+			std::cin >> sw;
+			_debug_no_replace_res = (bool)sw;
+			break;
 		}
 	}
 	
-}
-
-std::string ansiToUtf8(const std::string& ansiString) {
-	int ansiSize = ansiString.size();
-	int utf8Size = MultiByteToWideChar(CP_ACP, 0, ansiString.c_str(), ansiSize, nullptr, 0);
-	std::vector<wchar_t> wideString(utf8Size);
-	MultiByteToWideChar(CP_ACP, 0, ansiString.c_str(), ansiSize, wideString.data(), utf8Size);
-	utf8Size = WideCharToMultiByte(CP_UTF8, 0, wideString.data(), utf8Size, nullptr, 0, nullptr, nullptr);
-	std::vector<char> utf8String(utf8Size);
-	WideCharToMultiByte(CP_UTF8, 0, wideString.data(), utf8Size, utf8String.data(), utf8Size, nullptr, nullptr);
-	return std::string(utf8String.begin(), utf8String.end());
-}
-
-std::string utf8ToAnsi(const std::string& utf8String) {
-	int utf8Size = static_cast<int>(utf8String.size());
-	int ansiSize = MultiByteToWideChar(CP_UTF8, 0, utf8String.c_str(), utf8Size, nullptr, 0);
-	std::vector<wchar_t> wideString(ansiSize);
-	MultiByteToWideChar(CP_UTF8, 0, utf8String.c_str(), utf8Size, wideString.data(), ansiSize);
-	ansiSize = WideCharToMultiByte(CP_ACP, 0, wideString.data(), ansiSize, nullptr, 0, nullptr, nullptr);
-	std::vector<char> ansiString(ansiSize);
-	WideCharToMultiByte(CP_ACP, 0, wideString.data(), ansiSize, ansiString.data(), ansiSize, nullptr, nullptr);
-	return std::string(ansiString.begin(), ansiString.end());
 }
