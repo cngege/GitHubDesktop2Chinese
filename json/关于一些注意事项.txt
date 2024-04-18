@@ -24,4 +24,8 @@ $：匹配输入字符串的结束位置。
 
 6. json中数组最后一项结尾不可有逗号,    否则无法读取。如：[["xx","xxx"],["",""],]
 
-7. 待补充..
+7. 善用正则表达式，如 Ee.createElement\\(yD,null,this.props.repositoryName 其中的函数参数yD,常常因版本更新而发生变动
+    所有可以利用正则模糊匹配这两个字符，使其适应性更强：如 Ee.createElement\\((..),null,this.props.repositoryName
+    替换的时候使用$1表示第一个使用正则捕获到的内容 如：Ee.createElement\\($1,null,this.props.repositoryName
+
+8. 待补充..
