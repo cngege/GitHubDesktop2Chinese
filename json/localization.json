@@ -250,6 +250,24 @@
 		["\"1 local commit\":`\\$\\{n.ahead\\} local commits`","\"1 个本地提交\":`${n.ahead} 个本地提交`"],
 		["a.push\\(\"commits\"\\)","a.push(\"更改\")"],
 		["Push \\$\\{a.join\\(\" and \"\\)\\} to the \\$\\{t.name\\} remote","推送 ${a.join(\" and \")} 到远程${t.name}仓库"],
-		["p=`Push \\$\\{t.name\\}`","p=`推送到${t.name}`"]
+		["p=`Push \\$\\{t.name\\}`","p=`推送到${t.name}`"],
+		["label:\"Discard all changes…\"","label:\"放弃所有更改…\""],
+		["label:n\\?\"Stash all changes…\":\"Stash all changes\"","label:n?\"暂存所有更改…\":\"暂存所有更改\""],
+		["`Version \\$\\{t\\}`","`版本: ${t}`"],
+		["\"release notes\"","\"发行日志\""],
+		["\"Beta Channel\"","\"测试频道\""],
+		["\"Check out the\"","\"了解\""],
+		["\"Looking for the latest features\\?\"","\"想要了解最新的功能?\""],
+		["\"Couldn't determine the last time an update check was performed. You may be running an old version. Please try manually checking for updates and contact GitHub Support if the problem persists\"","\"无法确定上次执行更新检查的时间。您可能正在运行旧版本。请尝试手动检查更新，如果问题仍然存在，请联系 GitHub 支持团队\""],
+		["`Unknown update status \\$\\{e.status\\}`","\"`未识别的更新状态: ${e.status}`\""],
+		["\"Terms and Conditions\"","\"条款和条件\""],
+		["\"License and Open Source Notices\"","\"许可证和开源通知\""],
+		["\"You have the latest version \\(last checked\"","\"您当前是最新版本 (上次检查在 \""],
+		["\"An update has been downloaded and is ready to be installed.\"","\"已下载更新并准备安装.\""],
+		["\"Ensure Latest Version\":\"Check for Updates\"","\"确保是最新版本\":\"检查更新\""],
+		["\"Quit and Install Update\"","\"退出并进行更新安装\""],
+		["\"Checking for updates…\"","\"正在检查更新…\""],
+		["Text:\"Close\"","Text:\"关闭\""],
+		["\"\"","\"\""]
 	]
 }
