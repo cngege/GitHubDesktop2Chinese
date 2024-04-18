@@ -12,10 +12,17 @@ endif()
 project ("GitHubDesktop2Chinese")
 
 include_directories(include)
+include_directories(Utils)
+include_directories(openssl-proj/include)
 
 
 # 将源代码添加到此项目的可执行文件。
-add_executable (GitHubDesktop2Chinese "GitHubDesktop2Chinese.cpp" "GitHubDesktop2Chinese.h")
+add_executable (GitHubDesktop2Chinese "GitHubDesktop2Chinese.cpp")
+
+# 链接OpenSSL库  
+target_link_libraries(GitHubDesktop2Chinese ${CMAKE_SOURCE_DIR}/openssl-proj/lib/libssl.lib)
+target_link_libraries(GitHubDesktop2Chinese ${CMAKE_SOURCE_DIR}/openssl-proj/lib/libcrypto.lib)
+  
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET GitHubDesktop2Chinese PROPERTY CXX_STANDARD 20)
