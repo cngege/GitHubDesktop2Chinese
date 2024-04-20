@@ -45,6 +45,7 @@ bool _debug_error_check_mode_main = false;
 bool _debug_error_check_mode_renderer = false;
 bool _debug_invalid_check_mode = false;
 bool _debug_no_replace_res = false;
+bool _debug_translation_from_bak = false;		// 直接从备份文件中翻译到目标文件中
 
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
@@ -215,7 +216,8 @@ int main(int argc, char* argv[])
 	// TODO 读取main.js文件
 	{
 		int out = 0;
-		std::string main_str = utils::ReadFile(fs::path(Base / "main.js").string());
+		// 如果"从备份文件中汉化"选项打开 则判断备份文件是否存在,以便尝试从备份文件中读取
+		std::string main_str = (_debug_translation_from_bak && fs::exists(Base / "main.js.bak")) ? utils::ReadFile(fs::path(Base / "main.js.bak").string()) : utils::ReadFile(fs::path(Base / "main.js").string());
 		for (auto& item : localization["main"].items())
 		{
 #if NO_REPLACE
@@ -261,7 +263,7 @@ int main(int argc, char* argv[])
 	// TODO 读取renderer.js文件
 	{
 		int out = 0;
-		std::string renderer_str = utils::ReadFile(fs::path(Base / "renderer.js").string());
+		std::string renderer_str = (_debug_translation_from_bak && fs::exists(Base / "renderer.js.bak")) ? utils::ReadFile(fs::path(Base / "renderer.js.bak").string()) :  utils::ReadFile(fs::path(Base / "renderer.js").string());
 		for (auto& item : localization["renderer"].items())
 		{
 #if NO_REPLACE
@@ -405,6 +407,7 @@ void DeveloperOptions() {
 		spdlog::info("2) [{}] renderer崩溃调试.", _debug_error_check_mode_renderer);
 		spdlog::info("3) [{}] 翻译项失效检测.", _debug_invalid_check_mode);
 		spdlog::info("4) [{}] 不替换资源.不干预其他开发者选项.", _debug_no_replace_res);
+		spdlog::info("5) [{}] 如果有)从备份文件中汉化(会直接改变资源文件的来源,影响其他选项).", _debug_translation_from_bak);
 		std::cout << std::endl;
 
 		int sys = 0;
@@ -434,6 +437,11 @@ void DeveloperOptions() {
 			spdlog::info("输入你要切换的状态(0关 1开):");
 			std::cin >> sw;
 			_debug_no_replace_res = (bool)sw;
+			break;
+		case 5:
+			spdlog::info("输入你要切换的状态(0关 1开):");
+			std::cin >> sw;
+			_debug_translation_from_bak = (bool)sw;
 			break;
 		}
 	}
