@@ -312,6 +312,7 @@
 		["\"Save\"","\"保存\""],
 		["\"Sign in to your GitHub.com account to access your repositories.\"","\"登录到你的GitHub账户以访问你的存储库.\""],
 		["\"h2\",null,\"GitHub Enterprise\"","\"h2\",null,\"GitHub 企业版\""],
-		["title:\"Options\"","title:\"选项\""]
+		["title:\"Options\"","title:\"选项\""],
+		["`Pulling \\$\\{n.name\\}`","`从 ${n.name} 拉取中`"]
 	]
 }
