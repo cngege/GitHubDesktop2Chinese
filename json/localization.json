@@ -347,6 +347,8 @@
 		["\"The currently checked out branch. Pick this if you need to build on work done on this branch.\"","\"当前已签出的分支。如果你需要在这个分支上继续构建工作，请选择这个分支。\""],
 		["\"default branch\"","\"默认分支\""],
 		["\" Sign in\"","\" 登录\""],
-		["\"Sorry, I can't find that branch\"","\"对不起，我找不到那个分支\""]
+		["\"Sorry, I can't find that branch\"","\"对不起，我找不到那个分支\""],
+		["\"file\":\"files\",(.)=`\\$\\{r.length\\} changed \\$\\{i\\}`","\"文件\":\"文件\",$1=`${r.length} 个更改的 ${i}`"],
+		["\"\"","\"\""]
 	]
 }
