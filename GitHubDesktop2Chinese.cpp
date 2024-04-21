@@ -76,12 +76,11 @@ int main(int argc, char* argv[])
 		dev_cmd->add_flag("--mainerrorcheck", _debug_error_check_mode_main,			"[错误检查模式]对main.js以错误检查模式进行排查");
 		dev_cmd->add_flag("--rendererrorcheck", _debug_error_check_mode_renderer,	"[错误检查模式]对renderer.js以错误检查模式进行排查");
 		dev_cmd->add_flag("--invalidcheck", _debug_invalid_check_mode,				"[检测失效项]对本地化文件中的失效替换项进行检测");
-		dev_cmd->add_flag("--noreplaceres", _debug_no_replace_res,					"[资源不替换]开启后不会对资源进行替换,但不会阻止[检测失效项]");
+		dev_cmd->add_flag("--noreplaceres", _debug_no_replace_res,					"[资源不替换]开启后不会对资源进行替换,但不会阻止[错误检查模式]");
 		dev_cmd->add_flag("--translationfrombak", _debug_translation_from_bak,		"[从备份文件中读取替换]优先从备份文件中读取js文件内容进行替换,开启[检测失效项]时建议开启此项");
 		dev_cmd->add_flag("--devreplace", _debug_dev_replace,						"[开发模式替换]仅替换指定映射以节约汉化时间(会影响其他项)");
 
 
-		//
 		app.add_flag("--nopause", no_pause,							"程序在结束前不再暂停等待");
 		app.add_flag("-r,--onlyfromremote", only_read_from_remote,	"仅从远程url中读取本地化文件");
 		app.add_option("-j,--json", LocalizationJSON,				"指定本地化JSON文件的本地路径");
@@ -279,7 +278,7 @@ int main(int argc, char* argv[])
 	{
 		int out = 0;
 		// 如果"从备份文件中汉化"选项打开 则判断备份文件是否存在,以便尝试从备份文件中读取
-		std::string main_str = (_debug_translation_from_bak && fs::exists(Base / "main.js.bak")) ? utils::ReadFile(fs::path(Base / "main.js.bak").string()) : utils::ReadFile(fs::path(Base / "main.js").string());
+		std::string main_str = ((_debug_translation_from_bak || _debug_invalid_check_mode) && fs::exists(Base / "main.js.bak")) ? utils::ReadFile(fs::path(Base / "main.js.bak").string()) : utils::ReadFile(fs::path(Base / "main.js").string());
 		for (auto& item : localization[_debug_dev_replace?"main_dev":"main"].items())
 		{
 #if NO_REPLACE
@@ -325,7 +324,7 @@ int main(int argc, char* argv[])
 	// TODO 读取renderer.js文件
 	{
 		int out = 0;
-		std::string renderer_str = (_debug_translation_from_bak && fs::exists(Base / "renderer.js.bak")) ? utils::ReadFile(fs::path(Base / "renderer.js.bak").string()) :  utils::ReadFile(fs::path(Base / "renderer.js").string());
+		std::string renderer_str = ((_debug_translation_from_bak || _debug_invalid_check_mode) && fs::exists(Base / "renderer.js.bak")) ? utils::ReadFile(fs::path(Base / "renderer.js.bak").string()) :  utils::ReadFile(fs::path(Base / "renderer.js").string());
 		for (auto& item : localization[_debug_dev_replace?"renderer_dev":"renderer"].items())
 		{
 #if NO_REPLACE
