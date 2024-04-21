@@ -27,6 +27,16 @@
   你可以在[这里](https://github.com/cngege/GitHubDesktop2Chinese/releases/download/0.1.8/openssl-dll.zip)下载，解压后将两个dll文件复制的exe同目录下即可  
   *我一直在寻找使用openssl库时不依赖其dll的方法,如果你恰巧知道,请一定要[![告诉我](http://rescdn.qqmail.com/zh_CN/htmledition/images/function/qm_open/ico_mailme_01.png)](mailto:2586850402@qq.com)或提交[Issues](https://github.com/cngege/GitHubDesktop2Chinese/issues)*
   
+## 第三方库  
+
+**感谢以下诸位提供的优质的开源项目**  
+
+- CLI: https://github.com/CLIUtils/CLI11  
+- HttpLib: https://github.com/yhirose/cpp-httplib  
+- nlohmann/json: https://github.com/nlohmann/json  
+- spdlog: https://github.com/gabime/spdlog  
+- WinReg: https://github.com/GiovanniDicanio/WinReg  
+
 ## TODO 
 
 > (开发者功能)替换项失效检测 已完成
