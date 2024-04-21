@@ -5,7 +5,7 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING	//消除 converter.to_bytes的警告
 #define _CRT_SECURE_NO_WARNINGS								//消除 sprintf的警告
 
-#define PAUSE system("pause")
+#define PAUSE if(!no_pause) system("pause")
 
 #include "GitHubDesktop2Chinese.h"
 #include <string>
