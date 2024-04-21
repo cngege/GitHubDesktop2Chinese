@@ -11,6 +11,8 @@ endif()
 
 project ("GitHubDesktop2Chinese")
 
+include(FetchContent)
+
 include_directories(include)
 include_directories(Utils)
 
@@ -26,6 +28,16 @@ target_link_libraries(GitHubDesktop2Chinese PRIVATE
 	${CMAKE_SOURCE_DIR}/openssl-proj/lib/libssl.lib
 	${CMAKE_SOURCE_DIR}/openssl-proj/lib/libcrypto.lib)
   
+
+# 动态引入链接 CLI参数管理器库
+FetchContent_Declare(
+    cli11_proj
+    QUIET
+    GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+    GIT_TAG v2.4.1
+)
+FetchContent_MakeAvailable(cli11_proj)
+target_link_libraries(GitHubDesktop2Chinese PRIVATE CLI11::CLI11)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET GitHubDesktop2Chinese PROPERTY CXX_STANDARD 20)
