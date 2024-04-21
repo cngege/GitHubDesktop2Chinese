@@ -1,5 +1,6 @@
 ﻿// GitHubDesktop2Chinese.cpp: 定义应用程序的入口点。
-//
+
+
 #define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING	//消除 converter.to_bytes的警告
 #define _CRT_SECURE_NO_WARNINGS								//消除 sprintf的警告
@@ -15,6 +16,8 @@
 #include "spdlog/spdlog.h"			// 日志式输出库
 #include "nlohmann/json.hpp"		// JSON读取本地配置库
 #include "WinReg/WinReg.hpp"		// 注册表操作库
+
+#include <CLI/CLI.hpp>				// 参数管理器:		https://github.com/CLIUtils/CLI11
 #include "Utils/utils.hpp"
 
 
@@ -31,6 +34,10 @@ using json = nlohmann::json;
 // 设置一个路径的全局变量  指向要修改JS的目录
 fs::path Base;
 fs::path LocalizationJSON;
+
+bool no_pause;									// 程序在结束前是否暂停
+bool only_read_from_remote;						// 仅从远程url中读取本地化文件
+
 json localization = R"(
 						{
 							"main": [
@@ -41,11 +48,14 @@ json localization = R"(
 							]
 						}
 					)"_json;
+bool _debug_goto_devoptions;
+
 bool _debug_error_check_mode_main = false;
 bool _debug_error_check_mode_renderer = false;
 bool _debug_invalid_check_mode = false;
 bool _debug_no_replace_res = false;
 bool _debug_translation_from_bak = false;		// 直接从备份文件中翻译到目标文件中
+bool _debug_dev_replace = false;				// 开发模式替换
 
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
@@ -54,42 +64,74 @@ int main(int argc, char* argv[])
 #if _DEBUG
 	spdlog::set_level(spdlog::level::debug);
 #endif // _DEBUG
+	// 注册命令行
+	{
+		CLI::App app{ "汉化GitHub Desktop管理、替换资源" };
+
+		//app.require_subcommand(1);
+
+		// 子命令 开发者选项
+		auto dev_cmd = app.add_subcommand("dev", "开发者选项");
+		dev_cmd->add_flag("-d,--dev", _debug_goto_devoptions, "进入开发者选项调整功能(可在开启程序时按住shift直接进入)");
+		dev_cmd->add_flag("--mainerrorcheck", _debug_error_check_mode_main,			"[错误检查模式]对main.js以错误检查模式进行排查");
+		dev_cmd->add_flag("--rendererrorcheck", _debug_error_check_mode_renderer,	"[错误检查模式]对renderer.js以错误检查模式进行排查");
+		dev_cmd->add_flag("--invalidcheck", _debug_invalid_check_mode,				"[检测失效项]对本地化文件中的失效替换项进行检测");
+		dev_cmd->add_flag("--noreplaceres", _debug_no_replace_res,					"[资源不替换]开启后不会对资源进行替换,但不会阻止[检测失效项]");
+		dev_cmd->add_flag("--translationfrombak", _debug_translation_from_bak,		"[从备份文件中读取替换]优先从备份文件中读取js文件内容进行替换,开启[检测失效项]时建议开启此项");
+		dev_cmd->add_flag("--devreplace", _debug_dev_replace,						"[开发模式替换]仅替换指定映射以节约汉化时间(会影响其他项)");
+
+
+		//
+		app.add_flag("--nopause", no_pause,							"程序在结束前不再暂停等待");
+		app.add_flag("-r,--onlyfromremote", only_read_from_remote,	"仅从远程url中读取本地化文件");
+		app.add_option("-j,--json", LocalizationJSON,				"指定本地化JSON文件的本地路径");
+		app.add_option("-g,--githubdesktoppath", Base,				"指定GitHubDesktop要汉化的资源所在目录");
+		
+		app.callback([&]() {
+			// 手动指定了本地化文件目录
+			if (!LocalizationJSON.string().empty()) {
+				if (!LocalizationJSON.string().ends_with(".json")) {
+					throw CLI::ValidationError("(-j,--json) 指定的本地化文件路径必须以.json结尾");
+				}
+				if (!fs::exists(LocalizationJSON)) {
+					std::ofstream io(LocalizationJSON);
+					io << std::setw(4) << localization << std::endl;
+					io.close();
+					throw CLI::ValidationError("(-j,--json) 指定的本地化文件不存在,已在指定位置创建");
+				}
+			}
+			// 手动指定了GitHubDesktop资源文件目录
+			if (!Base.string().empty()) {
+				if (!fs::exists(Base)) {
+					throw CLI::ValidationError("(-g,--githubdesktoppath) 指定的资源文件目录不存在");
+				}
+				if (!fs::exists(Base / "index.html")) {
+					throw CLI::ValidationError("(-g,--githubdesktoppath) 指定的资源文件目录无效,该目录下应该是存放main.js和renderer.js文件的");
+				}
+			}
+		});
+
+
+		CLI11_PARSE(app, argc, argv);
+		spdlog::info("LocalizationJSON:{}", LocalizationJSON.string());
+	}
 
 	// 开发者声明
 	spdlog::info("开发者：CNGEGE>2024/04/13");
 	
-	if (GetKeyState(VK_SHIFT) & 0x8000) {
+	if (GetKeyState(VK_SHIFT) & 0x8000 || _debug_goto_devoptions) {
 		// 如果Shift按下, 则进入开发者选项
 		SetConsoleTitle("开发者模式");
 		spdlog::info("您已进入开发者模式");
 		DeveloperOptions();
 	}
 
-
-	//检查参数
-	for (int i = 1; i < argc; i++)
-	{
-		std::string sPath = argv[i];
-		std::regex pattern("\\\\");
-		std::string fpath = std::regex_replace(sPath,pattern,"/");
-		if (fpath.ends_with("/localization.json")) {
-			LocalizationJSON = sPath;
-			spdlog::info("已手动指定本地化文件位置:{}", sPath);
-		}
-		if (fs::is_directory(fs::path(sPath)) && fs::exists(fs::path(sPath) / "index.html")) {
-			Base = sPath;
-			spdlog::info("已手动指定GitHubDesktop目录:{}", sPath);
-		}
-	}
-
 	if (LocalizationJSON.empty()) {
 		LocalizationJSON = "localization.json";
 	}
 
-	// 判断汉化映射文件是否存在, 不存在则创建一个
-	if (!fs::exists(LocalizationJSON)) {
-		// 没有发现json文件,尝试从远程开源项目中获取
-		spdlog::warn("没有指定,或从指定位置没有发现 {} 文件", "localization.json");
+	// 如果是仅从远程仓库读取汉化文件
+	if (only_read_from_remote) {
 		spdlog::info("尝试从远程开源项目中获取");
 		std::string httpjson;
 		if (utils::ReadHttpDataString("https://raw.kkgithub.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
@@ -97,32 +139,52 @@ int main(int argc, char* argv[])
 			spdlog::info("远程读取成功");
 		}
 		else {
-			spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
-			std::ofstream io(LocalizationJSON);
-			io << std::setw(4) << localization << std::endl;
-			io.close();
-			PAUSE;
-			return 0;
-		}
-
-	}else
-	{
-		// 本地读取汉化文件到json中
-		std::ifstream config(LocalizationJSON);
-		if (!config) {
-			spdlog::error("localization.json 打开失败,无法读取");
-		}
-		try
-		{
-			config >> localization;
-		}
-		catch (const std::exception& e)
-		{
-			spdlog::error("{} at line {}", e.what(), __LINE__);
+			spdlog::warn("远程获取失败,请检查网络和代理,并稍后再试");
 			PAUSE;
 			return 0;
 		}
 	}
+	// 没有指定仅从远程仓库获取汉化文件
+	else {
+		// 判断汉化映射文件是否存在, 不存在则创建一个
+		if (!fs::exists(LocalizationJSON)) {
+			// 没有发现json文件,尝试从远程开源项目中获取
+			spdlog::warn("没有指定,或从指定位置没有发现 {} 文件", "localization.json");
+			spdlog::info("尝试从远程开源项目中获取");
+			std::string httpjson;
+			if (utils::ReadHttpDataString("https://raw.kkgithub.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+				localization = json::parse(httpjson);
+				spdlog::info("远程读取成功");
+			}
+			else {
+				spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
+				std::ofstream io(LocalizationJSON);
+				io << std::setw(4) << localization << std::endl;
+				io.close();
+				PAUSE;
+				return 0;
+			}
+		}
+		else
+		{
+			// 本地读取汉化文件到json中
+			std::ifstream config(LocalizationJSON);
+			if (!config) {
+				spdlog::error("localization.json 打开失败,无法读取");
+			}
+			try
+			{
+				config >> localization;
+			}
+			catch (const std::exception& e)
+			{
+				spdlog::error("{} at line {}", e.what(), __LINE__);
+				PAUSE;
+				return 0;
+			}
+		}
+	}
+
 
 	// Github Desktop 存在目录没有提前设置
 	if (!fs::exists(Base) || !fs::exists(Base / "index.html")) {
@@ -218,7 +280,7 @@ int main(int argc, char* argv[])
 		int out = 0;
 		// 如果"从备份文件中汉化"选项打开 则判断备份文件是否存在,以便尝试从备份文件中读取
 		std::string main_str = (_debug_translation_from_bak && fs::exists(Base / "main.js.bak")) ? utils::ReadFile(fs::path(Base / "main.js.bak").string()) : utils::ReadFile(fs::path(Base / "main.js").string());
-		for (auto& item : localization["main"].items())
+		for (auto& item : localization[_debug_dev_replace?"main_dev":"main"].items())
 		{
 #if NO_REPLACE
 			continue;
@@ -264,7 +326,7 @@ int main(int argc, char* argv[])
 	{
 		int out = 0;
 		std::string renderer_str = (_debug_translation_from_bak && fs::exists(Base / "renderer.js.bak")) ? utils::ReadFile(fs::path(Base / "renderer.js.bak").string()) :  utils::ReadFile(fs::path(Base / "renderer.js").string());
-		for (auto& item : localization["renderer"].items())
+		for (auto& item : localization[_debug_dev_replace?"renderer_dev":"renderer"].items())
 		{
 #if NO_REPLACE
 			continue;
@@ -407,7 +469,8 @@ void DeveloperOptions() {
 		spdlog::info("2) [{}] renderer崩溃调试.", _debug_error_check_mode_renderer);
 		spdlog::info("3) [{}] 翻译项失效检测.", _debug_invalid_check_mode);
 		spdlog::info("4) [{}] 不替换资源.不干预其他开发者选项.", _debug_no_replace_res);
-		spdlog::info("5) [{}] 如果有)从备份文件中汉化(会直接改变资源文件的来源,影响其他选项).", _debug_translation_from_bak);
+		spdlog::info("5) [{}] 优先从备份文件中汉化(会直接改变资源文件的来源,影响其他选项).", _debug_translation_from_bak);
+		spdlog::info("6) [{}] 仅替换指定映射项，以优化汉化作者替换时间", _debug_dev_replace);
 		std::cout << std::endl;
 
 		int sys = 0;
@@ -442,6 +505,11 @@ void DeveloperOptions() {
 			spdlog::info("输入你要切换的状态(0关 1开):");
 			std::cin >> sw;
 			_debug_translation_from_bak = (bool)sw;
+			break;
+		case 6:
+			spdlog::info("输入你要切换的状态(0关 1开):");
+			std::cin >> sw;
+			_debug_dev_replace = (bool)sw;
 			break;
 		}
 	}
