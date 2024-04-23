@@ -11,3 +11,4 @@ CTestTestfile.cmake
 _deps
 /.vs
 /out
+/openssl-proj/lib
