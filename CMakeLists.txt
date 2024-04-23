@@ -25,6 +25,10 @@ FIND_FILE(LOCAL_OPENSSL_LIBRARIES_PATH
 	NAMES ""
 	HINTS "openssl-proj/lib"
 	NO_DEFAULT_PATH)
+if(NOT EXISTS "openssl-proj/lib")
+	file(MAKE_DIRECTORY "openssl-proj/lib")
+	MESSAGE(STATUS "Folder “openssl-proj/lib” created successfully.")
+endif()
 
 # /////////////////////////////////////ssl库lib名称////////////////////////////////////////////////
 SET(OPENSSL_SSL_NAME "libssl.lib")
