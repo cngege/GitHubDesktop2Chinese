@@ -112,7 +112,6 @@ int main(int argc, char* argv[])
 
 
 		CLI11_PARSE(app, argc, argv);
-		spdlog::info("LocalizationJSON:{}", LocalizationJSON.string());
 	}
 
 	// 开发者声明
