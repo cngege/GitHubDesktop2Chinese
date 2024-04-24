@@ -33,7 +33,7 @@ endif()
 # /////////////////////////////////////ssl库lib名称////////////////////////////////////////////////
 SET(OPENSSL_SSL_NAME "libssl.lib")
 # ssl远程下载地址
-SET(SSL_DOWNLOAD_URL "https://mirror.ghproxy.com/https://github.com/cngege/cngege.github.io/releases/download/v0.1-beta.1/libssl.lib")
+SET(SSL_DOWNLOAD_URL "https://gh.ddlc.top/https://github.com/cngege/cngege.github.io/releases/download/v0.1-beta.1/libssl.lib")
 MESSAGE(STATUS "Checking ${OPENSSL_SSL_NAME}...")
 # 判断库文件是否已经存在
 FIND_FILE(LOCAL_OPENSSL_SSL_LIB
@@ -72,7 +72,7 @@ ENDIF()
 # /////////////////////////////////////crypto库lib名称////////////////////////////////////////////////
 SET(OPENSSL_CRYPTO_NAME "libcrypto.lib")
 # ssl远程下载地址
-SET(CRYPTO_DOWNLOAD_URL "https://mirror.ghproxy.com/https://github.com/cngege/cngege.github.io/releases/download/v0.1-beta.1/libcrypto.lib")
+SET(CRYPTO_DOWNLOAD_URL "https://gh.ddlc.top/https://github.com/cngege/cngege.github.io/releases/download/v0.1-beta.1/libcrypto.lib")
 MESSAGE(STATUS "Checking ${OPENSSL_CRYPTO_NAME}...")
 # 判断库文件是否已经存在
 FIND_FILE(LOCAL_OPENSSL_CRYPTO_LIB
