@@ -360,12 +360,12 @@
 		["`\\$\\{(.)\\} pull request`","`${$1} 拉取请求`"],
 		["`\\$\\{(.)\\} pull request on GitHub\\$\\{o&&o.endpoint!==(..)\\(\\)\\?\" Enterprise\":\"\"\\}.`","`从GitHub${o&&o.endpoint!==$2()?\" 企业版\":\"\"}中${$1}拉取请求.`"],
 		["buttonText\\|\\|\"Close\"","buttonText||\"关闭\""],
+		["\"This directory does not appear to be a Git repository. Would you like to create a repository here instead\\?\"","\"这个目录似乎不是一个Git仓库。你想在这里创建一个仓库吗？\""],
+		["\"This directory does not appear to be a Git repository.\"","\"这个文件夹似乎不是一个有效的Git仓库. 你想在这里\""],
+		["\"create a repository\"\\),\" \",\"here instead\\?\"","\"创建一个存储库\"),\" \",\"吗?\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
