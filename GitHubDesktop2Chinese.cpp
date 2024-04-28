@@ -43,8 +43,14 @@ json localization = R"(
 							"main": [
 								["XXXXX", "XXXXX"]
 							],
+							"main_dev": [
+								["",""]
+							],
 							"renderer": [
 								["xxxxx","xxxxx"]
+							],
+							"renderer_dev": [
+								["",""]
 							]
 						}
 					)"_json;
