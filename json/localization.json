@@ -380,6 +380,9 @@
 		["\"Rebasing branch\"","\"变基分支\""],
 		["title:\"Publish branch\",","title:\"发布分支\","],
 		["\"Rebase in progress\":\"Cannot publish detached HEAD\"","\"正在进行变基操作\":\"无法发布游离的HEAD\""],
+		["\"Installing update…\"","\"安装更新中…\""],
+		["\"Do not close GitHub Desktop while the update is in progress. Closing now may break your installation.\"","\"在进行更新时，请勿关闭GitHub桌面程序。现在关闭可能使您的新版程序无法打开。\""],
+		["\"Quit anyway\"","\"无论如何都要退出\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
