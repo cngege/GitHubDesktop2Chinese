@@ -161,10 +161,13 @@ int main(int argc, char* argv[])
 				spdlog::info("远程读取成功");
 			}
 			else {
-				spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
-				std::ofstream io(LocalizationJSON);
-				io << std::setw(4) << localization << std::endl;
-				io.close();
+				spdlog::warn("远程获取失败 - 是否创建json框架，手动编辑汉化映射");
+				if (utils::ReadUserInput_bool({ "n","y" }, 0)) {
+					spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
+					std::ofstream io(LocalizationJSON);
+					io << std::setw(4) << localization << std::endl;
+					io.close();
+				}
 				PAUSE;
 				return 0;
 			}
@@ -478,7 +481,7 @@ void DeveloperOptions() {
 		std::cout << std::endl;
 
 		int sys = 0;
-		int sw = 0;	//功能开关
+		//int sw = 0;	//功能开关
 		spdlog::info("请输入你要修改的功能:");
 		std::cin >> sys;
 		switch (sys)
@@ -486,34 +489,35 @@ void DeveloperOptions() {
 		case 0:
 			return;
 		case 1:
-			spdlog::info("输入你要切换的状态(0关 1开):");
-			std::cin >> sw;
-			_debug_error_check_mode_main = (bool)sw;
+			//spdlog::info("输入你要切换的状态(0关 1开):");
+			//std::cin >> sw;
+			//_debug_error_check_mode_main = (bool)sw;
+			_debug_error_check_mode_main = utils::ReadUserInput_bool({ "false", "true" });
 			break;
 		case 2:
-			spdlog::info("输入你要切换的状态(0关 1开):");
-			std::cin >> sw;
-			_debug_error_check_mode_renderer = (bool)sw;
+			//spdlog::info("输入你要切换的状态(0关 1开):");
+			//std::cin >> sw;
+			_debug_error_check_mode_renderer = utils::ReadUserInput_bool({ "false", "true" });
 			break;
 		case 3:
-			spdlog::info("输入你要切换的状态(0关 1开):");
-			std::cin >> sw;
-			_debug_invalid_check_mode = (bool)sw;
+			//spdlog::info("输入你要切换的状态(0关 1开):");
+			//std::cin >> sw;
+			_debug_invalid_check_mode = utils::ReadUserInput_bool({ "false", "true" });
 			break;
 		case 4:
-			spdlog::info("输入你要切换的状态(0关 1开):");
-			std::cin >> sw;
-			_debug_no_replace_res = (bool)sw;
+			//spdlog::info("输入你要切换的状态(0关 1开):");
+			//std::cin >> sw;
+			_debug_no_replace_res = utils::ReadUserInput_bool({ "false", "true" });
 			break;
 		case 5:
-			spdlog::info("输入你要切换的状态(0关 1开):");
-			std::cin >> sw;
-			_debug_translation_from_bak = (bool)sw;
+			//spdlog::info("输入你要切换的状态(0关 1开):");
+			//std::cin >> sw;
+			_debug_translation_from_bak = utils::ReadUserInput_bool({ "false", "true" });
 			break;
 		case 6:
-			spdlog::info("输入你要切换的状态(0关 1开):");
-			std::cin >> sw;
-			_debug_dev_replace = (bool)sw;
+			//spdlog::info("输入你要切换的状态(0关 1开):");
+			//std::cin >> sw;
+			_debug_dev_replace = utils::ReadUserInput_bool({ "false", "true" });
 			break;
 		}
 	}
