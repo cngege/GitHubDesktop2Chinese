@@ -379,7 +379,7 @@
 		["\"View conflicts\"","\"查看冲突\""],
 		["\"Rebasing branch\"","\"变基分支\""],
 		["title:\"Publish branch\",","title:\"发布分支\","],
-		["Rebase in progress\":\"Cannot publish detached HEAD","\"正在进行变基操作\":\"无法发布游离的HEAD\""],
+		["\"Rebase in progress\":\"Cannot publish detached HEAD\"","\"正在进行变基操作\":\"无法发布游离的HEAD\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
