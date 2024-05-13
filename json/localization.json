@@ -383,6 +383,7 @@
 		["\"Installing update…\"","\"安装更新中…\""],
 		["\"Do not close GitHub Desktop while the update is in progress. Closing now may break your installation.\"","\"在进行更新时，请勿关闭GitHub桌面程序。现在关闭可能使您的新版程序无法打开。\""],
 		["\"Quit anyway\"","\"无论如何都要退出\""],
+		["\"Refreshing repository\"","\"更新存储库\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
