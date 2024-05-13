@@ -384,12 +384,13 @@
 		["\"Do not close GitHub Desktop while the update is in progress. Closing now may break your installation.\"","\"在进行更新时，请勿关闭GitHub桌面程序。现在关闭可能使您的新版程序无法打开。\""],
 		["\"Quit anyway\"","\"无论如何都要退出\""],
 		["\"Refreshing repository\"","\"更新存储库\""],
+		["\"Preview the Pull Request from your current branch\"","\"预览当前分支中的拉取请求\""],
+		["\"Preview Pull Request\"","\"预览拉取请求\""],
+		["\"The current branch \\(\",(..).createElement\\((..),null,(.).branch.name\\),\"\\) is already published to GitHub. Preview the changes this pull request will have before proposing your changes.\"",
+		"\"当前分支(\",$1.createElement($2,null,$3.branch.name),\")已发布到 GitHub。在提出您的更改之前，请先预览此拉取请求将带来的更改。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
 	]
