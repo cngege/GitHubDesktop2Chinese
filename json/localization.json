@@ -388,6 +388,8 @@
 		["\"Preview Pull Request\"","\"预览拉取请求\""],
 		["\"The current branch \\(\",(..).createElement\\((..),null,(.).branch.name\\),\"\\) is already published to GitHub. Preview the changes this pull request will have before proposing your changes.\"",
 		"\"当前分支(\",$1.createElement($2,null,$3.branch.name),\")已发布到 GitHub。在提出您的更改之前，请先预览此拉取请求将带来的更改。\""],
+		["\"Create a tag\"","\"创建一个标签\""],
+		["\"Create tag\"","\"创建标签\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
