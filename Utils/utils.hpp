@@ -1,4 +1,4 @@
-#ifndef UTILS_IS_EXITES
+ï»¿#ifndef UTILS_IS_EXITES
 #define UTILS_IS_EXITES
 
 #include <string>
@@ -56,7 +56,7 @@ public:
 		std::ofstream override (filename, std::ios::binary);
 		override.write(txt.c_str(), txt.size());
 		if (!override) {
-			spdlog::error("´ò¿ª²¢Ð´ÈëÄ¿±êÎÄ¼þ:{} Ê±Ê§°Ü", filename);
+			spdlog::error("æ‰“å¼€å¹¶å†™å…¥ç›®æ ‡æ–‡ä»¶:{} æ—¶å¤±è´¥", filename);
 		}
 		override.close();
 	}
@@ -80,11 +80,11 @@ public:
 
 		while (true)
 		{
-			// Êä³öÌáÊ¾
+			// è¾“å‡ºæç¤º
 			//if (defaultval == -1)
-			//	spdlog::info("ÇëÊäÈëÒ»¸ö±íÊ¾×Ö·û´®µÄÖµ({})", input);
+			//	spdlog::info("è¯·è¾“å…¥ä¸€ä¸ªè¡¨ç¤ºå­—ç¬¦ä¸²çš„å€¼({})", input);
 			//else
-			//	spdlog::info("ÇëÊäÈëÒ»¸ö±íÊ¾×Ö·û´®µÄÖµ({} Ä¬ÈÏ {})", input, input[defaultval]);
+			//	spdlog::info("è¯·è¾“å…¥ä¸€ä¸ªè¡¨ç¤ºå­—ç¬¦ä¸²çš„å€¼({} é»˜è®¤ {})", input, input[defaultval]);
 
 			std::string instr;
 			std::cin >> instr;
@@ -97,7 +97,7 @@ public:
 			}
 
 			if (defaultval == -1) {
-				// Ñ­»·
+				// å¾ªçŽ¯
 				continue;
 			}
 			else {
@@ -107,15 +107,15 @@ public:
 	}
 
 	static auto ReadUserInput_bool(std::vector<std::string> input = {"false", "true"}, int defaultval = -1) -> bool {
-		if (input.size() != 2) throw std::exception("¶ÁÈ¡ bool ÀàÐÍÖµÊ± input Êý×é³¤¶È±ØÐëÎªÁ½¸ö");
-		if (defaultval > (int)input.size() - 1 || defaultval < -1) throw std::exception(std::format("defaultval ±ØÐëÄÜ¹»Ö¸Ïò inputÊý×é£¬»òÕßÎª -1, defaultval:{}" , defaultval).c_str());
+		if (input.size() != 2) throw std::exception("è¯»å– bool ç±»åž‹å€¼æ—¶ input æ•°ç»„é•¿åº¦å¿…é¡»ä¸ºä¸¤ä¸ª");
+		if (defaultval > (int)input.size() - 1 || defaultval < -1) throw std::exception(std::format("defaultval å¿…é¡»èƒ½å¤ŸæŒ‡å‘ inputæ•°ç»„ï¼Œæˆ–è€…ä¸º -1, defaultval:{}" , defaultval).c_str());
 		while (true)
 		{
-			// Êä³öÌáÊ¾
+			// è¾“å‡ºæç¤º
 			if(defaultval == -1)
-				spdlog::info("ÇëÊäÈëÒ»¸ö±íÊ¾boolµÄÖµ({}/{})", input[0], input[1]);
+				spdlog::info("è¯·è¾“å…¥ä¸€ä¸ªè¡¨ç¤ºboolçš„å€¼({}/{})", input[0], input[1]);
 			else
-				spdlog::info("ÇëÊäÈëÒ»¸ö±íÊ¾boolµÄÖµ({}/{} Ä¬ÈÏ {})", input[0], input[1], input[defaultval]);
+				spdlog::info("è¯·è¾“å…¥ä¸€ä¸ªè¡¨ç¤ºboolçš„å€¼({}/{} é»˜è®¤ {})", input[0], input[1], input[defaultval]);
 
 			std::string instr;
 			std::cin >> instr;
@@ -128,7 +128,7 @@ public:
 			}
 			else {
 				if (defaultval == -1) {
-					// Ñ­»·
+					// å¾ªçŽ¯
 					continue;
 				}
 				else if (defaultval == 0){
