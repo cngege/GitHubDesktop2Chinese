@@ -32,7 +32,6 @@ jobs:
         dir .
         dir openssl-proj/lib/
         tree /F build
-      shell: bash
 
     - name: Build
       # Build your program with the given configuration
@@ -80,7 +79,7 @@ jobs:
           tag: ${{steps.tag.outputs.tag}}
           bodyFile: "ReleaseBody.md"
           #name: 0
-          artifacts: ${{github.workspace}}/build/GitHubDesktop2Chinese/GitHubDesktop2Chinese.exe
+          artifacts: ${{github.workspace}}/build/GitHubDesktop2Chinese/GitHubDesktop2Chinese.exe,${{github.workspace}}/json/localization.json
         env:
           GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
           
