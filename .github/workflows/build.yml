@@ -30,7 +30,8 @@ jobs:
       working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: |
         dir .
-        dir build/GitHubDesktop2Chinese/
+        dir openssl-proj/lib/
+        tree /F build
       shell: bash
 
     - name: Build
