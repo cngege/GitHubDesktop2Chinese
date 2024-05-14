@@ -1,0 +1,78 @@
+# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+name: CMake Build GitHubDesktop2Chinese
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+    - name: Upload Release GitHubDesktop2Chinese.exe
+      uses: actions/upload-artifact@v2
+      with:
+        name: GitHubDesktop2Chinese
+        path: ${{github.workspace}}/build/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese.exe
+
+  publish_release:
+    name: Publish release
+    needs: build
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ${{github.workspace}}/build/
+          
+      - name: Get tag
+        id: tag
+        uses: devops-actions/action-get-tag@v1.0.2
+        with:
+            default: v0.0.0 # Optional: Default version when tag not found
+
+      - name: cmd
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+        run: |
+          dir .
+          dir build/GitHubDesktop2Chinese/
+        shell: bash
+
+      - name: Create release
+        #if: github.event.inputs.status != 'stable'
+        uses: ncipollo/release-action@v1
+        with:
+          prerelease: false # 是否是预览版
+          tag: ${{steps.tag.outputs.tag}}
+          bodyFile: "ReleaseBody.md"
+          #name: 0
+          artifacts: ${{github.workspace}}/build/GitHubDesktop2Chinese/GitHubDesktop2Chinese.exe
+        env:
+          GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
+          
