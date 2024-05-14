@@ -17,6 +17,8 @@ include_directories(include)
 include_directories(Utils)
 
 
+
+
 # 下载libssl.lib
 
 # 设置库远程下载超时时间
@@ -27,6 +29,7 @@ FIND_FILE(LOCAL_OPENSSL_LIBRARIES_PATH
 	NO_DEFAULT_PATH)
 if(NOT EXISTS "openssl-proj/lib")
 	file(MAKE_DIRECTORY "openssl-proj/lib")
+	SET(LOCAL_OPENSSL_LIBRARIES_PATH "openssl-proj/lib")
 	MESSAGE(STATUS "Folder “openssl-proj/lib” created successfully.")
 endif()
 
@@ -120,11 +123,11 @@ target_link_libraries(GitHubDesktop2Chinese PRIVATE
 	${CMAKE_SOURCE_DIR}/openssl-proj/lib/libcrypto.lib)
   
 
-# 动态引入链接 CLI参数管理器库
+	# 动态引入链接 CLI参数管理器库
 FetchContent_Declare(
     cli11_proj
     QUIET
-    GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+    GIT_REPOSITORY https://gitclone.com/github.com/CLIUtils/CLI11.git
     GIT_TAG v2.4.1
 )
 FetchContent_MakeAvailable(cli11_proj)
