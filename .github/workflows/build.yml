@@ -29,9 +29,10 @@ jobs:
     - name: cmd
       working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: |
-        dir .
-        dir openssl-proj/lib/
+        ls .
+        ls openssl-proj/lib/
         tree /F build
+      shell: pwsh
 
     - name: Build
       # Build your program with the given configuration
