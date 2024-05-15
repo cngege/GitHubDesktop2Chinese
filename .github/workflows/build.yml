@@ -23,16 +23,16 @@ jobs:
 
     - name: utf8
       # 使用utf8编码环境编译
-      run: chcp 936
+      run: chcp 65001
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build
+      run: chcp 65001 && cmake -B ${{github.workspace}}/build
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: chcp 65001 && cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       
     - name: Upload Release GitHubDesktop2Chinese.exe
       uses: actions/upload-artifact@v2
