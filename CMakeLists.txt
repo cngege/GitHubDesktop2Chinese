@@ -9,10 +9,9 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-if(MSVC)
-	add_compile_options(/utf-8)
-endif()
-#add_compile_options(/utf-8)
+
+#不要放在 if(MSVC) 中
+add_compile_options(/utf-8)
 
 project ("GitHubDesktop2Chinese")
 
