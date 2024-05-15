@@ -66,6 +66,9 @@ bool _debug_dev_replace = false;				// 开发模式替换
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
 {
+	// 设置控制台的输入 输出编码：
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
 	// 设置控制台打印日志输出等级
 #if _DEBUG
 	spdlog::set_level(spdlog::level::debug);
