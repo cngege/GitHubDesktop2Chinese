@@ -391,10 +391,13 @@
 		["\"Create a tag\"","\"创建一个标签\""],
 		["\"Create tag\"","\"创建标签\""],
 		["\"Downloading update…\"","\"下载更新中…\""],
+		["\"Accessibility\"\\)","\"辅助功能\")"],
+		["\"When enabled, GitHub Desktop will underline links in commit messages, comments, and other text fields. This can help make links easier to distinguish. \"","\"启用后，GitHub Desktop 将在提交信息、评论和其他文本字段中为链接添加下划线。这有助于更容易地识别链接。\""],
+		["\"This is an example link\"","\"这是一个示例链接\""],
+		["\"When enabled, check marks will be displayed along side the line numbers and groups of line numbers in the diff when committing. When disabled, the line number controls will be less prominent.\"","\"启用时，在提交变化时，会在行号及行号组旁边显示勾选标记。禁用时，行号控件将不太显眼。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
 		["\"\"","\"\""]
 	]
 }
