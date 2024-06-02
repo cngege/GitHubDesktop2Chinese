@@ -1,5 +1,10 @@
 # GitHubDesktop2Chinese
 
+![GitHub Actions](https://img.shields.io/github/actions/workflow/status/cngege/GitHubDesktop2Chinese/build.yml)
+![GitHub Release](https://img.shields.io/github/v/release/cngege/GitHubDesktop2Chinese)
+
+
+
 ## 这是什么
 
 > 这是一个自动替换GithubDesktop中文本为目标语言文本的程序，
@@ -27,10 +32,8 @@
 
 ## 其他
 
-> 如果报错提示找不到openssl 的dll文件，则说明你的机器上没有安装openssl(在线获取最新本地化文件需要openssl的支持)  
-  你可以在[这里](https://github.com/cngege/GitHubDesktop2Chinese/releases/download/0.1.8/openssl-dll.zip)下载，解压后将两个dll文件复制的exe同目录下即可  
-  *我一直在寻找使用openssl库时不依赖其dll的方法,如果你恰巧知道,请一定要[![告诉我](http://rescdn.qqmail.com/zh_CN/htmledition/images/function/qm_open/ico_mailme_01.png)](mailto:2586850402@qq.com)或提交[Issues](https://github.com/cngege/GitHubDesktop2Chinese/issues)*
-  **此方法我已经找到，当下最新exe无需依赖openssl dll**
+> 如果报错提示找不到openssl 的dll文件，请更新到[最新版](https://github.com/cngege/GitHubDesktop2Chinese/releases)   
+
 
 ## 第三方库  
 
