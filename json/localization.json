@@ -395,9 +395,25 @@
 		["\"When enabled, GitHub Desktop will underline links in commit messages, comments, and other text fields. This can help make links easier to distinguish. \"","\"启用后，GitHub Desktop 将在提交信息、评论和其他文本字段中为链接添加下划线。这有助于更容易地识别链接。\""],
 		["\"This is an example link\"","\"这是一个示例链接\""],
 		["\"When enabled, check marks will be displayed along side the line numbers and groups of line numbers in the diff when committing. When disabled, the line number controls will be less prominent.\"","\"启用时，在提交变化时，会在行号及行号组旁边显示勾选标记。禁用时，行号控件将不太显眼。\""],
+		["\"Stashed Changes\"","\"暂存的更改\""],
+		["\"View your stashed changes\"","\"查看你的已暂存更改\""],
+		["\"You have \",(.),\" \",1===(.)\\?\"change\":\"changes\",\" in progress that you have not yet committed.\"","\"您有\",$1,\"个正在进行的更改尚未提交.\""],
+		["\"When a stash exists, access it at the bottom of the Changes tab to the left.\"","\"当存在暂存时，请在左侧的“更改”选项卡底部访问它。\""],
+		["\"View stash\"","\"查看暂存\""],
+		["\"Stashed changes\"","\"暂存的更改\""],
+		["ButtonText:\"Restore\"","ButtonText:\"恢复\""],
+		["ButtonText:\"Discard\"","ButtonText:\"忽略\""],
+		["\"Restore\"\\),\" will move your stashed files to the Changes list.\"","\"恢复\"),\" 会将您的暂存文件移至更改列表.\""],
+		["\"Discard stash\\?\"","\"丢弃暂存的内容吗？\""],
+		["\"Are you sure you want to discard these stashed changes\\?\"","\"您确定要丢弃这些暂存的更改吗？\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""]
 	]
 }
