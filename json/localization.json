@@ -406,11 +406,15 @@
 		["\"Restore\"\\),\" will move your stashed files to the Changes list.\"","\"恢复\"),\" 会将您的暂存文件移至更改列表.\""],
 		["\"Discard stash\\?\"","\"丢弃暂存的内容吗？\""],
 		["\"Are you sure you want to discard these stashed changes\\?\"","\"您确定要丢弃这些暂存的更改吗？\""],
+		["\"Use Git Credential Manager\"","\"使用Git凭据管理器\""],
+		["\"Use\",\" \",(..).createElement\\((..),\\{uri:\"https://gh.io/gcm\"\\},\"Git Credential Manager\",\" \"\\),\" \",\"for private repositories outside of GitHub.com. This feature is experimental and subject to change.\"","\"使用\",\" \",$1.createElement($2,{uri:\"https://gh.io/gcm\"},\"Git凭据管理器\",\" \"),\" \",\"（或其他服务）来管理GitHub.com之外的私有仓库。此功能是实验性的，可能会发生变化。\""],
+		["\"Network and credentials\"","\"网络和凭据\""],
+		["\"Diff\"","\"差异\""],
+		["\"Tab size\"","\"替换制表符的空格数\""],
+		["8===(.)\\?`\\$\\{(.)\\} \\(default\\)`","8===$1?`${$2} (默认)`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
