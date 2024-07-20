@@ -415,9 +415,18 @@
 		["\"Publish this branch to GitHub\"","\"将这个分支发布到GitHub\""],
 		["\"Publish this branch to the remote\"","\"将这个分支发布到远程仓库\""],
 		["\"Cannot publish unborn HEAD\"","\"无法推送尚未提交任何更改的分支\""],
+		["\"Submodule changes\"","\"子模块存在更改\""],
+		["\"This is a submodule based on the repository\"","\"这个子模块基于仓库\""],
+		["\"This submodule has \",(.),\" changes. Those changes must be committed inside of the submodule before they can be part of the parent repository.\"","\"这个子模块存在\",$1,\"的更改。这些更改必须在子模块内部提交之后，才能成为父仓库的一部分。\""],
+		["\"modified and untracked\":(.).status.untrackedChanges\\?\"untracked\":\"modified\"","\"已修改且未追踪\":$1.status.untrackedChanges?\"未追踪\":\"已修改\""],
+		["\"Open this submodule on GitHub Desktop\"","\"在 GitHub Desktop 中打开这个子模块\""],
+		["\"You can open this submodule on GitHub Desktop as a normal repository to manage and commit any changes in it.\"","\"您可以在 GitHub Desktop 中像普通仓库一样打开这个子模块，以管理和提交其中的任何更改。\""],
+		["\"Open repository\"","\"打开仓库\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
