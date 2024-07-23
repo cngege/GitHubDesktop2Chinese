@@ -414,6 +414,8 @@
 		["8===(.)\\?`\\$\\{(.)\\} \\(default\\)`","8===$1?`${$2} (默认)`"],
 		["\"Publish this branch to GitHub\"","\"将这个分支发布到GitHub\""],
 		["\"Publish this branch to the remote\"","\"将这个分支发布到远程仓库\""],
+		["\"Publish repository\"","\"公开存储库\""],
+		["\"Publish this repository to GitHub\"","\"将这个仓库发布到 GitHub\""],
 		["\"Cannot publish unborn HEAD\"","\"无法推送尚未提交任何更改的分支\""],
 		["\"Submodule changes\"","\"子模块存在更改\""],
 		["\"This is a submodule based on the repository\"","\"这个子模块基于仓库\""],
@@ -425,8 +427,6 @@
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
