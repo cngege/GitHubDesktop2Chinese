@@ -424,9 +424,18 @@
 		["\"Open this submodule on GitHub Desktop\"","\"在 GitHub Desktop 中打开这个子模块\""],
 		["\"You can open this submodule on GitHub Desktop as a normal repository to manage and commit any changes in it.\"","\"您可以在 GitHub Desktop 中像普通仓库一样打开这个子模块，以管理和提交其中的任何更改。\""],
 		["\"Open repository\"","\"打开仓库\""],
+		["\"Squash and \"","\"压缩并\""],
+		["\"Merge into \"","\"合并分支到\""],
+		["\"The commits in the selected branch will be combined into one commit in the current branch.\"","\"所选分支的提交将合并到当前分支的一个提交中。\""],
+		["label:\"Rebase\"","label:\"变基\""],
+		["\"The commits from the selected branch will be rebased and added to the current branch.\"","\"来自选定分支的提交将被重新定位并添加到当前分支中。\""],
+		["\"Rebase \"","\"变基分支\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
