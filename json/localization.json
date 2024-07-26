@@ -212,7 +212,7 @@
 		["\"Open with default program\"","\"使用默认程序打开\""],
 		["`Open in \\$\\{e.externalEditorLabel\\}`","`使用 ${e.externalEditorLabel} 打开`"],
 		["`Open in \\$\\{s\\}`","`使用 ${s} 打开`"],
-		["`Open in \\$\\{e.resolvedExternalEditor\\|\\|\"editor\"\\}`","`使用 ${e.resolvedExternalEditor||\"editor\"} 打开`"],
+		["`Open in \\$\\{e.resolvedExternalEditor\\|\\|\"editor\"\\}`","`使用 ${e.resolvedExternalEditor||\"编辑器\"} 打开`"],
 		["`Open in \\$\\{n\\}`","`使用 ${n} 打开`"],
 		["`Open in \\$\\{e.shellLabel\\}`","`使用 ${e.shellLabel} 打开`"],
 		["`Open in \\$\\{e.externalEditorLabel\\}`","`使用 ${e.externalEditorLabel} 打开`"],
