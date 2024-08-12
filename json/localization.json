@@ -447,9 +447,18 @@
 		"\"认证失败。一些常见原因包括:\\n\\n- 您尚未登录到您的账户：请查看“文件”>“选项”。\\n- 您可能需要重新登录以刷新您的令牌。\\n- 您没有权限访问此仓库。\\n- 该仓库已在GitHub上存档。请检查仓库设置以确认您是否仍被允许推送提交。\\n- 如果您使用SSH认证，请检查您的密钥是否已添加到ssh-agent中并与您的账户关联。\\n- 如果您使用SSH认证，请确保您的仓库托管服务的主机密钥验证通过。\\n- 如果您使用用户名/密码认证，您可能需要使用个人访问令牌（Personal Access Token）而不是您的账户密码。请查阅您的仓库托管服务的文档。\""],
 		["ButtonText:\"Continue\"","ButtonText:\"继续\""],
 		["\"Continue\"","\"继续\""],
+		["\"Create a Pull Request from your current branch\"","\"从你的当前分支创建一个拉取请求\""],
+		["\"Create Pull Request\"","\"创建一个拉取请求\""],
+		["\"The current branch \\(\"","\"当前分支(\""],
+		["\"\\) is already published to GitHub. Create a pull request to propose and collaborate on your changes.\"","\")已发布到GitHub。创建一个拉取请求来同步你的更改并进行协作。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
