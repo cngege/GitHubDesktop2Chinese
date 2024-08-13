@@ -460,13 +460,20 @@
 		["'\"View on GitHub\" will open ',(..).createElement\\(\"strong\",null,(.).fullName\\),\" \",\"in the browser.\"","'\"在GitHub中显示\" 按钮将会在浏览器中打开',$1.createElement(\"strong\",null,$2.fullName),\".\""],
 		["\"New branches will be based on\",\" \",(..).createElement\\(\"strong\",null,(.).fullName\\),\"'s default branch.\"","\"新分支将会基于\",\" \",$1.createElement(\"strong\",null,$2.fullName),\"的默认分支.\""],
 		["\"Autocompletion of user and issues will be based on\"","\"用户和问题的自动补全将基于\""],
+		["\"Do you want to create a new branch instead\\?\"","\"您想要创建一个新的分支吗？‌\""],
+		["\"Create new branch\"","\"新建分支\""],
+		["\"ProTip! Press\"","\"小技巧! 请按下\""],
+		["\"to quickly create a new branch from anywhere within the app\"","\"以在应用程序内的任何地方快速创建一个新的分支\""],
+		["\" as determined by your\",\" \",(..).createElement\\((..),\\{onClick:this.onForkSettingsClick\\},\"fork behavior settings\"\\)",
+		"\",行为由\",$1.createElement($2,{onClick:this.onForkSettingsClick},\"复刻行为设置\"),\"所决定\""],
+		["\"Publish your branch\"","\"发布你的分支\""],
+		["\"Publish branch\"","\"发布分支\""],
+		["\"\\) hasn't been published to the remote yet. By publishing it \",(.)\\?\"to GitHub\":\"\",\" you can share it, \",(.)\\?\"open a pull request, \":\"\",\"and collaborate with others.\"",
+		"\") 尚未发布到远程仓库. 现在发布它\",$1?\"到GitHub\":\"\",\"。你可以\",$2?\"开启一个拉取请求, \":\"\",\"发布它并进行多人协作。\""],
+		["\"Always available in the toolbar or\"","\"该选项位于菜单栏中 或者\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
 	]
