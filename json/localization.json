@@ -471,9 +471,28 @@
 		["\"\\) hasn't been published to the remote yet. By publishing it \",(.)\\?\"to GitHub\":\"\",\" you can share it, \",(.)\\?\"open a pull request, \":\"\",\"and collaborate with others.\"",
 		"\") 尚未发布到远程仓库. 现在发布它\",$1?\"到GitHub\":\"\",\"。你可以\",$2?\"开启一个拉取请求, \":\"\",\"发布它并进行多人协作。\""],
 		["\"Always available in the toolbar or\"","\"该选项位于菜单栏中 或者\""],
+		["\"Sorry, I can't find that pull request!\"","\"对不起，无法找到此拉取请求！\""],
+		["`Loading repositories from \\$\\{(.)\\}…`","`正在从${$1}加载中...`"],
+		["\"Looks like there are no repositories for\",\" \",(..).createElement\\((..),null,this.props.account.login\\),\" on \",(.),\".\"",
+		"\"看起来在\",$3,\"的\",$1.createElement($2,null,this.props.account.login),\"的用户中没有存储库.\""],
+		["\"Refresh this list\"\\),\" \",\"if you've created a repository recently.\"","\"刷新列表\"),\" \",\"如果你最近创建了存储库.\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
 	]
