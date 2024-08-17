@@ -67,9 +67,13 @@
 		["\"View &pull request on GitHub\":\"Create &pull request\"","\"在GitHub上查看拉取请求(&P)\":\"创建拉取请求(&P)\""],
 		["\"Expand active resizable\"","\"展开可调大小的活动项\""],
 		["\"Contract active resizable\"","\"折叠可调大小的活动项\""],
+		["id:\"about\"\\}\\]","id:\"about\"}]"],
+		["id:\"about\"\\}\\]","id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){o.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]"],
 		["\"\"","\"\""]
 	],
 	"main_dev":[
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
