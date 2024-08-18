@@ -31,7 +31,7 @@
 		["Pu&ll","拉取(&L)"],
 		["&Fetch","同步(&F)"],
 		["&View on GitHub","在 GitHub 中显示(&V)"],
-		["label:`O&pen in \\$\\{(.)\\?\\?\"shell\"\\}`","label:`使用${$1??\"shell\"}打开(&O)`"],
+		["label:`O&pen in \\$\\{(.)\\?\\?\"shell\"\\}`","label:`使用${$1??\"shell\"}打开(&P)`"],
 		["Show in E&xplorer","在文件管理器中显示(&X)"],
 		["`&Open in \\$\\{e\\?\\?\"external editor\"\\}`","`用 ${e??\"默认编辑器\"} 打开(&O)`"],
 		["\"Create &issue on GitHub\"","\"在GitHub中新建议题(&I)\""],
@@ -67,8 +67,8 @@
 		["\"View &pull request on GitHub\":\"Create &pull request\"","\"在GitHub上查看拉取请求(&P)\":\"创建拉取请求(&P)\""],
 		["\"Expand active resizable\"","\"展开可调大小的活动项\""],
 		["\"Contract active resizable\"","\"折叠可调大小的活动项\""],
-		["id:\"about\"\\}\\]","id:\"about\"}]"],
 		["id:\"about\"\\}\\]","id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){o.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]"],
+		["\"en-US\"","\"zh-CN\""],
 		["\"\"","\"\""]
 	],
 	"main_dev":[
@@ -145,7 +145,7 @@
 		["\"Committing\"","\"提交\""],
 		["\"Amending\"","\"修正\""],
 		["\"Amend\"","\"修正\""],
-		["`\\$\\{t\\} to \\$\\{e\\}`","`${t} 到 ${e}`"],
+		["`\\$\\{t\\} to \\$\\{e\\}`","`${t}到${e}`"],
 		["\"No local changes\"","\"没有本地更改\""],
 		["\"There are no uncommitted changes in this repository. Here are some friendly suggestions for what to do next.\"","\"该存储库中没有未提交的更改。以下是一些很好的建议，供您参考。\""],
 		["\"Open the repository page on GitHub in your browser\"","\"在浏览器中的GitHub上打开仓库页面\""],
