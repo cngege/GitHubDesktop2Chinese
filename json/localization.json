@@ -497,6 +497,8 @@
 		["null,\"Split\"","null,\"分割\""],
 		["\"No files in commit\"","\"此提交中无文件\""],
 		["\"Copy the full SHA\"","\"复制完整的SHA\""],
+		["\"to quickly add a local repository, and\"","\"快速添加本地仓库，按下\""],
+		["\"to clone from anywhere within the app\"","\"从任意网络位置克隆一个仓库\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
