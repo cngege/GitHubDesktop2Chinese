@@ -533,9 +533,18 @@
 		["\"Great commit summaries contain fewer than 50 characters\"","\"优秀的提交说明应少于50个字符\""],
 		["\"Place extra information in the description field.\"","\"‌额外信息请放在描述字段中。‌\""],
 		["\"Great commit summaries contain fewer than 50 characters. Place extra information in the description field.\"","\"好的提交说明应少于50个字符。‌额外信息请放在描述字段中。‌\""],
+		["label:\"Remove alias\"","label:\"删除别名\""],
+		["alias\\?\"Create\":\"Change\"","alias?\"创建\":\"更换\""],
+		["`\\$\\{(.)\\} repository alias`","`${$1}仓库别名`"],
+		["'Choose a new alias for the repository \"","'为这个仓库选择一个新的别名\""],
+		["\"This will not affect the original repository name on GitHub.\"","\"这不会影响GitHub上的原始仓库名称。‌\""],
+		["ButtonText:`\\$\\{(.)\\} alias`","ButtonText:`${$1}别名`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
