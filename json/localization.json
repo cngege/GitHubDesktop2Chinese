@@ -530,12 +530,12 @@
 		"\"你的更改将修改你\",$1.createElement(\"strong\",null,\"最近的一次提交\"),\".\",$2.createElement($3,{onClick:this.props.onStopAmending},\"停止修改\"),\"以将这些变化作为一个新的提交.\""],
 		["\"Reset to commit\"","\"重置提交\""],
 		["\"You have changes in progress. Resetting to a previous commit might result in some of these changes being lost. Do you want to continue anyway\\?\"","\"你当前有未完成的更改。‌重置到之前的提交可能会导致其中一些更改丢失。‌你是否无论如何都想继续？\""],
+		["\"Great commit summaries contain fewer than 50 characters\"","\"优秀的提交说明应少于50个字符\""],
+		["\"Place extra information in the description field.\"","\"‌额外信息请放在描述字段中。‌\""],
+		["\"Great commit summaries contain fewer than 50 characters. Place extra information in the description field.\"","\"好的提交说明应少于50个字符。‌额外信息请放在描述字段中。‌\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
