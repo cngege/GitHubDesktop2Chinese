@@ -153,7 +153,7 @@
 		["\"Open the repository in your external editor\"","\"在外部编辑器中打开存储库\""],
 		["\"Select your editor in\",\" \",(..).createElement\\((..),\\{onClick:this.openIntegrationPreferences\\},\"Options\"\\)","\"在 \",$1.createElement($2,{onClick:this.openIntegrationPreferences},\"选项\"), \" 中选择你的编辑器\""],
 		["\" menu or\"","\" 菜单 或者\""],
-		["View the files of your repository in \\$\\{e\\}","在 ${e} 中显示你的存储库文件"],
+		["View the files of your repository in \\$\\{(.)\\}","在 ${$1} 中显示你的存储库文件"],
 		["\"span\",null,\"History\"","\"span\",null,\"历史\""],
 		["\"span\",null,\"Changes\"","\"span\",null,\"更改\""],
 		["`\\$\\{(.)\\}/\\$\\{(.).length\\} changed \\$\\{(.)\\} included`","`包含${$1}/${$2.length}已更改的${$3}`"],
@@ -561,10 +561,10 @@
 		["=\"Show in Explorer\"","=\"在文件管理器中显示\""],
 		["=\"Recycle Bin\"","=\"回收站\""],
 		["=\"Open with default program\"","=\"使用默认程序打开\""],
+		["return\"Explorer\"","return\"文件管理器\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
