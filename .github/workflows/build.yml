@@ -35,7 +35,7 @@ jobs:
       run: chcp 65001 && cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       
     - name: Upload Release GitHubDesktop2Chinese.exe
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: GitHubDesktop2Chinese
         path: ${{github.workspace}}/build/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese.exe
@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: ${{github.workspace}}/build/
           
