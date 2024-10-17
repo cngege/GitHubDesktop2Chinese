@@ -568,13 +568,13 @@
 		["\"This action cannot be undone.\"","\"该操作无法撤销。\""],
 		["\"The branch also exists on the remote, do you wish to delete it there as well\\?\"","\"该分支也存在于远程分支中，您是否也想在远程分支中删除该分支？\""],
 		["ButtonText:\"Delete\"","ButtonText:\"删除\""],
+		["\"Squash \",(.),\" commits\"","\"压缩\",$1,\"条提交记录\""],
+		["length\\?\"commit\":\"commits\"","length?\"此提交记录\":\"这些提交记录\""],
+		["`Move \\$\\{(.)\\} here`","`移动${$1}到这里`"],
+		["`Email: \\$\\{(.).email\\}`","`邮箱: ${$1.email}`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
