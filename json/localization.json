@@ -298,7 +298,7 @@
 		["\"Allows the display of notifications when high-signal events take place in the current repository.\"","\"允许在当前仓库中发生高信号事件时显示通知.\""],
 		["\" GitHub Desktop has no permission to display notifications. Please, enable them in the\"","\"GitHub Desktop 没有权限显示通知。请在 [相应位置] 中启用它们.\""],
 		["\"Make sure notifications are \",(.),\" for GitHub Desktop in the\",\" \",(..).createElement\\((..),\\{uri:(.)\\},\"Notifications Settings\"\\),\".\"",
-		"\"确保在GitHub Desktop里的 \",$2.createElement($3,{uri:$4},\"通知设置\"),\"里的通知状态是$1的\""],
+		"\"确保在系统里的 \",$2.createElement($3,{uri:$4},\"通知设置\"),\"里的GitHub Desktop通知状态是\",$1,\"的\""],
 		["\"properly configured\":\"enabled\"","\"正确配置\":\"开启\""],
 		["\"Show a confirmation dialog before...\"","\"在这些操作之前显示确认对话框\""],
 		["\"If I have changes and I switch branches...\"","\"如果我做了更改并切换了分支,那么\""],
