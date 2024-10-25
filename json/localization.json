@@ -577,10 +577,16 @@
 		["\"Expand Up\"","\"向上展开\""],
 		["\"Expand Down\"","\"向下展开\""],
 		["label:\"base:\"","label:\"基础分支:\""],
+		["\"The repository will be created at \"","\"此仓库将被创建在\""],
+		["\"Publish your repository to GitHub. Need help\\?\"","\"将你的仓库发布到GitHub。需要帮助吗？\""],
+		["\"Publish your repository to GitHub\"","\"将你的仓库发布到GitHub\""],
+		["\"This repository is currently only available on your local machine. By publishing it on GitHub you can share it, and collaborate with others.\"",
+		"\"当前仓库仅在本地可用，发布到GitHub后可共享与协作。\""],
+		["\"Always available in the toolbar for local repositories or\"","\"对于本地仓库，工具栏项目始终可用，或者\""],
+		["\"Keep this code private\"","\"保持此项目代码为私有\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
