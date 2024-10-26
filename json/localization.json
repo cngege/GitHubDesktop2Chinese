@@ -587,11 +587,11 @@
 		["\"Will be created as \"","\"名称将被创建为\""],
 		["\"Will be \",this.props.warningMessageVerb\\?\\?\"created\",\" as\",\" \"","\"名称将被\",this.props.warningMessageVerb??\"创建\",\"为\""],
 		["warningMessageVerb:\"saved\"","warningMessageVerb:\"保存\""],
+		["\"This folder contains files. Git can only clone to empty folders.\"","\"此文件夹包含文件。Git 只能克隆到空文件夹中。\""],
+		["\\{className:\"archived\"\\},\"Archived\"","{className:\"archived\"},\"已归档\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""]
 	]
