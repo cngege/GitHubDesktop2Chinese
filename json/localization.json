@@ -589,13 +589,13 @@
 		["warningMessageVerb:\"saved\"","warningMessageVerb:\"保存\""],
 		["\"This folder contains files. Git can only clone to empty folders.\"","\"此文件夹包含文件。Git 只能克隆到空文件夹中。\""],
 		["\\{className:\"archived\"\\},\"Archived\"","{className:\"archived\"},\"已归档\""],
+		["\"How are you planning to use this fork\\?\"","\"你打算如何使用这个克隆项目？\""],
+		["\"To contribute to the parent project\"","\"为父项目做出贡献\""],
+		["\"We will help you contribute to the\"","\"我们将帮助你为\""],
+		["\" \",\"repository\"","\"仓库做出贡献\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
