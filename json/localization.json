@@ -176,7 +176,7 @@
 		["\"@username\"","\"@用户名\""],
 		["\"Select branch to compare…\"","\"选择比较的分支…\""],
 		["\"No branches to compare\"","\"无可比较的分支\""],
-		["`Fetching \\$\\{(.).name\\}`","`获取${$1.name.replace(/origin/,\"原始仓库\")}的更改`"],
+		["`Fetching \\$\\{(.).name\\}`","`获取${$1.name.replace(/origin/,\"原始\").replace(/upstream/,\"上游\")}仓库的更改`"],
 		["\"Hang on…\"","\"稍等…\""],
 		["\"just now\"","\"刚刚\""],
 		["label:\"Amend commit…\"","label:\"修改提交…\""],
@@ -604,11 +604,12 @@
 		["\"A force push will rewrite history on\",\" \",(..).createElement\\((..),null,this.props.upstreamBranch\\),\". Any collaborators working on this branch will need to reset their own local branch to match the history of the remote.\"",
 		"\"强制推送将重写\",\" \",$1.createElement($2,null,this.props.upstreamBranch),\"分支上的历史记录。在该分支上工作的任何协作者都需要将自己的本地分支重置为与远程仓库的历史记录相匹配。\""],
 		["ButtonText:\"I'm sure\"","ButtonText:\"我确定\""],
+		["\"Your new branch will be based on\",\" \",(..).createElement\\(\"strong\",null,(.)\\),\"'s \"","\"您将创建的新分支将基于\",$1.createElement(\"strong\",null,$2),\"的\""],
+		["\"Unable to squash. Squashing replays all commits up to the last one required for the squash. A merge commit cannot exist among those commits.\"",
+		"\"无法压缩。压缩操作会重新生成所有提交，直到达到需要进行压缩的最后一个提交为止。在这些提交中不能存在合并提交。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
