@@ -629,6 +629,9 @@
 		["\\?\"commit\":\"commits\"","?\"个更改\":\"个更改\""],
 		["\"This will merge\",(..).createElement\\(\"strong\",null,` \\$\\{this.commitCount\\} \\$\\{(.)\\}`\\),\" from \",(..).createElement\\(\"strong\",null,(.).name\\),\" into \",(..).createElement\\(\"strong\",null,(.).name\\)\\)",
 		"\"这将会把\",$3.createElement(\"strong\",null,$4.name),\"分支的\",$1.createElement(\"strong\",null,`${this.commitCount} ${$2}`),\"合并到\",$5.createElement(\"strong\",null,$6.name),\"分支\")"],
+		["\"Confirm discard changes\"","\"确认放弃更改\""],
+		["\"Are you sure you want to discard the selected changes to:\"","\"是否确实要放弃对以下内容所做的选定更改：\""],
+		["return\"Discard changes\"","return\"放弃更改\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
