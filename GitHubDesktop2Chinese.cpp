@@ -63,6 +63,8 @@ bool _debug_no_replace_res = false;
 bool _debug_translation_from_bak = false;		// 直接从备份文件中翻译到目标文件中
 bool _debug_dev_replace = false;				// 开发模式替换
 
+std::optional<std::string> formatTime(std::string time_str);
+
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
 {
@@ -137,6 +139,21 @@ int main(int argc, char* argv[])
 		LocalizationJSON = "localization.json";
 	}
 
+	if(!fs::exists(LocalizationJSON)) {
+		// 读取项目更新时间
+		try {
+			std::string repoinfo;
+			if(utils::ReadHttpDataString("https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese", repoinfo)) {
+				auto infojson = json::parse(repoinfo);
+				std::optional<std::string> info = formatTime(infojson["updated_at"]);
+				if(info) {
+					spdlog::info("仓库最新更新时间: {}{}{}", "\033[33m", *info, "\033[0m");
+					PAUSE;
+				}
+			}
+		}
+		catch(...) {}
+	}
 	// 如果是仅从远程仓库读取汉化文件
 	if (only_read_from_remote) {
 		spdlog::info("尝试从远程开源项目中获取");
@@ -229,16 +246,21 @@ int main(int argc, char* argv[])
 				spdlog::info("最后拼接完整目录: {}", Base.string());
 
 				if (!fs::exists(Base)) {
-					spdlog::warn("注册表最终获取到的目录不存在,请手动输入");
+					spdlog::warn("注册表最终获取到的目录不存在,请手动指定main.js所在的文件夹目录");
 					Base = LoopGetBasePath();
 				}
 
 			}
 			catch (const winreg::RegException& regerr)
 			{
-				spdlog::error("{} at line: {}", regerr.what(), __LINE__);
+				spdlog::error("RegException {} at line: {}", regerr.what(), __LINE__);
 				PAUSE;
-				return 0;
+				return 1;
+			}
+			catch(const std::runtime_error& err) {
+				spdlog::error("runtime_error {} at line: {}", err.what(), __LINE__);
+				PAUSE;
+				return 1;
 			}
 		}
 	}
@@ -525,4 +547,23 @@ void DeveloperOptions() {
 		}
 	}
 	
+}
+
+
+std::optional<std::string> formatTime(std::string time_str) {
+	using namespace std::chrono;
+	std::optional<std::string> ret;
+	std::istringstream ss{ time_str };
+
+	sys_seconds tp;
+	ss >> parse("%FT%TZ", tp);
+	if(!ss.fail()) {
+		auto sctp = time_point_cast<seconds>(tp);
+		std::time_t cftime = decltype(sctp)::clock::to_time_t(sctp);
+		std::tm* tm = std::localtime(&cftime);
+		std::ostringstream oss;
+		oss << std::put_time(tm, "%Y年%m月%d日 %H时%M分%S秒");
+		ret = oss.str();
+	}
+	return ret;
 }
