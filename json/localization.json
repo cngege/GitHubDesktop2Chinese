@@ -641,12 +641,11 @@
 		["title:\"Error\"","title:\"错误\""],
 		["\"The file is empty\"","\"这个文件是空的\""],
 		["cancelButtonText:\"Open options\"","cancelButtonText:\"打开选项\""],
+		["\"Are you sure you want to discard all changes to:\"","\"你确定要放弃对这些文件所做的所有修改吗:\""],
+		["\"Changes can be restored by retrieving them from the \",(..),\".\"","\"可以通过检查\",$1,\"来恢复所有更改。\""],
 		["\"\"","\"\""]
-		
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
