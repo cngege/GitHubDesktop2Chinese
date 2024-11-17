@@ -639,8 +639,9 @@
 		["return\"checkout\";case (..).Pull:return\"pull\";case (..).Merge:return\"merge\";case (..).Rebase:return\"rebase\";case (..).Clone:return\"clone\";case (..).Fetch:return\"fetch\";case (..).Push:return\"push\";case (..).CherryPick:case (..).CreateBranchForCherryPick:return\"cherry-pick\";case (..).Squash:return\"squash\";case (..).Reorder:return\"reorder\";case (..).DiscardChanges:return\"discard changes\"",
 		"return\"检出\";case $1.Pull:return\"拉取\";case $1.Merge:return\"合并\";case $1.Rebase:return\"变基\";case $1.Clone:return\"克隆\";case $1.Fetch:return\"获取\";case $1.Push:return\"推送\";case $1.CherryPick:case $1.CreateBranchForCherryPick:return\"拣选\";case $1.Squash:return\"压缩\";case $1.Reorder:return\"重新排序\";case $1.DiscardChanges:return\"丢弃更改\""],
 		["title:\"Error\"","title:\"错误\""],
-		["\"\"","\"\""],
-		["This file is empty","这个文件是空的"]
+		["\"The file is empty\"","\"这个文件是空的\""],
+		["\"\"","\"\""]
+		
 	],
 	"renderer_dev": [
 		["\"\"","\"\""],
