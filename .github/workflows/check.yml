@@ -1,7 +1,11 @@
 # XXXXXXXX
 
 name: Check Pull Request
-on: [pull_request_target]
+on:
+  pull_request:
+    branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
+  push:
+    branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
 
 jobs:
   label:
