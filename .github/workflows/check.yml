@@ -33,14 +33,17 @@ jobs:
 
     - name: Parse json_file,Read download url
       shell: pwsh
+      id: set_env_vars
       run: |
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
         $env:browser_download_url = $($jsonObj.assets[4].browser_download_url)
+        echo "browser_download_url=$($jsonObj.assets[4].browser_download_url)" >> $GITHUB_ENV
 
     - name: download github desktop
       shell: pwsh
       run: |
+        echo ${{ env.browser_download_url }}
         Invoke-WebRequest -Uri "$env:browser_download_url" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
 
     - name: unzip GitHub Desktop Full
