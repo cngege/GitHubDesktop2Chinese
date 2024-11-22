@@ -31,14 +31,22 @@ jobs:
       shell: pwsh
       run: Invoke-WebRequest -Uri "https://github.com/cngege/GitHubDesktop2Chinese/releases/latest/download/GitHubDesktop2Chinese.exe" -OutFile "${{github.workspace}}\GitHubDesktop2Chinese.exe"  
 
+    - name: define env
+      shell: bash
+      run: |
+          VERSION="$(echo $(date +'v%Y.%m.%d')_${{ github.run_number }}_$(git rev-parse --short=8 HEAD))"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+    - name: use-env
+      run: echo '${{ env.VERSION }}'
+
     - name: Parse json_file,Read download url
       shell: pwsh
       id: forjson
       run: |
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
-        echo "browser_download_url=$($jsonObj.assets[4].browser_download_url)" >> "$GITHUB_OUTPUT"
-        echo "A${{ steps.forjson.outputs.browser_download_url }}"
+        echo "browser_download_url=$($jsonObj.assets[4].browser_download_url)" >> $GITHUB_OUTPUT
+        echo "A${{steps.forjson.outputs.browser_download_url}}"
 
     - name: download github desktop
       shell: pwsh
