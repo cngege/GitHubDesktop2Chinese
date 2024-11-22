@@ -37,7 +37,7 @@ jobs:
       run: |
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
-        if ( $($jsonObj.assets[4].browser_download_url) -like "*-x64-full.nupkg" ) {
+        if ( $($jsonObj.assets[5].browser_download_url) -like "*-x64-full.nupkg" ) {
           Add-Content -Path $env:GITHUB_ENV -Value "browser_download_url=$($jsonObj.assets[4].browser_download_url)"
         } else {
           echo "下标为4的资源不是以 -x64-full.nupkg结尾,请手动打开链接确认..."
