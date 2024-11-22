@@ -30,7 +30,30 @@ jobs:
     - name: Download GitHubDesktop2Chinese.exe
       shell: pwsh
       run: Invoke-WebRequest -Uri "https://github.com/cngege/GitHubDesktop2Chinese/releases/latest/download/GitHubDesktop2Chinese.exe" -OutFile "${{github.workspace}}\GitHubDesktop2Chinese.exe"  
-      
+
+    - name: Parse json_file,Read download url
+      shell: pwsh
+      run: |
+        $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
+        $jsonObj = ConvertFrom-Json -InputObject $jsonContent
+        echo $($jsonObj.assets[4].browser_download_url)
+        echo "browser_download_url=$($jsonObj.assets[4].browser_download_url)" >> $GITHUB_ENV
+
+    - name: download github desktop
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri "${{ env.browser_download_url }}" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
+
+    - name: unzip GitHub Desktop Full
+      shell: pwsh
+      run: |
+        Expand-Archive -Path "${{github.workspace}}\GitHubDesktop_full.zip" -DestinationPath "${{github.workspace}}\GitHubDesktopFull" -Force
+
+    - name: run and check GitHubDesktop2Chinese.exe
+      shell: pwsh
+      run: |
+        ${{github.workspace}}\GitHubDesktop2Chinese.exe --nopause -j "json/localization.json" -g "${{github.workspace}}\GitHubDesktopFull\lib\net45\resources\app" dev --invalidcheck
+        
     - name: Test Tree
       shell: pwsh
-      run: tree ../../
+      run: tree . /A /F
