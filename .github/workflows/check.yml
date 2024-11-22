@@ -6,8 +6,8 @@ on:
     branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
   push:
     branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
-    #paths:
-    #  - 'json/localization.json'  # 仅当推送此文件时触发
+    paths:
+      - 'json/localization.json'  # 仅当推送此文件时触发
 
 jobs:
   Configuration_Environment:
@@ -38,12 +38,10 @@ jobs:
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
         Add-Content -Path $env:GITHUB_ENV -Value "browser_download_url=$($jsonObj.assets[4].browser_download_url)"
-        echo "A${{env.browser_download_url}}"
 
     - name: download github desktop
       shell: pwsh
       run: |
-        echo "A${{env.browser_download_url}}"
         Invoke-WebRequest -Uri "${{env.browser_download_url}}" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
 
     - name: unzip GitHub Desktop Full
@@ -56,6 +54,6 @@ jobs:
       run: |
         ${{github.workspace}}\GitHubDesktop2Chinese.exe --nopause -j "json/localization.json" -g "${{github.workspace}}\GitHubDesktopFull\lib\net45\resources\app" dev --invalidcheck
         
-    - name: Test Tree
-      shell: pwsh
-      run: tree . /A /F
+    #- name: Test Tree
+    #  shell: pwsh
+    #  run: tree . /A /F
