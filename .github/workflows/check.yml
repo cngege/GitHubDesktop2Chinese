@@ -6,8 +6,8 @@ on:
     branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
   push:
     branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
-    #paths:
-    #  - 'json/localization.json'  # 仅当推送此文件时触发
+    paths:
+      - 'json/localization.json'  # 仅当推送此文件时触发
 
 jobs:
   Configuration_Environment:
@@ -37,7 +37,7 @@ jobs:
       run: |
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
-        if ( $($jsonObj.assets[5].browser_download_url) -like "*-x64-full.nupkg" ) {
+        if ( $($jsonObj.assets[4].browser_download_url) -like "*-x64-full.nupkg" ) {
           Add-Content -Path $env:GITHUB_ENV -Value "browser_download_url=$($jsonObj.assets[4].browser_download_url)"
         } else {
           echo "下标为4的资源不是以 -x64-full.nupkg结尾,请手动打开链接确认..."
