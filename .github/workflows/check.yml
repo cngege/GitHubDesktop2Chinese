@@ -32,9 +32,9 @@ jobs:
       run: Invoke-WebRequest -Uri "https://github.com/cngege/GitHubDesktop2Chinese/releases/latest/download/GitHubDesktop2Chinese.exe" -OutFile "${{github.workspace}}\GitHubDesktop2Chinese.exe"  
 
     - name: define env
-      shell: bash
+      shell: pwsh
       run: |
-          VERSION="$(echo $(date +'v%Y.%m.%d')_${{ github.run_number }}_$(git rev-parse --short=8 HEAD))"
+          $VERSION="AABBCCDD"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
     - name: use-env
       run: echo '${{ env.VERSION }}'
