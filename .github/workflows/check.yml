@@ -1,0 +1,31 @@
+# XXXXXXXX
+
+name: Check Pull Request
+on: [pull_request_target]
+
+jobs:
+  label:
+
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: utf8
+      # 使用utf8编码环境编译
+      run: chcp 65001
+
+    - name: Download Data_json
+      shell: pwsh
+      run: Invoke-WebRequest -Uri "https://api.github.com/repos/desktop/desktop/releases/latest" -OutFile ".\release.json"
+      
+    - name: Download GitHubDesktop2Chinese.exe
+      shell: pwsh
+      run: Invoke-WebRequest -Uri "https://github.com/cngege/GitHubDesktop2Chinese/releases/latest/download/GitHubDesktop2Chinese.exe" -OutFile ".\GitHubDesktop2Chinese.exe"  
+      
+    - name: Test Tree
+      shell: pwsh
+      run: tree .
