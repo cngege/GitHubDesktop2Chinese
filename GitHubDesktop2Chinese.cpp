@@ -35,6 +35,9 @@ using json = nlohmann::json;
 fs::path Base;
 fs::path LocalizationJSON;
 
+//fs::path Main_Json_Path;
+//fs::path Renderer_Json_Path;
+
 bool no_pause;									// 程序在结束前是否暂停
 bool only_read_from_remote;						// 仅从远程url中读取本地化文件
 
@@ -83,19 +86,22 @@ int main(int argc, char* argv[])
 
         // 子命令 开发者选项
         auto dev_cmd = app.add_subcommand("dev", "开发者选项");
-        dev_cmd->add_flag("-d,--dev", _debug_goto_devoptions, "进入开发者选项调整功能(可在开启程序时按住shift直接进入)");
-        dev_cmd->add_flag("--mainerrorcheck", _debug_error_check_mode_main,			"[错误检查模式]对main.js以错误检查模式进行排查");
-        dev_cmd->add_flag("--rendererrorcheck", _debug_error_check_mode_renderer,	"[错误检查模式]对renderer.js以错误检查模式进行排查");
-        dev_cmd->add_flag("--invalidcheck", _debug_invalid_check_mode,				"[检测失效项]对本地化文件中的失效替换项进行检测");
-        dev_cmd->add_flag("--noreplaceres", _debug_no_replace_res,					"[资源不替换]开启后不会对资源进行替换,但不会阻止[错误检查模式]");
-        dev_cmd->add_flag("--translationfrombak", _debug_translation_from_bak,		"[从备份文件中读取替换]优先从备份文件中读取js文件内容进行替换,开启[检测失效项]时建议开启此项");
-        dev_cmd->add_flag("--devreplace", _debug_dev_replace,						"[开发模式替换]仅替换指定映射以节约汉化时间(会影响其他项)");
+        dev_cmd->add_flag("-d,--dev", _debug_goto_devoptions,                       "进入开发者选项调整功能(可在开启程序时按住shift直接进入)");
+        dev_cmd->add_flag("--mainerrorcheck", _debug_error_check_mode_main,         "[错误检查模式]对main.js以错误检查模式进行排查");
+        dev_cmd->add_flag("--rendererrorcheck", _debug_error_check_mode_renderer,   "[错误检查模式]对renderer.js以错误检查模式进行排查");
+        dev_cmd->add_flag("--invalidcheck", _debug_invalid_check_mode,              "[检测失效项]对本地化文件中的失效替换项进行检测");
+        dev_cmd->add_flag("--noreplaceres", _debug_no_replace_res,                  "[资源不替换]开启后不会对资源进行替换,但不会阻止[错误检查模式]");
+        dev_cmd->add_flag("--translationfrombak", _debug_translation_from_bak,      "[从备份文件中读取替换]优先从备份文件中读取js文件内容进行替换,开启[检测失效项]时建议开启此项");
+        dev_cmd->add_flag("--devreplace", _debug_dev_replace,                       "[开发模式替换]仅替换指定映射以节约汉化时间(会影响其他项)");
 
+        //auto git_cmd = app.add_subcommand("action", "Github自动流程");
+        //git_cmd->add_option("--main_json", Main_Json_Path,                          "手动指定main.json的文件位置,直接处理此文件");
+        //git_cmd->add_option("--renderer_json", Renderer_Json_Path,                  "手动指定renderer.json的文件位置,直接处理此文件");
 
-        app.add_flag("--nopause", no_pause,							"程序在结束前不再暂停等待");
-        app.add_flag("-r,--onlyfromremote", only_read_from_remote,	"仅从远程url中读取本地化文件");
-        app.add_option("-j,--json", LocalizationJSON,				"指定本地化JSON文件的本地路径");
-        app.add_option("-g,--githubdesktoppath", Base,				"指定GitHubDesktop要汉化的资源所在目录");
+        app.add_flag("--nopause", no_pause,                         "程序在结束前不再暂停等待");
+        app.add_flag("-r,--onlyfromremote", only_read_from_remote,  "仅从远程url中读取本地化文件");
+        app.add_option("-j,--json", LocalizationJSON,               "指定本地化JSON文件的本地路径");
+        app.add_option("-g,--githubdesktoppath", Base,              "指定GitHubDesktop要汉化的资源所在目录");
         
         app.callback([&]() {
             // 手动指定了本地化文件目录
@@ -119,6 +125,18 @@ int main(int argc, char* argv[])
                     throw CLI::ValidationError("(-g,--githubdesktoppath) 指定的资源文件目录无效,该目录下应该是存放main.js和renderer.js文件的");
                 }
             }
+            //// 验证 Main_Json_Path 是否有效
+            //if(!Main_Json_Path.string().empty()) {
+            //    if(!fs::exists(Main_Json_Path)) {
+            //        throw CLI::ValidationError("(action main_json) 指定的资源文件不存在");
+            //    }
+            //}
+            //// 验证 Renderer_Json_Path 是否有效
+            //if(!Renderer_Json_Path.string().empty()) {
+            //    if(!fs::exists(Renderer_Json_Path)) {
+            //        throw CLI::ValidationError("(action renderer_json) 指定的资源文件不存在");
+            //    }
+            //}
         });
 
 
@@ -273,7 +291,7 @@ int main(int argc, char* argv[])
         if (!fs::exists(Base / mainjsbak)) {
             spdlog::warn("目录有误，找不到目录下的main.js. ");
             PAUSE;
-            return 0;
+            return 1;
         }
         fs::copy_file(Base / "main.js.bak", Base / "main.js");
         spdlog::warn("main.js 未找到, 但已从备份main.js.bak中还原");
@@ -285,7 +303,7 @@ int main(int argc, char* argv[])
         if (!fs::exists(Base / rendererjsbak)) {
             spdlog::warn("目录有误，找不到目录下的renderer.js. ");
             PAUSE;
-            return 0;
+            return 1;
         }
         fs::copy_file(Base / "renderer.js.bak", Base / "renderer.js");
         spdlog::warn("renderer.js 未找到, 但已从备份renderer.js.bak中还原");
@@ -306,8 +324,7 @@ int main(int argc, char* argv[])
     }
 
 
-
-    // TODO 读取main.js文件
+    int ret_num = 0;
     {
         int out = 0;
         // 如果"从备份文件中汉化"选项打开 则判断备份文件是否存在,以便尝试从备份文件中读取
@@ -329,6 +346,7 @@ int main(int argc, char* argv[])
                 bool found = std::regex_search(main_str, pattern);
                 if (!found) {
                     spdlog::warn("[main] 检测到失效项: {}", rege);
+                    ret_num++;
                 }
                 continue;
             }
@@ -375,6 +393,7 @@ int main(int argc, char* argv[])
                 bool found = std::regex_search(renderer_str, pattern);
                 if (!found) {
                     spdlog::warn("[renderer] 检测到失效项: {}", rege);
+                    ret_num++;
                 }
                 continue;
             }
@@ -399,7 +418,7 @@ int main(int argc, char* argv[])
 
 
     PAUSE;
-    return 0;
+    return ret_num;
 }
 
 /**
