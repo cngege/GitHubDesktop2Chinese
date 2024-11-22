@@ -39,6 +39,7 @@ jobs:
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
         Set-Item -Path "Env:browser_download_url" -Value $($jsonObj.assets[4].browser_download_url)
         echo "browser_download_url=$($jsonObj.assets[4].browser_download_url)" >> $GITHUB_ENV
+        echo "A$env:browser_download_url"
 
     - name: download github desktop
       shell: pwsh
