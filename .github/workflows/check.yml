@@ -42,8 +42,10 @@ jobs:
 
     - name: download github desktop
       shell: pwsh
+      env:
+        browser_download_url: ${{ env.browser_download_url }}
       run: |
-        echo ${{ env.browser_download_url }}
+        echo A$browser_download_url
         Invoke-WebRequest -Uri "$env:browser_download_url" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
 
     - name: unzip GitHub Desktop Full
