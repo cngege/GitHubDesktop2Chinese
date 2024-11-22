@@ -37,13 +37,13 @@ jobs:
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
         echo "browser_download_url=$($jsonObj.assets[4].browser_download_url)" >> $GITHUB_ENV
-        echo "A$env:browser_download_url"
+        echo "A${{env.browser_download_url}}"
 
     - name: download github desktop
       shell: pwsh
       run: |
-        echo "A$env:browser_download_url"
-        Invoke-WebRequest -Uri "$env:browser_download_url" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
+        echo "A${{env.browser_download_url}}"
+        Invoke-WebRequest -Uri "${{env.browser_download_url}}" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
 
     - name: unzip GitHub Desktop Full
       shell: pwsh
