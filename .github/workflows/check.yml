@@ -6,10 +6,11 @@ on:
     branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
   push:
     branches: [ '*' ]  # 可以指定分支，或者用 * 表示所有分支
+    #paths:
+    #  - 'json/localization.json'  # 仅当推送此文件时触发
 
 jobs:
-  label:
-
+  Configuration_Environment:
     runs-on: windows-latest
     permissions:
       contents: read
@@ -24,11 +25,11 @@ jobs:
 
     - name: Download Data_json
       shell: pwsh
-      run: Invoke-WebRequest -Uri "https://api.github.com/repos/desktop/desktop/releases/latest" -OutFile ".\release.json"
+      run: Invoke-WebRequest -Uri "https://api.github.com/repos/desktop/desktop/releases/latest" -OutFile "${{github.workspace}}\release.json"
       
     - name: Download GitHubDesktop2Chinese.exe
       shell: pwsh
-      run: Invoke-WebRequest -Uri "https://github.com/cngege/GitHubDesktop2Chinese/releases/latest/download/GitHubDesktop2Chinese.exe" -OutFile ".\GitHubDesktop2Chinese.exe"  
+      run: Invoke-WebRequest -Uri "https://github.com/cngege/GitHubDesktop2Chinese/releases/latest/download/GitHubDesktop2Chinese.exe" -OutFile "${{github.workspace}}\GitHubDesktop2Chinese.exe"  
       
     - name: Test Tree
       shell: pwsh
