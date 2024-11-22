@@ -31,28 +31,20 @@ jobs:
       shell: pwsh
       run: Invoke-WebRequest -Uri "https://github.com/cngege/GitHubDesktop2Chinese/releases/latest/download/GitHubDesktop2Chinese.exe" -OutFile "${{github.workspace}}\GitHubDesktop2Chinese.exe"  
 
-    - name: define env
-      shell: pwsh
-      run: |
-          $VERSION="AABBCCDD"
-          Add-Content -Path $env:GITHUB_ENV -Value "VERSION=$VERSION"
-    - name: use-env
-      run: echo '${{ env.VERSION }}'
-
     - name: Parse json_file,Read download url
       shell: pwsh
       id: forjson
       run: |
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
-        echo "browser_download_url=$($jsonObj.assets[4].browser_download_url)" >> $GITHUB_OUTPUT
-        echo "A${{steps.forjson.outputs.browser_download_url}}"
+        Add-Content -Path $env:GITHUB_ENV -Value "browser_download_url=$($jsonObj.assets[4].browser_download_url)"
+        echo "A${{env.browser_download_url}}"
 
     - name: download github desktop
       shell: pwsh
       run: |
-        echo "A${{ steps.forjson.outputs.browser_download_url }}"
-        Invoke-WebRequest -Uri "${{ steps.forjson.outputs.browser_download_url }}" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
+        echo "A${{env.browser_download_url}}"
+        Invoke-WebRequest -Uri "${{env.browser_download_url}}" -OutFile "${{github.workspace}}\GitHubDesktop_full.zip"
 
     - name: unzip GitHub Desktop Full
       shell: pwsh
