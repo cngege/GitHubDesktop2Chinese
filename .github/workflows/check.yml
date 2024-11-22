@@ -35,7 +35,7 @@ jobs:
       shell: pwsh
       run: |
           $VERSION="AABBCCDD"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          Add-Content -Path $env:GITHUB_ENV -Value "VERSION=$VERSION"
     - name: use-env
       run: echo '${{ env.VERSION }}'
 
