@@ -1,6 +1,7 @@
 # GitHubDesktop2Chinese
 
 ![GitHub Actions](https://img.shields.io/github/actions/workflow/status/cngege/GitHubDesktop2Chinese/build.yml)
+![GitHub Actions](https://img.shields.io/github/actions/workflow/status/cngege/GitHubDesktop2Chinese/check.yml)
 ![GitHub Release](https://img.shields.io/github/v/release/cngege/GitHubDesktop2Chinese)
 ![GitHub Release](https://img.shields.io/badge/Cpp-json-blue?logo=cplusplus)
 ![GitHub License](https://img.shields.io/github/license/cngege/GitHubDesktop2Chinese)
@@ -38,7 +39,6 @@
 
 
 ## 🍬第三方库🍬  
-
 **感谢以下诸位提供的优质的开源项目**  
 
 - CLI: https://github.com/CLIUtils/CLI11  
@@ -47,11 +47,15 @@
 - spdlog: https://github.com/gabime/spdlog  
 - WinReg: https://github.com/GiovanniDicanio/WinReg  
 
-## 🎋TODO🎋 
-
+## 🎋TODO🎋  
 > 暂无
 
+## 🍬星标(收藏)历史🍬
+![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
 
-
-
+<details> 
+    <summary>点击展开示例图片</summary>
 ![图片](https://github.com/lkyero/GitHubDesktop_zh/assets/28597788/3023d028-8f63-4919-8900-ab3e953a1f76)
+</details>
+
+
