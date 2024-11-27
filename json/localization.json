@@ -655,7 +655,15 @@
 		["`This email address \\$\\{(.)\\?\"matches\":\"does not match\"\\} \\$\\{this.getAccountTypeDescription\\(\\)\\}",
 		"`这个邮箱地址和${this.getAccountTypeDescription()}${$1?\"匹配\":\"不匹配\"} "],
 		["\"Your commits will be wrongly attributed. \"","\"这将会导致你的提交被错误的归属。\""],
-		["\"Learn more\"","\"查看更多\""],
+		["\"Learn more.\"","\"查看更多。\""],
+		["\"The email in your global Git config \\(\"","\"你git公共配置中的当前邮箱(\""],
+		["isEnterpriseAccount\\?\" Enterprise\":\"\"","isEnterpriseAccount?\"企业版\":\"\""],
+		["` for \\$\\{this.props.user.name\\}`","`(${this.props.user.name})`"],
+		["\" doesn't match your GitHub\",(.),\" \",\"account\",(.),\"","\"和你的GitHub\",$1,\" \",\"账户\",$2,\"不匹配\",\""],
+		["\"You can also choose an email local to this repository from the\"","\"您还可以设置一个争对此仓库的本地邮箱\""],
+		["\"repository settings\"","\"仓库设置\""],
+		["type:\"button\"\\},\"Ignore\"","type:\"button\"},\"放弃\""],
+		["type:\"submit\"\\},\"Update email\"","type:\"submit\"},\"更新邮箱\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
