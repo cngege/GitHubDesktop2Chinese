@@ -676,11 +676,15 @@
 		["\"Select a repository\"","\"选择一个仓库\""],
 		["\"No repositories\"","\"没有仓库\""],
 		["\"No repository selected\"","\"没有选中的仓库\""],
+		["\" files selected\"","\"个文件被选中\""],
+		["\\{className:\"image-diff-header\"\\},\"Added\"","{className:\"image-diff-header\"},\"新增\""],
+		["1\\?\"commits\":\"commit\"","1?\"提交\":\"提交\""],
+		["`Cherry-pick \\$\\{this.props.commitCount\\} \\$\\{(.)\\}`","`签出${this.props.commitCount}个${$1}`"],
+		["\"This binary file has changed.\"","\"此分支文件存在更改。\""],
+		["\"Open file in external program.\"","\"使用外部程序打开文件。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
