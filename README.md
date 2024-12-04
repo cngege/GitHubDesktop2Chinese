@@ -32,6 +32,20 @@
 > 只需要克隆仓库，阅读`json/关于一些注意事项.txt`，注意一些编写时的事项, 然后在`json/localization.json` 文件中参照已经写过的格式补充要汉化的条目即可  
   将此文件放在程序目录下,确保程序可以读取运行 然后提交PR
 
+## 🍬映射文件：localization.json🍬
+> 此文件存储所有GitHubDesktop中英文文本到本地化(中文)文本之间的映射，  
+  使用正则匹配的方式 将包含英文字符串的文本替换为包含中文字符串的文本。  
+  项目更新主要更新此文件。
+  
+- 路径: [项目目录]/json/localization.json 
+- 主节点 - version(int): 此json文件的版本,此值仅会因未来格式更新而更新 
+- 主节点 - minversion(string): 需要最低的加载器版本 
+- 主节点 - main(array): 存储用于替换GitHubDesktop的main.js的映射 
+- 主节点 - main_dev(array): 存储用于替换GitHubDesktop的main.js的映射,区别于开发时快速替换 
+- 主节点 - renderer(array): 存储用于替换GitHubDesktop的renderer.js的映射 
+- 主节点 - renderer_dev(array): 存储用于替换GitHubDesktop的renderer.js的映射,区别于开发时快速替换 
+
+
 ## 🧭其他🧭
 
 > 如果报错提示找不到openssl 的dll文件，请更新到[最新版](https://github.com/cngege/GitHubDesktop2Chinese/releases)   
@@ -48,7 +62,13 @@
 - WinReg: https://github.com/GiovanniDicanio/WinReg  
 
 ## 🎋TODO🎋  
-> 暂无
+ - [x] json文件格式修改,用于标识文件版本、最低支持加载器（GitHubDesktop2Chinese.exe）的版本
+ - [ ] 加载器加入程序版本宏定义
+ - [ ] 加载器支持替换映射的第三个参数,即查找参数,将第三个参数（如果有）进行全局正则查找,  
+       将匹配到的结果在第二个参数中进行特殊字符的替换
+ - [ ] 加载器检查json文件所需最低版本是否满足需求,如果不满足且定义了`--nopause`则提示后退出,
+       否则提示后询问是否强制替换
+ - [ ] 加载器在没有定义`--nopause`的情况下,在替换之前进行一次暂停,以便用户自行确认信息后是否往下执行
 
 ## 🍬星标(收藏)历史🍬
 ![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
