@@ -323,8 +323,11 @@ int main(int argc, char* argv[])
         spdlog::info("已新建备份 renderer.js -> renderer.js.bak");
     }
 
+    
+    PAUSE;
 
     int ret_num = 0;
+    // 处理 main[_dev].json文件
     {
         int out = 0;
         // 如果"从备份文件中汉化"选项打开 则判断备份文件是否存在,以便尝试从备份文件中读取
@@ -348,7 +351,32 @@ int main(int argc, char* argv[])
                     spdlog::warn("[main] 检测到失效项: {}", rege);
                     ret_num++;
                 }
+                if(item.value().size() >= 3) {
+                    std::regex pattern3(item.value()[2].get<std::string>());
+                    found = std::regex_search(main_str, pattern3);
+                    if(!found) {
+                        spdlog::warn("[renderer] 检测到失效项: {}", item.value()[2].get<std::string>());
+                        ret_num++;
+                    }
+                }
                 continue;
+            }
+
+
+            if(item.value().size() >= 3) {
+                // 对数组第三项进行全局查找
+                std::regex pattern3(item.value()[2].get<std::string>());
+                for(std::sregex_iterator it = std::sregex_iterator(main_str.begin(), main_str.end(), pattern3);
+                    it != std::sregex_iterator();
+                    ++it) {
+                    const std::smatch& match = *it;
+                    for(size_t i = 1; i < match.size(); i++) {
+                        std::string replace_str = "#\\{" + std::to_string(i)+"\\}";
+                        std::regex replace_regx(replace_str);
+                        item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
+                    }
+                    break;
+                }
             }
 
             // 替换
@@ -372,7 +400,7 @@ int main(int argc, char* argv[])
 
 
 
-    // TODO 读取renderer.js文件
+    // 处理renderer.js文件
     {
         int out = 0;
         std::string renderer_str = ((_debug_translation_from_bak || _debug_invalid_check_mode) && fs::exists(Base / "renderer.js.bak")) ? utils::ReadFile(fs::path(Base / "renderer.js.bak").string()) :  utils::ReadFile(fs::path(Base / "renderer.js").string());
@@ -395,7 +423,31 @@ int main(int argc, char* argv[])
                     spdlog::warn("[renderer] 检测到失效项: {}", rege);
                     ret_num++;
                 }
+                if(item.value().size() >= 3) {
+                    std::regex pattern3(item.value()[2].get<std::string>());
+                    found = std::regex_search(renderer_str, pattern3);
+                    if(!found) {
+                        spdlog::warn("[renderer] 检测到失效项: {}", item.value()[2].get<std::string>());
+                        ret_num++;
+                    }
+                }
                 continue;
+            }
+
+            if(item.value().size() >= 3) {
+                // 对数组第三项进行全局查找
+                std::regex pattern3(item.value()[2].get<std::string>());
+                for(std::sregex_iterator it = std::sregex_iterator(renderer_str.begin(), renderer_str.end(), pattern3);
+                    it != std::sregex_iterator();
+                    ++it) {
+                    const std::smatch& match = *it;
+                    for(size_t i = 1; i < match.size(); i++) {
+                        std::string replace_str = "#\\{" + std::to_string(i) + "\\}";
+                        std::regex replace_regx(replace_str);
+                        item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
+                    }
+                    break;
+                }
             }
 
             renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
