@@ -2,8 +2,8 @@
 
 
 #define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING	//消除 converter.to_bytes的警告
-#define _CRT_SECURE_NO_WARNINGS								//消除 sprintf的警告
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING   //消除 converter.to_bytes的警告
+#define _CRT_SECURE_NO_WARNINGS                             //消除 sprintf的警告
 
 #define PAUSE if(!no_pause) system("pause")
 
@@ -13,19 +13,25 @@
 
 #include <regex>
 
-#include "spdlog/spdlog.h"			// 日志式输出库
-#include "nlohmann/json.hpp"		// JSON读取本地配置库
-#include "WinReg/WinReg.hpp"		// 注册表操作库
+#include "spdlog/spdlog.h"          // 日志式输出库
+#include "nlohmann/json.hpp"        // JSON读取本地配置库
+#include "WinReg/WinReg.hpp"        // 注册表操作库
 
-#include <CLI/CLI.hpp>				// 参数管理器:		https://github.com/CLIUtils/CLI11
+#include <CLI/CLI.hpp>              // 参数管理器:   https://github.com/CLIUtils/CLI11
 #include "Utils/utils.hpp"
-
+#include "VersionParse/Version.hpp"
 
 #if _DEBUG
 #define NO_REPLACE 0
 #endif // _DEBUG
 
+#ifndef FILE_VERSION
+#define FILE_VERSION "v0.0.0-Dev.0"
+#endif // !FILE_VERSION
 
+
+
+std::Version FileVer{0,0,0};
 
 
 namespace fs = std::filesystem;
@@ -38,8 +44,8 @@ fs::path LocalizationJSON;
 //fs::path Main_Json_Path;
 //fs::path Renderer_Json_Path;
 
-bool no_pause;									// 程序在结束前是否暂停
-bool only_read_from_remote;						// 仅从远程url中读取本地化文件
+bool no_pause;                                  // 程序在结束前是否暂停
+bool only_read_from_remote;                     // 仅从远程url中读取本地化文件
 
 json localization = R"(
                         {
@@ -142,9 +148,16 @@ int main(int argc, char* argv[])
 
         CLI11_PARSE(app, argc, argv);
     }
-
+    FileVer = std::Version(FILE_VERSION);
+    
     // 开发者声明
-    spdlog::info("开发者：CNGEGE>2024/04/13");
+    spdlog::info("开发者：CNGEGE > 2024/04/13");
+    if(FileVer) {
+        spdlog::info("版本: {}", FileVer.toString(true));
+    }
+    else {
+        spdlog::warn("程序版本解析失败... at {}", FILE_VERSION);
+    }
     
     if (GetKeyState(VK_SHIFT) & 0x8000 || _debug_goto_devoptions) {
         // 如果Shift按下, 则进入开发者选项
@@ -152,6 +165,8 @@ int main(int argc, char* argv[])
         spdlog::info("您已进入开发者模式");
         DeveloperOptions();
     }
+
+    SetConsoleTitle(FileVer.toString(true).c_str());
 
     if (LocalizationJSON.empty()) {
         LocalizationJSON = "localization.json";
@@ -172,6 +187,40 @@ int main(int argc, char* argv[])
         }
         catch(...) {}
     }
+
+    // 检查更新
+    // https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/latest
+    {
+        if(FileVer.status != std::Version::Dev) {
+            spdlog::info("检查更新中..");
+            try {
+                std::string repoinfo;
+                if(utils::ReadHttpDataString("https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/releases/latest", repoinfo)) {
+                    auto infojson = json::parse(repoinfo);
+                    auto tag_name = infojson["tag_name"].get<std::string>();
+                    std::Version remoteVer(tag_name.c_str());
+                    if(!remoteVer) {
+                        spdlog::warn("远程仓库中的版本号解析失败, ({})", tag_name);
+                    }
+                    else {
+                        if(FileVer < remoteVer) {
+                            spdlog::info("发现新版本: {}", remoteVer.toString());
+                            std::string downlink = infojson["assets"][0]["browser_download_url"].get<std::string>();
+                            spdlog::info("点击链接下载: {}", downlink);
+                        }
+                    }
+                    PAUSE;
+                }
+                else {
+                    spdlog::warn("远程信息读取失败..");
+                }
+            }
+            catch(...) {
+                spdlog::warn("检查更新时出现异常");
+            }
+        }
+    }
+
     // 如果是仅从远程仓库读取汉化文件
     if (only_read_from_remote) {
         spdlog::info("尝试从远程开源项目中获取");
@@ -323,9 +372,38 @@ int main(int argc, char* argv[])
         spdlog::info("已新建备份 renderer.js -> renderer.js.bak");
     }
 
-    
-    PAUSE;
+    // 判断版本
+    if(FileVer.status != std::Version::Dev && !localization["minversion"].empty()) {
+        std::Version JsonVer(localization["minversion"].get<std::string>().c_str());
+        if(!JsonVer) {
+            spdlog::warn("映射文件中 minversion 解析失败... at {}", localization["minversion"].get<std::string>().c_str());
+            PAUSE;
+        }
+        else {
+            if(FileVer < JsonVer) {
+                // 不符合要求
+                spdlog::warn("文件要求加载器版本至少为: {}, 但加载器版本为: {}", JsonVer.toString(), FileVer.toString());
+                spdlog::info("请更新：{}", "https://github.com/cngege/GitHubDesktop2Chinese/releases");
+                // 询问是否强制执行
 
+                if(!no_pause) {
+                    spdlog::info("输入(f)强制执行替换(可能会导致无法打开), 其他退出..");
+                    std::string input;
+                    std::cin >> input;
+                    if(input != "f" && input != "F") {
+                        return 1;
+                    }
+                }
+            }
+            else {
+                PAUSE;
+            }
+        }
+    }
+    else {
+        PAUSE;
+    }
+    
     int ret_num = 0;
     // 处理 main[_dev].json文件
     {
@@ -365,17 +443,21 @@ int main(int argc, char* argv[])
 
             if(item.value().size() >= 3) {
                 // 对数组第三项进行全局查找
-                std::regex pattern3(item.value()[2].get<std::string>());
-                for(std::sregex_iterator it = std::sregex_iterator(main_str.begin(), main_str.end(), pattern3);
-                    it != std::sregex_iterator();
-                    ++it) {
+                std::string regex_str = item.value()[2].get<std::string>();
+                std::regex pattern3(regex_str);
+                std::sregex_iterator it = std::sregex_iterator(main_str.begin(), main_str.end(), pattern3);
+                if(it != std::sregex_iterator()) {
                     const std::smatch& match = *it;
                     for(size_t i = 1; i < match.size(); i++) {
-                        std::string replace_str = "#\\{" + std::to_string(i)+"\\}";
+                        std::string replace_str = "#\\{" + std::to_string(i) + "\\}";
                         std::regex replace_regx(replace_str);
                         item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
                     }
-                    break;
+                }
+                else {
+                    // 如果没有找到，则应该进行提示并跳过此项，以免进行错误的字符插入，造成程序无法打开
+                    spdlog::warn("[main] 出现一处失效项,此项将跳过: {}", regex_str);
+                    continue;
                 }
             }
 
@@ -436,17 +518,21 @@ int main(int argc, char* argv[])
 
             if(item.value().size() >= 3) {
                 // 对数组第三项进行全局查找
-                std::regex pattern3(item.value()[2].get<std::string>());
-                for(std::sregex_iterator it = std::sregex_iterator(renderer_str.begin(), renderer_str.end(), pattern3);
-                    it != std::sregex_iterator();
-                    ++it) {
+                std::string regex_str = item.value()[2].get<std::string>();
+                std::regex pattern3(regex_str);
+                std::sregex_iterator it = std::sregex_iterator(renderer_str.begin(), renderer_str.end(), pattern3);
+                if(it != std::sregex_iterator()) {
                     const std::smatch& match = *it;
                     for(size_t i = 1; i < match.size(); i++) {
                         std::string replace_str = "#\\{" + std::to_string(i) + "\\}";
                         std::regex replace_regx(replace_str);
                         item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
                     }
-                    break;
+                }
+                else {
+                    // 如果没有找到，则应该进行提示并跳过此项，以免进行错误的字符插入，造成程序无法打开
+                    spdlog::warn("[renderer] 出现一处失效项,此项将跳过: {}", regex_str);
+                    continue;
                 }
             }
 
