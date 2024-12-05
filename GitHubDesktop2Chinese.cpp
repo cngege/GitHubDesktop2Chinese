@@ -175,7 +175,6 @@ int main(int argc, char* argv[])
                 std::optional<std::string> info = formatTime(infojson["updated_at"]);
                 if(info) {
                     spdlog::info("仓库最新更新时间: {}{}{}", "\033[33m", *info, "\033[0m");
-                    PAUSE;
                 }
             }
         }
@@ -229,7 +228,7 @@ int main(int argc, char* argv[])
         else {
             spdlog::warn("远程获取失败,请检查网络和代理,并稍后再试");
             PAUSE;
-            return 0;
+            return 1;
         }
     }
     // 没有指定仅从远程仓库获取汉化文件
@@ -253,7 +252,7 @@ int main(int argc, char* argv[])
                     io.close();
                 }
                 PAUSE;
-                return 0;
+                return 1;
             }
         }
         else
@@ -271,7 +270,7 @@ int main(int argc, char* argv[])
             {
                 spdlog::error("{} at line {}", e.what(), __LINE__);
                 PAUSE;
-                return 0;
+                return 1;
             }
         }
     }
