@@ -25,12 +25,6 @@
 #define NO_REPLACE 0
 #endif // _DEBUG
 
-#ifndef FILE_VERSION
-#define FILE_VERSION "v0.0.0-Dev.0"
-#endif // !FILE_VERSION
-
-
-
 std::Version FileVer{0,0,0};
 
 
@@ -148,7 +142,7 @@ int main(int argc, char* argv[])
 
         CLI11_PARSE(app, argc, argv);
     }
-    FileVer = std::Version(FILE_VERSION);
+    FileVer = std::Version(FILEVERSION);
     
     // 开发者声明
     spdlog::info("开发者：CNGEGE > 2024/04/13");
@@ -156,7 +150,7 @@ int main(int argc, char* argv[])
         spdlog::info("版本: {}", FileVer.toString(true));
     }
     else {
-        spdlog::warn("程序版本解析失败... at {}", FILE_VERSION);
+        spdlog::warn("程序版本解析失败... at {}", FILEVERSION);
     }
     
     if (GetKeyState(VK_SHIFT) & 0x8000 || _debug_goto_devoptions) {
@@ -207,6 +201,9 @@ int main(int argc, char* argv[])
                             spdlog::info("发现新版本: {}", remoteVer.toString());
                             std::string downlink = infojson["assets"][0]["browser_download_url"].get<std::string>();
                             spdlog::info("点击链接下载: {}", downlink);
+                        }
+                        else {
+                            spdlog::info("当前版本已经是最新版..");
                         }
                     }
                     PAUSE;

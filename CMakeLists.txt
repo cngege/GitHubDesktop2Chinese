@@ -13,6 +13,13 @@ endif()
 #不要放在 if(MSVC) 中
 add_compile_options(/utf-8)
 
+if(DEFINED FILE_VERSION)
+add_definitions(-DFILEVERSION="${FILE_VERSION}")
+#add_definitions(-DFILEVERSION="v1.0.2")
+else()
+add_definitions(-DFILEVERSION="0.0.0-Dev.0")
+endif()
+
 project ("GitHubDesktop2Chinese")
 
 include(FetchContent)
