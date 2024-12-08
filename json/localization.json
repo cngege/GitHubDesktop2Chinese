@@ -715,9 +715,15 @@
 		["\" \",\"to control the visibility of the link underlines and diff check marks\\.\"","\"，以控制是否显示链接下划线和差异更改标记。\""],
 		["\"This branch is up to date with \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)","\"此分支与\",$1().createElement(\"strong\",null,$2.name),\"分支是最新同步的\""],
 		["\"Checking for ability to merge automatically\\.\\.\\.\"","\"检查是否具备自动合并的能力……\""],
+		["Enterprise\\?\"Enterprise\":","Enterprise?\"企业\":"],
+		["NonGitHub\\?\"Other\":","NonGitHub?\"其他\":"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
