@@ -717,6 +717,9 @@
 		["\"Checking for ability to merge automatically\\.\\.\\.\"","\"检查是否具备自动合并的能力……\""],
 		["Enterprise\\?\"Enterprise\":","Enterprise?\"企业\":"],
 		["NonGitHub\\?\"Other\":","NonGitHub?\"其他\":"],
+		["description:\"Checking out\"","description:\"检查签出\""],
+		["`Checking out branch \\$\\{(.).name\\}`","`检查签出${$1.name}分支`"],
+		["\"Switching to branch\"","\"切换到分支\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
