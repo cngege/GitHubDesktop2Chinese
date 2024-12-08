@@ -205,7 +205,6 @@ int main(int argc, char* argv[])
                             spdlog::info("当前版本已经是最新版..");
                         }
                     }
-                    PAUSE;
                 }
                 else {
                     spdlog::warn("远程信息读取失败..");
