@@ -258,7 +258,7 @@
 		["\"Choose a branch to merge into \"","\"选择一个分支合并到\""],
 		["\"1 local commit\":`\\$\\{n.ahead\\} local commits`","\"1 个本地提交\":`${n.ahead} 个本地提交`"],
 		["a.push\\(\"commits\"\\)","a.push(\"更改\")"],
-		["Push \\$\\{(.).join\\(\" and \"\\)\\} to the \\$\\{(.).name\\} remote","推送${$1.join(\" and \")}到远端${$2}(别名)仓库"],
+		["Push \\$\\{(.).join\\(\" and \"\\)\\} to the \\$\\{(.).name\\} remote","推送${$1.join(\" and \")}到远端${$2.name}(别名)仓库"],
 		["p=`Push \\$\\{(.).name\\}`","p=`推送到${$1}(别名)仓库`"],
 		["label:\"Discard all changes…\"","label:\"放弃所有更改…\""],
 		["label:n\\?\"Stash all changes…\":\"Stash all changes\"","label:n?\"暂存所有更改…\":\"暂存所有更改\""],
