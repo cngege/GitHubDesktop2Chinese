@@ -713,9 +713,12 @@
 		["\"Check out the new\",\" \"","\"查看新的\""],
 		["\"accessibility settings\"","\"辅助功能设置\""],
 		["\" \",\"to control the visibility of the link underlines and diff check marks\\.\"","\"，以控制是否显示链接下划线和差异更改标记。\""],
+		["\"This branch is up to date with \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)","\"此分支与\",$1().createElement(\"strong\",null,$2.name),\"分支是最新同步的\""],
+		["\"Checking for ability to merge automatically\\.\\.\\.\"","\"检查是否具备自动合并的能力……\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
