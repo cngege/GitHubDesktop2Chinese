@@ -71,7 +71,7 @@
  - [x] 加载器在没有定义`--nopause`的情况下,在替换之前进行一次暂停,以便用户自行确认信息后是否往下执行
  - [ ] 加载器自动更新，以及可以在参数中禁用自动更新
  - [ ] JSON文件附加描述文本，在加载器中显示
- - [ ] 加载器显示所有项目参与者并在汉化前或在汉化后显示
+ - [x] 加载器显示所有项目参与者并在汉化后显示
 
 ## 🍬星标(收藏)历史🍬
 ![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)

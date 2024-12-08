@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 
     // 如果是仅从远程仓库读取汉化文件
     if (only_read_from_remote) {
-        spdlog::info("尝试从远程开源项目中获取");
+        spdlog::info("尝试从远程仓库中获取");
         std::string httpjson;
         if (utils::ReadHttpDataString("https://raw.kkgithub.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
             localization = json::parse(httpjson);
@@ -236,7 +236,7 @@ int main(int argc, char* argv[])
         if (!fs::exists(LocalizationJSON)) {
             // 没有发现json文件,尝试从远程开源项目中获取
             spdlog::warn("没有指定,或从指定位置没有发现 {} 文件", "localization.json");
-            spdlog::info("尝试从远程开源项目中获取");
+            spdlog::info("尝试从远程仓库中获取");
             std::string httpjson;
             if (utils::ReadHttpDataString("https://raw.kkgithub.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
                 localization = json::parse(httpjson);
@@ -547,6 +547,26 @@ int main(int argc, char* argv[])
             utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str);
         }
         spdlog::info("{} 汉化结束.", "renderer.js");
+    }
+
+    // 获取项目参与者:
+    // https://api.github.com/repos/cngege/GitHubDesktop2Chinese/contributors
+    try {
+        spdlog::info("正在获取项目参与者");
+        std::string contributors;
+        if(utils::ReadHttpDataString("https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/contributors", contributors)) {
+            auto contributorsjson = json::parse(contributors);
+            spdlog::info("人数: {}", contributorsjson.size());
+            int num = 0;
+            for(auto& item : contributorsjson.items()) {
+                num++;
+                if(num > 10) break;
+                spdlog::info("{}/10 名称:{} 贡献:{}{}{} 主页:{}", num, item.value()["login"].get<std::string>(),"\033[37m\033[5m", item.value()["contributions"].get<int>(),"\033[0m", item.value()["html_url"].get<std::string>());
+            }
+        }
+    }
+    catch(...) {
+        spdlog::warn("读取解析数据出现异常.");
     }
 
 
