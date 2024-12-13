@@ -343,7 +343,7 @@
 		["\"Ignored files\"","\"Ignored文件\""],
 		["\"Git config\"\\)","\"Git配置\")"],
 		["\"Repository settings\"","\"仓库设置\""],
-		["`Primary remote repository \\(\"","`主要的远程仓库 (\""],
+		["`Primary remote repository \\(","`主要的远程仓库 ("],
 		["\"Editing \"","\"编辑\""],
 		["\". This file specifies intentionally untracked files that Git should ignore. Files already tracked by Git are not affected.\"","\".该文件指定了git应该忽略的有意的未跟踪文件。 GIT已经跟踪的文件不受影响.\""],
 		["\"Learn more about gitignore files\"","\"了解更多关于gitignore文件\""],
