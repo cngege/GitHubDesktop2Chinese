@@ -52,6 +52,7 @@
 		["\"View branch on GitHub\"","\"在GitHub上显示分支\""],
 		["\"Preview pull request\"","\"预览拉取请求\""],
 		["\"&Branch\"","\"分支(&B)\""],
+		["\"&Help\"","\"帮助(&H)\""],
 		["\"Report issue…\"","\"报告问题…\""],
 		["\"Failed opening issue creation page\"","\"打开议题页面出错\""],
 		["\"&Contact GitHub support…\"","\"联系GitHub支持…(&C)\""],
@@ -68,15 +69,13 @@
 		["\"View &pull request on GitHub\":\"Create &pull request\"","\"在GitHub上查看拉取请求(&P)\":\"创建拉取请求(&P)\""],
 		["\"Expand active resizable\"","\"展开可调大小的活动项\""],
 		["\"Contract active resizable\"","\"折叠可调大小的活动项\""],
-		["id:\"about\"\\}\\]","id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){r.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]","click\\(\\)\\{([a-zA-z\\$_]{1,3})\\.shell\\.openExternal"],
+		["id:\"about\"\\}\\]","id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){#{1}.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]","click\\(\\)\\{([a-zA-z\\$_]{1,3})\\.shell\\.openExternal"],
 		["\\)(.).append\\((.)\\);else",
 		"){$2.label=$2.label.replace(/Undo/,'撤销').replace(/Redo/,'恢复').replace(/Cut/,'剪切').replace(/Copy/,'复制').replace(/Paste/,'粘贴').replace(/Delete/,'删除').replace(/Select All/,'全选');$1.append($2);}else"],
 		["\"\"","\"\""],
-		["\"&Help\"","\"帮助(&H)-请尽快更新GitHubDesktop2Chinese到最新版本\""],
 		["\"\"","\"\""]
 	],
 	"main_dev":[
-		["","id:\"about\"\\}\\]","id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){#{1}.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]","click\\(\\)\\{([a-zA-z\\$_]{1,3})\\.shell\\.openExternal"],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
@@ -86,8 +85,8 @@
 		["\"\"","\"\""]
 	],
     "renderer": [
-		["\"Let's get started!\"","\"你们这些家伙,快来帮我汉化！🍥🍥🍥\""],
-		["\"Add a repository to GitHub Desktop to start collaborating\"","\"添加一个存储以立即开始工作！🧭🧭🧭\""],
+		["\"Let's get started!\"","\"让我们开始吧！🍥🍥🍥\""],
+		["\"Add a repository to GitHub Desktop to start collaborating\"","\"添加一个存储以立即开始工作！🎀🎀🎀\""],
 		["\"Create a New Repository on your local drive…\"","\"创建一个新存储库到本地…\""],
 		["\"Clone a repository from the Internet…\"","\"从网络上克隆一个新存储库…\""],
 		["\"Add an Existing Repository from your local drive…\"","\"从本地添加一个已存在的存储库…\""],
@@ -160,9 +159,9 @@
 		["\"There are no uncommitted changes in this repository. Here are some friendly suggestions for what to do next.\"","\"该仓库中没有未提交的更改。以下是一些很好的建议，供您参考。\""],
 		["\"Open the repository page on GitHub in your browser\"","\"在浏览器中的GitHub上打开仓库页面\""],
 		["\"Open the repository in your external editor\"","\"在外部编辑器中打开仓库\""],
-		["\"Select your editor in\",\" \",(..).createElement\\((..),\\{onClick:this.openIntegrationPreferences\\},\"Options\"\\)","\"在 \",$1.createElement($2,{onClick:this.openIntegrationPreferences},\"选项\"), \" 中选择你的编辑器\""],
+		["\"Select your editor in\",\" \",(..).createElement\\((..),\\{onClick:this.openIntegrationPreferences\\},\"Options\"\\)","\"在\",$1.createElement($2,{onClick:this.openIntegrationPreferences},\"选项\"), \"中选择你的编辑器\""],
 		["\" menu or\"","\" 菜单 或者\""],
-		["View the files of your repository in \\$\\{(.)\\}","在 ${$1} 中显示你的仓库文件"],
+		["View the files of your repository in \\$\\{(.)\\}","在${$1}中显示你的仓库文件"],
 		["\"span\",null,\"History\"","\"span\",null,\"历史\""],
 		["\"span\",null,\"Changes\"","\"span\",null,\"更改\""],
 		["`\\$\\{(.)\\}/\\$\\{(.).length\\} changed \\$\\{(.)\\} included`","`包含${$1}/${$2.length}已更改的${$3}`"],
@@ -722,6 +721,10 @@
 		["description:\"Checking out\"","description:\"检查签出\""],
 		["`Checking out branch \\$\\{(.).name\\}`","`检查签出${$1.name}分支`"],
 		["\"Switching to branch\"","\"切换到分支\""],
+		["title:\"Newer commits on remote\"","title:\"远程上的较新提交\""],
+		["\"Desktop is unable to push commits to this branch because there are commits on the remote that are not present on your local branch\\. Fetch these new commits before pushing in order to reconcile them with your local commits\\.\"",
+		"\"本地无法将提交推送到此分支，因为远程存在一些在本地分支上不存在的提交。在推送之前，请先拉取这些新变化，以便使其与本地提交相协调一致。\""],
+		["okButtonText:\"Fetch\"","okButtonText:\"获取\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
