@@ -725,6 +725,7 @@
 		["\"Desktop is unable to push commits to this branch because there are commits on the remote that are not present on your local branch\\. Fetch these new commits before pushing in order to reconcile them with your local commits\\.\"",
 		"\"本地无法将提交推送到此分支，因为远程存在一些在本地分支上不存在的提交。在推送之前，请先拉取这些新变化，以便使其与本地提交相协调一致。\""],
 		["okButtonText:\"Fetch\"","okButtonText:\"获取\""],
+		["label:\"View Pull Request on GitHub\"","label:\"在GitHub显示拉取请求\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
