@@ -730,6 +730,7 @@
 		"`目录${$1}似乎是一个Git仓库。您是否想要添加这个仓库来替代（原有的相关内容）呢？`"],
 		["\"The directory \",(..)\\.createElement\\((..),null,(.)\\),\"appears to be a Git repository\\. Would you like to\",\" \",(..)\\.createElement\\((..),\\{onClick:this.onAddRepositoryClicked\\},\"add this repository\"\\),\" \",\"instead\\?\"",
 		"\"此目录\",$1.createElement($2,null,$3),\"似乎是一个Git仓库。 您是否想要\",$4.createElement($5,{onClick:this.onAddRepositoryClicked},\"添加这个仓库\"),\"来替代（原有的相关内容）呢？\""],
+		["\"A branch with that name already exists\\.\"","\"已经存在一个具有该名称的分支。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
