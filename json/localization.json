@@ -726,6 +726,10 @@
 		"\"本地无法将提交推送到此分支，因为远程存在一些在本地分支上不存在的提交。在推送之前，请先拉取这些新变化，以便使其与本地提交相协调一致。\""],
 		["okButtonText:\"Fetch\"","okButtonText:\"获取\""],
 		["label:\"View Pull Request on GitHub\"","label:\"在GitHub显示拉取请求\""],
+		["`The directory \\$\\{(.)\\} appears to be a Git repository\\. Would you like to add this repository instead\\?`",
+		"`目录${$1}似乎是一个Git仓库。您是否想要添加这个仓库来替代（原有的相关内容）呢？`"],
+		["\"The directory \",(..)\\.createElement\\((..),null,(.)\\),\"appears to be a Git repository\\. Would you like to\",\" \",(..)\\.createElement\\((..),\\{onClick:this.onAddRepositoryClicked\\},\"add this repository\"\\),\" \",\"instead\\?\"",
+		"\"此目录\",$1.createElement($2,null,$3),\"似乎是一个Git仓库。 您是否想要\",$4.createElement($5,{onClick:this.onAddRepositoryClicked},\"添加这个仓库\"),\"来替代（原有的相关内容）呢？\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
