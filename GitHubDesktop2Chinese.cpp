@@ -5,7 +5,7 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING   //消除 converter.to_bytes的警告
 #define _CRT_SECURE_NO_WARNINGS                             //消除 sprintf的警告
 
-#define PAUSE if(!no_pause) system("pause")
+#define PAUSE if(!no_pause) { spdlog::info("按任意键继续..."); system("pause >nul"); }
 
 #include "GitHubDesktop2Chinese.h"
 #include <string>
@@ -40,6 +40,7 @@ fs::path LocalizationJSON;
 
 bool no_pause;                                  // 程序在结束前是否暂停
 bool only_read_from_remote;                     // 仅从远程url中读取本地化文件
+bool enable_proxy;                              // 使用代理访问
 
 json localization = R"(
                         {
@@ -99,9 +100,10 @@ int main(int argc, char* argv[])
         //git_cmd->add_option("--renderer_json", Renderer_Json_Path,                  "手动指定renderer.json的文件位置,直接处理此文件");
 
         app.add_flag("--nopause", no_pause,                         "程序在结束前不再暂停等待");
-        app.add_flag("-r,--onlyfromremote", only_read_from_remote,  "仅从远程url中读取本地化文件");
-        app.add_option("-j,--json", LocalizationJSON,               "指定本地化JSON文件的本地路径");
         app.add_option("-g,--githubdesktoppath", Base,              "指定GitHubDesktop要汉化的资源所在目录");
+        app.add_option("-j,--json", LocalizationJSON, "指定本地化JSON文件的本地路径");
+        app.add_flag("-p,--enableproxy", enable_proxy, "开启代理访问GitHub");
+        app.add_flag("-r,--onlyfromremote", only_read_from_remote, "仅从远程url中读取本地化文件");
         
         app.callback([&]() {
             // 手动指定了本地化文件目录
@@ -170,7 +172,7 @@ int main(int argc, char* argv[])
         // 读取项目更新时间
         try {
             std::string repoinfo;
-            if(utils::ReadHttpDataString("https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese", repoinfo)) {
+            if(utils::ReadHttpDataString(enable_proxy ? "https://api.github.com" : "https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese", repoinfo)) {
                 auto infojson = json::parse(repoinfo);
                 std::optional<std::string> info = formatTime(infojson["updated_at"]);
                 if(info) {
@@ -188,7 +190,7 @@ int main(int argc, char* argv[])
             spdlog::info("检查更新中..");
             try {
                 std::string repoinfo;
-                if(utils::ReadHttpDataString("https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/releases/latest", repoinfo)) {
+                if(utils::ReadHttpDataString(enable_proxy ? "https://api.github.com" : "https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/releases/latest", repoinfo)) {
                     auto infojson = json::parse(repoinfo);
                     auto tag_name = infojson["tag_name"].get<std::string>();
                     std::Version remoteVer(tag_name.c_str());
@@ -220,13 +222,13 @@ int main(int argc, char* argv[])
     if (only_read_from_remote) {
         spdlog::info("尝试从远程仓库中获取");
         std::string httpjson;
-        if (utils::ReadHttpDataString("https://raw.kkgithub.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+        if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.github.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
             localization = json::parse(httpjson);
             spdlog::info("远程读取成功");
         }
         else {
             spdlog::warn("远程获取失败,请检查网络和代理,并稍后再试");
-            PAUSE;
+            PAUSE
             return 1;
         }
     }
@@ -238,7 +240,7 @@ int main(int argc, char* argv[])
             spdlog::warn("没有指定,或从指定位置没有发现 {} 文件", "localization.json");
             spdlog::info("尝试从远程仓库中获取");
             std::string httpjson;
-            if (utils::ReadHttpDataString("https://raw.kkgithub.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+            if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.github.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
                 localization = json::parse(httpjson);
                 spdlog::info("远程读取成功");
             }
@@ -250,7 +252,7 @@ int main(int argc, char* argv[])
                     io << std::setw(4) << localization << std::endl;
                     io.close();
                 }
-                PAUSE;
+                PAUSE
                 return 1;
             }
         }
@@ -268,7 +270,7 @@ int main(int argc, char* argv[])
             catch (const std::exception& e)
             {
                 spdlog::error("{} at line {}", e.what(), __LINE__);
-                PAUSE;
+                PAUSE
                 return 1;
             }
         }
@@ -316,12 +318,12 @@ int main(int argc, char* argv[])
             catch (const winreg::RegException& regerr)
             {
                 spdlog::error("RegException {} at line: {}", regerr.what(), __LINE__);
-                PAUSE;
+                PAUSE
                 return 1;
             }
             catch(const std::runtime_error& err) {
                 spdlog::error("runtime_error {} at line: {}", err.what(), __LINE__);
-                PAUSE;
+                PAUSE
                 return 1;
             }
         }
@@ -334,7 +336,7 @@ int main(int argc, char* argv[])
     if (!fs::exists(Base / mainjs)) {
         if (!fs::exists(Base / mainjsbak)) {
             spdlog::warn("目录有误，找不到目录下的main.js. ");
-            PAUSE;
+            PAUSE
             return 1;
         }
         fs::copy_file(Base / "main.js.bak", Base / "main.js");
@@ -346,7 +348,7 @@ int main(int argc, char* argv[])
     if (!fs::exists(Base / rendererjs)) {
         if (!fs::exists(Base / rendererjsbak)) {
             spdlog::warn("目录有误，找不到目录下的renderer.js. ");
-            PAUSE;
+            PAUSE
             return 1;
         }
         fs::copy_file(Base / "renderer.js.bak", Base / "renderer.js");
@@ -372,7 +374,7 @@ int main(int argc, char* argv[])
         std::Version JsonVer(localization["minversion"].get<std::string>().c_str());
         if(!JsonVer) {
             spdlog::warn("映射文件中 minversion 解析失败... at {}", localization["minversion"].get<std::string>().c_str());
-            PAUSE;
+            PAUSE
         }
         else {
             if(FileVer < JsonVer) {
@@ -391,12 +393,12 @@ int main(int argc, char* argv[])
                 }
             }
             else {
-                PAUSE;
+                PAUSE
             }
         }
     }
     else {
-        PAUSE;
+        PAUSE
     }
     
     int ret_num = 0;
@@ -554,7 +556,7 @@ int main(int argc, char* argv[])
     try {
         spdlog::info("正在获取项目参与者");
         std::string contributors;
-        if(utils::ReadHttpDataString("https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/contributors", contributors)) {
+        if(utils::ReadHttpDataString(enable_proxy ? "https://api.github.com" : "https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/contributors", contributors)) {
             auto contributorsjson = json::parse(contributors);
             spdlog::info("人数: {}", contributorsjson.size());
             int num = 0;
@@ -570,7 +572,7 @@ int main(int argc, char* argv[])
     }
 
 
-    PAUSE;
+    PAUSE
     return ret_num;
 }
 
