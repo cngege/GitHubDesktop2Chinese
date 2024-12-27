@@ -486,7 +486,7 @@
 		"\"看起来在\",$3,\"的\",$1.createElement($2,null,this.props.account.login),\"的用户中没有存储库.\""],
 		["\"Refresh this list\"\\),\" \",\"if you've created a repository recently.\"","\"刷新列表\"),\" \",\"如果你最近创建了存储库.\""],
 		["\"Sorry, I can't find that repository\"","\"对不起，找不到此仓库\""],
-		["\"This diff contains a change in line endings from '\",(.).from,\"' to '\"","\"此差异包含行尾的更改\",$1.from,\"'到'\""],
+		["\"This diff contains a change in line endings from '\",(.).from,\"' to '\"","\"此差异包含行尾的更改'\",$1.from,\"'到'\""],
 		["ButtonText:\"Remove\"","ButtonText:\"移除\""],
 		["\"Remove repository\"","\"移除仓库\""],
 		["\"The repository will be removed from GitHub Desktop:\"","\"仓库也将从GitHub Desktop中移除:\""],
