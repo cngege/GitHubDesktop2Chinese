@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
     if (only_read_from_remote) {
         spdlog::info("尝试从远程仓库中获取");
         std::string httpjson;
-        if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.github.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+        if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.githubusercontent.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
             localization = json::parse(httpjson);
             spdlog::info("远程读取成功");
         }
@@ -240,18 +240,18 @@ int main(int argc, char* argv[])
             spdlog::warn("没有指定,或从指定位置没有发现 {} 文件", "localization.json");
             spdlog::info("尝试从远程仓库中获取");
             std::string httpjson;
-            if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.github.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+            if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.githubusercontent.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
                 localization = json::parse(httpjson);
                 spdlog::info("远程读取成功");
             }
             else {
-                spdlog::warn("远程获取失败 - 是否创建json框架，手动编辑汉化映射");
-                if (utils::ReadUserInput_bool({ "n","y" }, 0)) {
-                    spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
-                    std::ofstream io(LocalizationJSON);
-                    io << std::setw(4) << localization << std::endl;
-                    io.close();
-                }
+                spdlog::warn("远程获取失败 - 请尝试使用(-p)参数开启代理或重试");
+                //if (utils::ReadUserInput_bool({ "n","y" }, 0)) {
+                //    spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
+                //    std::ofstream io(LocalizationJSON);
+                //    io << std::setw(4) << localization << std::endl;
+                //    io.close();
+                //}
                 PAUSE
                 return 1;
             }

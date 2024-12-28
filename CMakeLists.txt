@@ -13,6 +13,13 @@ endif()
 #不要放在 if(MSVC) 中
 add_compile_options(/utf-8)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(/bigobj)
+    message("当前是以Debug模式编译")
+endif()
+
+
+
 if(DEFINED FILE_VERSION)
 add_definitions(-DFILEVERSION="${FILE_VERSION}")
 #add_definitions(-DFILEVERSION="v1.0.2")
