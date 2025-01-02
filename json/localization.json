@@ -731,6 +731,13 @@
 		["\"The directory \",(..)\\.createElement\\((..),null,(.)\\),\"appears to be a Git repository\\. Would you like to\",\" \",(..)\\.createElement\\((..),\\{onClick:this.onAddRepositoryClicked\\},\"add this repository\"\\),\" \",\"instead\\?\"",
 		"\"此目录\",$1.createElement($2,null,$3),\"似乎是一个Git仓库。 您是否想要\",$4.createElement($5,{onClick:this.onAddRepositoryClicked},\"添加这个仓库\"),\"来替代（原有的相关内容）呢？\""],
 		["\"A branch with that name already exists\\.\"","\"已经存在一个具有该名称的分支。\""],
+		["label:\"Include selected files\"","label:\"包含所选文件\""],
+		["label:\"Exclude selected files\"","label:\"排除所选文件\""],
+		["label:\"Copy paths\"","label:\"复制路径\""],
+		["label:\"Copy relative paths\"","label:\"复制相对路径\""],
+		["\"The default branch of the upstream repository\\. Pick this to start on something new that's not dependent on your current branch\\.\"","\"上游仓库的默认分支。选择此项可开始处理不依赖于当前分支的新内容。\""],
+		["\"Your default branch source is determined by your\"","\"你的默认分支来源决定于你的\""],
+		["\"fork behavior settings\"","\"复刻行为设置\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
