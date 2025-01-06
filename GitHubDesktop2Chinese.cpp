@@ -148,11 +148,19 @@ int main(int argc, char* argv[])
     
     // 开发者声明
     spdlog::info("开发者：CNGEGE > 2024/04/13");
+
+    // 打印构建平台与版本
+#ifdef CURRENT_PLATFORM_ISX64
+    std::string arch_str("x64");
+#else
+    std::string arch_str("x86");
+#endif // CURRENT_PLATFORM_ISX64
+
     if(FileVer) {
-        spdlog::info("版本: {}", FileVer.toString(true));
+        spdlog::info("程序架构：- {}  版本: - {}", arch_str,  FileVer.toString(true));
     }
     else {
-        spdlog::warn("程序版本解析失败... at {}", FILEVERSION);
+        spdlog::warn("程序架构：- {}  程序版本解析失败... at {}", arch_str, FILEVERSION);
     }
     
     if (GetKeyState(VK_SHIFT) & 0x8000 || _debug_goto_devoptions) {
