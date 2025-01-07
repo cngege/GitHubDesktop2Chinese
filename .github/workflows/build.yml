@@ -96,8 +96,6 @@ jobs:
           artifacts: |
             ${{github.workspace}}/build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe,
             ${{github.workspace}}/build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe,
-            ${{github.workspace}}/build/GitHubDesktop2Chinese/GitHubDesktop2Chinese.exe,
-            ${{github.workspace}}/build/GitHubDesktop2Chinese/GitHubDesktop2Chinese_x86.exe,
             ${{github.workspace}}/json/localization.json
         env:
           GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
