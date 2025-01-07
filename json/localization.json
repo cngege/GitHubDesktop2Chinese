@@ -743,12 +743,12 @@
 		["\"These branches can be automatically merged\\.\"","\"这些分支可以自动合并。\""],
 		["\"Sorry, I can't find that remote branch\\.\"","\"抱歉，我找不到那个远程分支。\""],
 		["\"You can only open pull requests against remote branches\\.\"","\"你只能针对远程分支发起拉取请求。\""],
+		["\"Cherry-pick \",this.props.commitCount,\" \",(.),\" to a branch\"","\"签出\",this.props.commitCount,\"处\",$1,\"到一个分支\""],
+		["title:\"Delete tag\"","title:\"删除标签\""],
+		["\"Are you sure you want to delete the tag\"","\"你确定想要删除这个标签\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
