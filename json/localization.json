@@ -746,9 +746,14 @@
 		["\"Cherry-pick \",this.props.commitCount,\" \",(.),\" to a branch\"","\"签出\",this.props.commitCount,\"处\",$1,\"到一个分支\""],
 		["title:\"Delete tag\"","title:\"删除标签\""],
 		["\"Are you sure you want to delete the tag\"","\"你确定想要删除这个标签\""],
+		["\"A tag named \",(..)\\.createElement\\((..),null,this\\.state\\.tagName\\),\" already exists\"",
+		"\"一个名为\",$1.createElement($2,null,this.state.tagName),\"的标签已经存在\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
