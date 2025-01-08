@@ -87,7 +87,7 @@ jobs:
             chcp 65001
             $result = ("${{steps.tag.outputs.tag}}" -like "*beta*" -as [string]).ToLower()
             echo "isPrerelease=$result" >> $GITHUB_ENV
-            echo "${{needs.publish_release.outputs.isPrerelease}}"
+            echo "${{env.isPrerelease}}"
       - name: tree
         run: | 
             chcp 65001 
@@ -97,7 +97,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           #prerelease: false # 是否是预览版
-          prerelease: ${{needs.publish_release.outputs.isPrerelease}}
+          prerelease: ${{env.isPrerelease}}
           tag: ${{steps.tag.outputs.tag}}
           bodyFile: "ReleaseBody.md"
           #name: 0
