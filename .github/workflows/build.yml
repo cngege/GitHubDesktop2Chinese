@@ -83,7 +83,7 @@ jobs:
             default: v0.0.0 # Optional: Default version when tag not found
 
       - name: tree
-        run: chcp 65001 && cmd /c tree ${{github.workspace}}/build /F
+        run: chcp 65001 && cmd /c tree ./build /F
 
       - name: Create release
         #if: github.event.inputs.status != 'stable'
@@ -94,9 +94,9 @@ jobs:
           bodyFile: "ReleaseBody.md"
           #name: 0
           artifacts: |
-            ${{github.workspace}}/build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe,
-            ${{github.workspace}}/build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe,
-            ${{github.workspace}}/json/localization.json
+            ./build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe,
+            ./build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe,
+            ./json/localization.json
         env:
           GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
           
