@@ -85,10 +85,8 @@ jobs:
       - name: env_isPrerelease
         shell: pwsh
         run: |
-            #$result = ("${{steps.tag.outputs.tag}}" -like "*beta*" -as [string]).ToLower()
             $isPrerelease = if("${{steps.tag.outputs.tag}}" -like "*beta*") { "true" } else { "false" }
-            Add-Content -Path $env:GITHUB_ENV -value "isPrerelease=true"
-
+            Add-Content -Path $env:GITHUB_ENV -value "isPrerelease=$isPrerelease"
       - name: tree
         run: | 
             echo "output: ${{ env.isPrerelease }}"
