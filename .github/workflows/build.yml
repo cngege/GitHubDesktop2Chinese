@@ -85,7 +85,7 @@ jobs:
       - name: env_isPrerelease
         run: |
             $result = ("${{steps.tag.outputs.tag}}" -like "*beta*" -as [string]).ToLower()
-            cmd /c echo "isPrerelease=$result" >> $GITHUB_ENV
+            echo "isPrerelease=$result" >> $GITHUB_ENV
       - name: tree
         run: | 
             chcp 65001 
