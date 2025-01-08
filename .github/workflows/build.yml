@@ -89,13 +89,14 @@ jobs:
         #if: github.event.inputs.status != 'stable'
         uses: ncipollo/release-action@v1
         with:
-          prerelease: false # 是否是预览版
+          #prerelease: false # 是否是预览版
+          prerelease: contains(${{steps.tag.outputs.tag}},"beta")
           tag: ${{steps.tag.outputs.tag}}
           bodyFile: "ReleaseBody.md"
           #name: 0
           artifacts: |
-            ./build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe,
-            ./build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe,
+            ./build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe
+            ./build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe
             ./json/localization.json
         env:
           GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
