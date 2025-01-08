@@ -87,8 +87,11 @@ jobs:
             chcp 65001
             $result = ("${{steps.tag.outputs.tag}}" -like "*beta*" -as [string]).ToLower()
             echo "isPrerelease=$result" >> $GITHUB_ENV
+            echo "${{needs.publish_release.outputs.isPrerelease}}"
       - name: tree
-        run: chcp 65001 && cmd /c tree ./build /F && echo ${{needs.publish_release.outputs.isPrerelease}}
+        run: | 
+            chcp 65001 
+            cmd /c tree ./build /F 
       - name: Create release
         #if: github.event.inputs.status != 'stable'
         uses: ncipollo/release-action@v1
