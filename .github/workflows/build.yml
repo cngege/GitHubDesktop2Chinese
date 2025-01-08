@@ -87,7 +87,7 @@ jobs:
         run: |
             #$result = ("${{steps.tag.outputs.tag}}" -like "*beta*" -as [string]).ToLower()
             $isPrerelease = if("${{steps.tag.outputs.tag}}" -like "*beta*") { "true" } else { "false" }
-            Write-Output "isPrerelease=true" >> $GITHUB_ENV
+            Add-Content -Path $env:GITHUB_ENV -value "isPrerelease=true"
 
       - name: tree
         run: | 
