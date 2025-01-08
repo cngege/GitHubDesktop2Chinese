@@ -82,15 +82,19 @@ jobs:
         with:
             default: v0.0.0 # Optional: Default version when tag not found
 
+      - name: env_isPrerelease
+        run: |
+            chcp 65001
+            $result = (${{steps.tag.outputs.tag} -like "*beta*" -as [string]).ToLower()
+            echo isPrerelease=$result >> $GITHUB_ENV
       - name: tree
-        run: chcp 65001 && cmd /c tree ./build /F
-
+        run: chcp 65001 && cmd /c tree ./build /F && echo ${{needs.publish_release.outputs.isPrerelease}}
       - name: Create release
         #if: github.event.inputs.status != 'stable'
         uses: ncipollo/release-action@v1
         with:
           #prerelease: false # 是否是预览版
-          prerelease: contains(${{steps.tag.outputs.tag}},"beta")
+          prerelease: ${{needs.publish_release.outputs.isPrerelease}}
           tag: ${{steps.tag.outputs.tag}}
           bodyFile: "ReleaseBody.md"
           #name: 0
