@@ -85,8 +85,8 @@ jobs:
       - name: env_isPrerelease
         run: |
             chcp 65001
-            $result = (${{steps.tag.outputs.tag} -like "*beta*" -as [string]).ToLower()
-            echo isPrerelease=$result >> $GITHUB_ENV
+            $result = (${{steps.tag.outputs.tag}} -like "*beta*" -as [string]).ToLower()
+            echo "isPrerelease=$result" >> $GITHUB_ENV
       - name: tree
         run: chcp 65001 && cmd /c tree ./build /F && echo ${{needs.publish_release.outputs.isPrerelease}}
       - name: Create release
