@@ -23,9 +23,6 @@
   第二种方法: 下载或自行构建 GitHubDesktop2Chinese.exe  和 localization.json  放在同一个文件夹。运行程序即可  
   GitHubDesktop每次版本更新都需要运行一次此程序才能完成汉化
 
-> [!tip]
-> 如果打开 GitHubDesktop2Chinese.exe 时发现缺失 `MSVCP140_ATOMIC_WAIT.dll`，可以尝试下载微软运行库 [Microsoft Visual C++ Redistributable 14.42.34433.0](https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170)。找到 `最新的 Microsoft Visual C++ 可再发行程序包版本`，选择与你相应的操作系统的版本进行下载（比如64位的电脑选择 `vc_redist.x64.exe	`，32位的电脑选择 `vc_redist.x86.exe`），安装即可。
-
 ## 🎏怎么编译源代码
 
 > 下载克隆项目 本地使用VS2022 使用CMAKE打开，即可构建
@@ -52,8 +49,10 @@
 ## 🧭其他
 
 > 如果报错提示找不到openssl 的dll文件，请更新到[最新版](https://github.com/cngege/GitHubDesktop2Chinese/releases)   
-  如果你有任何建议可以提issus.
+  如果你有任何建议可以提issues.
 
+> [!tip]
+> 如果打开 GitHubDesktop2Chinese.exe 时发现缺失 `MSVCP140_ATOMIC_WAIT.dll`，可以尝试下载微软运行库 [Microsoft Visual C++ Redistributable 14.42.34433.0](https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170)。找到 `最新的 Microsoft Visual C++ 可再发行程序包版本`，选择与你相应的操作系统的版本进行下载（比如64位的电脑选择 `vc_redist.x64.exe	`，32位的电脑选择 `vc_redist.x86.exe`），安装即可。
 
 ## 🍬第三方库  
 **感谢以下诸位提供的优质的开源项目**  
