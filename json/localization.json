@@ -148,6 +148,7 @@
 		["\"Summary \\(required\\)\"","\"摘要(必填)\""],
 		["\"Commit\"","\"提交\""],
 		["\"A commit summary is required to commit\"","\"提交时需要提供提交摘要\""],
+		["\" \",this\\.getFilesToBeCommittedButtonText\\(\\)","this.getFilesToBeCommittedButtonText()"],
 		[",\"to\",\" \",(..)\\.createElement\\(\"strong\",null,(.)\\)\\)",",\"到\",$1.createElement(\"strong\",null,$2),\"分支\")"],
 		["\"Select one or more files to commit\"","\"选择一个或多个文件进行提交\""],
 		["\"Committing changes…\"","\"正在提交更改...\""],
