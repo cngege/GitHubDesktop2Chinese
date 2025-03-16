@@ -762,6 +762,8 @@
 		["title:\"Receiving objects\"","title:\"正在接收对象\""],
 		["title:\"Resolving deltas\"","title:\"解析差异\""],
 		["title:\"Checking out files\"","title:\"正在检出文件\""],
+		["\"Your branch is up to date with the compared branch \\(\",(..)\\.createElement\\((..),null,(.)\\),\"\\)\"","\"你的分支与所对比的分支(\",$1.createElement($2,null,$3),\")\",\"保持同步\""],
+		["\"No commit selected\"","\"未选择任何提交记录\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
