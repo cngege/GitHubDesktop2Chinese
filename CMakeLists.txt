@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt: GitHubDesktop2Chinese 的 CMake 项目，在此处包括源代码并定义
 # 项目特定的逻辑。
 #
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.30)
 
 # 如果支持，请为 MSVC 编译器启用热重载。
 if (POLICY CMP0141)
@@ -53,7 +53,7 @@ if(DEFINED GitHubActions)
         set(CRYPTO_URL https://github.com/cngege/cngege.github.io/releases/download/v0.1-beta.1/libcrypto_x86.lib)
     endif()
 else()
-    set(CLI11_URL https://gitclone.com/github.com/CLIUtils/CLI11.git)
+    set(CLI11_URL https://kkgithub.com/CLIUtils/CLI11.git)
     if(DEFINED CURRENT_PLATFORM_ISX64)
         set(LIBSSL_URL https://www.ghproxy.cc/https://github.com/cngege/cngege.github.io/releases/download/v0.1-beta.1/libssl.lib)
         set(CRYPTO_URL https://www.ghproxy.cc/https://github.com/cngege/cngege.github.io/releases/download/v0.1-beta.1/libcrypto.lib)
