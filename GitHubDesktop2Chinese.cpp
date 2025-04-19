@@ -40,6 +40,7 @@ fs::path LocalizationJSON;
 
 bool no_pause;                                  // 程序在结束前是否暂停
 bool only_read_from_remote;                     // 仅从远程url中读取本地化文件
+bool rollback;                                  // 从备份中还原汉化前的文件
 bool enable_proxy;                              // 使用代理访问
 
 json localization = R"(
@@ -82,7 +83,6 @@ int main(int argc, char* argv[])
     // 注册命令行
     {
         CLI::App app{ "汉化GitHub Desktop管理、替换资源" };
-
         //app.require_subcommand(1);
 
         // 子命令 开发者选项
@@ -104,6 +104,7 @@ int main(int argc, char* argv[])
         app.add_option("-j,--json", LocalizationJSON, "指定本地化JSON文件的本地路径");
         app.add_flag("-p,--enableproxy", enable_proxy, "开启代理访问GitHub");
         app.add_flag("-r,--onlyfromremote", only_read_from_remote, "仅从远程url中读取本地化文件");
+        app.add_flag("--rollback", rollback, "从备份文件中还原汉化前的文件");
         
         app.callback([&]() {
             // 手动指定了本地化文件目录
@@ -325,7 +326,8 @@ int main(int argc, char* argv[])
             }
             catch (const winreg::RegException& regerr)
             {
-                spdlog::error("RegException {} at line: {}", regerr.what(), __LINE__);
+                spdlog::error("可能注册表key {} 不存在,请检查注册表目录 {}", "DisplayVersion 或 InstallLocation", "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
+                spdlog::error("RegException {} ,ErrCode:{}  at line: {}", regerr.what(),regerr.code().value(), __LINE__);
                 PAUSE
                 return 1;
             }
@@ -335,12 +337,44 @@ int main(int argc, char* argv[])
                 return 1;
             }
         }
+        key.Close();
+    }
+
+    fs::path mainjs = "main.js";
+    fs::path mainjsbak = "main.js.bak";
+
+    fs::path rendererjs = "renderer.js";
+    fs::path rendererjsbak = "renderer.js.bak";
+
+    // 指定还原
+    if(rollback) {
+        if(fs::exists(Base / mainjsbak)) {
+            if(fs::exists(Base / mainjs)) {
+                fs::remove(Base / mainjs);
+            }
+            fs::copy_file(Base / mainjsbak, Base / mainjs);
+            spdlog::info("{} 还原完成", mainjs.string().c_str());
+        }
+        else {
+            spdlog::warn("{} 回滚失败, {} 文件不存在", mainjs.string().c_str(), mainjsbak.string().c_str());
+        }
+
+        if(fs::exists(Base / rendererjsbak)) {
+            if(fs::exists(Base / rendererjs)) {
+                fs::remove(Base / rendererjs);
+            }
+            fs::copy_file(Base / rendererjsbak, Base / rendererjs);
+            spdlog::info("{} 还原完成", rendererjs.string().c_str());
+        }
+        else {
+            spdlog::warn("{} 回滚失败, {} 文件不存在", rendererjs.string().c_str(), rendererjsbak.string().c_str());
+        }
+        PAUSE
+        return 0;
     }
 
 
     // 如果没有js文件却有备份文件 则从备份恢复
-    fs::path mainjs = "main.js";
-    fs::path mainjsbak = "main.js.bak";
     if (!fs::exists(Base / mainjs)) {
         if (!fs::exists(Base / mainjsbak)) {
             spdlog::warn("目录有误，找不到目录下的main.js. ");
@@ -351,8 +385,6 @@ int main(int argc, char* argv[])
         spdlog::warn("main.js 未找到, 但已从备份main.js.bak中还原");
     }
 
-    fs::path rendererjs = "renderer.js";
-    fs::path rendererjsbak = "renderer.js.bak";
     if (!fs::exists(Base / rendererjs)) {
         if (!fs::exists(Base / rendererjsbak)) {
             spdlog::warn("目录有误，找不到目录下的renderer.js. ");
@@ -363,9 +395,6 @@ int main(int argc, char* argv[])
         spdlog::warn("renderer.js 未找到, 但已从备份renderer.js.bak中还原");
     }
 
-
-
-    // TODO 备份main.js 和 renderer.js 文件
     // 仅在备份文件不存在时备份
     if (!fs::exists(Base / "main.js.bak")) {
         fs::copy_file(Base / "main.js", Base / "main.js.bak");
