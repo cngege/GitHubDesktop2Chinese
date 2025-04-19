@@ -3,9 +3,14 @@
 
 #include <string>
 #include <codecvt>
+#include <tchar.h>
+#include <filesystem>
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "http/httplib.h"
+
+
+namespace fs = std::filesystem;
 
 class utils {
 public:
@@ -61,6 +66,13 @@ public:
         override.close();
     }
 
+    /**
+     * @brief 从网络上读取数据
+     * @param url_host 网络主机
+     * @param params 请求链接后缀
+     * @param out 成功后输出读取到的数据
+     * @return 是否成功
+     */
     static auto ReadHttpDataString(std::string url_host, std::string params, std::string& out) -> bool {
         httplib::Client cli(url_host);
         cli.enable_server_certificate_verification(false);
@@ -77,6 +89,60 @@ public:
         }
     }
 
+    //static auto DownloadHttpResource(std::string url_host, std::string params);
+    static auto UpdateProgram(std::string url_host, std::string params, fs::path Self) ->bool{
+        fs::path parent_dir = Self.parent_path();   // 文件所在目录
+        fs::path stem = Self.filename();                // 文件名 不包含扩展名
+
+        //printf_s(url_host.c_str()); printf_s("\n");
+        //printf_s(params.c_str());        printf_s("\n");
+        //printf_s(stem.string().c_str());        printf_s("\n");
+        //printf_s(stem.string().c_str());        printf_s("\n");
+
+        httplib::Client cli(url_host);
+        cli.enable_server_certificate_verification(false);
+        cli.set_follow_location(true);                          //https://raw.github.com 会要求301重定向
+        auto res = cli.Get(params, [](uint64_t len, uint64_t total) {
+            printf_s("\r %d%% ==>  %lld / %lld", (int)(len * 100 / total), len, total);
+            return true;
+        });
+        printf_s("\n");
+        if(res && res->status == httplib::StatusCode::OK_200) {
+            // 讲数据写入到本地文件中
+            std::ofstream downfile(Self.string() + ".new", std::ios::binary | std::ios::out | std::ios::trunc);
+            if(downfile.is_open()) {
+                printf_s("下载完成, 请稍等, 随后自动完成并(无参)重启.. \n");
+                // 写入文件
+                downfile.write(res->body.data(), res->body.length());
+                downfile.flush();
+                downfile.close();
+                // 完成后创建进程
+                // 构建参数
+                std::string p = "/c \"ping 127.0.0.1 -n 6 > nul & move /Y ";
+                p += stem.string() + ".new ";
+                p += stem.string();
+                p += " & start ";
+                p += stem.string();
+                p += "\"";
+
+                ShellExecute(
+                    NULL,                   // 父窗口句柄
+                    _T("open"),             // 操作
+                    _T("cmd.exe"),          // 应用程序
+                    p.c_str(),              // 参数
+                    parent_dir.string().c_str(),                   // 工作目录
+                    SW_SHOW);               // 显示方式
+
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+    }
 
     static auto ReadUserInput_string(std::vector<std::string> input, int defaultval = -1) -> std::string {
 

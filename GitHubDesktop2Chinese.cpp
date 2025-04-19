@@ -28,7 +28,6 @@
 std::Version FileVer{0,0,0};
 
 
-namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 // 设置一个路径的全局变量  指向要修改JS的目录
@@ -67,6 +66,7 @@ bool _debug_invalid_check_mode = false;
 bool _debug_no_replace_res = false;
 bool _debug_translation_from_bak = false;		// 直接从备份文件中翻译到目标文件中
 bool _debug_dev_replace = false;				// 开发模式替换
+bool _debug_dev_setversion = false;				// 开发模式可以指定当前版本
 
 std::optional<std::string> formatTime(std::string time_str);
 
@@ -80,11 +80,11 @@ int main(int argc, char* argv[])
 #if _DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif // _DEBUG
+    FileVer = std::Version(FILEVERSION);
     // 注册命令行
     {
         CLI::App app{ "汉化GitHub Desktop管理、替换资源" };
         //app.require_subcommand(1);
-
         // 子命令 开发者选项
         auto dev_cmd = app.add_subcommand("dev", "开发者选项");
         dev_cmd->add_flag("-d,--dev", _debug_goto_devoptions,                       "进入开发者选项调整功能(可在开启程序时按住shift直接进入)");
@@ -94,6 +94,9 @@ int main(int argc, char* argv[])
         dev_cmd->add_flag("--noreplaceres", _debug_no_replace_res,                  "[资源不替换]开启后不会对资源进行替换,但不会阻止[错误检查模式]");
         dev_cmd->add_flag("--translationfrombak", _debug_translation_from_bak,      "[从备份文件中读取替换]优先从备份文件中读取js文件内容进行替换,开启[检测失效项]时建议开启此项");
         dev_cmd->add_flag("--devreplace", _debug_dev_replace,                       "[开发模式替换]仅替换指定映射以节约汉化时间(会影响其他项)");
+        if(FileVer.major == 0 && FileVer.minor == 0 && FileVer.revision == 0) {
+            dev_cmd->add_flag("--devsetver", _debug_dev_setversion,                "[指定当前程序版本]输入一个版本信息可以指定当前程序版本");
+        }
 
         //auto git_cmd = app.add_subcommand("action", "Github自动流程");
         //git_cmd->add_option("--main_json", Main_Json_Path,                          "手动指定main.json的文件位置,直接处理此文件");
@@ -145,7 +148,32 @@ int main(int argc, char* argv[])
 
         CLI11_PARSE(app, argc, argv);
     }
-    FileVer = std::Version(FILEVERSION);
+    if(GetKeyState(VK_SHIFT) & 0x8000 || _debug_goto_devoptions) {
+        // 如果Shift按下, 则进入开发者选项
+        SetConsoleTitle("开发者模式");
+        spdlog::info("您已进入开发者模式");
+        DeveloperOptions();
+    }
+
+    if(_debug_dev_setversion) {
+        for(;;) {
+            spdlog::info("请输入版本 如 1.2.3 (exit强制跳出):");
+            std::string instr;
+            std::cin >> instr;
+            if(instr == "exit") {
+                break;
+            }
+            auto ver = std::Version(instr.c_str());
+            if(!ver) {
+                spdlog::error("你输入的版本无效");
+            }
+            else {
+                FileVer = ver;
+                system("cls");
+                break;
+            }
+        }
+    }
     
     // 开发者声明
     spdlog::info("开发者：CNGEGE > 2024/04/13");
@@ -164,12 +192,7 @@ int main(int argc, char* argv[])
         spdlog::warn("程序架构：- {}  程序版本解析失败... at {}", arch_str, FILEVERSION);
     }
     
-    if (GetKeyState(VK_SHIFT) & 0x8000 || _debug_goto_devoptions) {
-        // 如果Shift按下, 则进入开发者选项
-        SetConsoleTitle("开发者模式");
-        spdlog::info("您已进入开发者模式");
-        DeveloperOptions();
-    }
+
 
     SetConsoleTitle(FileVer.toString(true).c_str());
 
@@ -210,7 +233,27 @@ int main(int argc, char* argv[])
                         if(FileVer < remoteVer) {
                             spdlog::info("发现新版本: {}", remoteVer.toString());
                             std::string downlink = infojson["assets"][0]["browser_download_url"].get<std::string>();
-                            spdlog::info("点击链接下载: {}", downlink);
+                            spdlog::info("下载链接: {}", downlink);
+                            spdlog::info("是否自动更新:");
+                            bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
+                            if(autoupdate) {
+                                //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
+                                std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
+                                std::smatch matches;
+                                if(std::regex_match(downlink, matches, url_regex)) {
+                                    auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]));
+                                    if(!result) {
+                                        spdlog::error("失败 更新过程出现异常");
+                                    }
+                                    else {
+                                        // 立马退出 等待替换
+                                        return 0;
+                                    }
+                                }
+                                else {
+                                    spdlog::error("下载地址可能变更, 正则表达式无法捕获");
+                                }
+                            }
                         }
                         else {
                             spdlog::info("当前版本已经是最新版..");
@@ -714,6 +757,9 @@ void DeveloperOptions() {
         spdlog::info("4) [{}] 不替换资源.不干预其他开发者选项.", _debug_no_replace_res);
         spdlog::info("5) [{}] 优先从备份文件中汉化(会直接改变资源文件的来源,影响其他选项).", _debug_translation_from_bak);
         spdlog::info("6) [{}] 仅替换指定映射项，以优化汉化作者替换时间", _debug_dev_replace);
+        if(FileVer.major == 0 && FileVer.minor == 0 && FileVer.revision == 0) {
+            spdlog::info("20) [{}] 手动指定程序版本仅限于调试", _debug_dev_setversion);
+        }
         std::cout << std::endl;
 
         int sys = 0;
@@ -754,6 +800,11 @@ void DeveloperOptions() {
             //spdlog::info("输入你要切换的状态(0关 1开):");
             //std::cin >> sw;
             _debug_dev_replace = utils::ReadUserInput_bool({ "false", "true" });
+            break;
+        case 20:
+            //spdlog::info("输入你要切换的状态(0关 1开):");
+            //std::cin >> sw;
+            _debug_dev_setversion = utils::ReadUserInput_bool({ "false", "true" });
             break;
         }
     }
