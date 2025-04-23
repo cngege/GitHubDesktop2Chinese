@@ -36,6 +36,13 @@ else()
 add_definitions(-DFILEVERSION="0.0.0-Dev.0")
 endif()
 
+# 针对 Visual Studio 编译器（MSVC）
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    # 为 Release 模式添加生成 PDB 文件的标志
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+endif()
+
 project ("GitHubDesktop2Chinese")
 
 include(FetchContent)

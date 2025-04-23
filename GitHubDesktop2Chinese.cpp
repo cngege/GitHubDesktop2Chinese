@@ -76,11 +76,11 @@ int main(int argc, char* argv[])
     // 设置控制台的输入 输出编码：
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
-    // 设置控制台打印日志输出等级
-#if _DEBUG
-    spdlog::set_level(spdlog::level::debug);
-#endif // _DEBUG
     FileVer = std::Version(FILEVERSION);
+    // 设置控制台打印日志输出等级
+    if(FileVer.status == FileVer.Dev) {
+        spdlog::set_level(spdlog::level::debug);
+    }
     // 注册命令行
     {
         CLI::App app{ "汉化GitHub Desktop管理、替换资源" };
@@ -103,11 +103,11 @@ int main(int argc, char* argv[])
         //git_cmd->add_option("--renderer_json", Renderer_Json_Path,                  "手动指定renderer.json的文件位置,直接处理此文件");
 
         app.add_flag("--nopause", no_pause,                         "程序在结束前不再暂停等待");
-        app.add_option("-g,--githubdesktoppath", Base,              "指定GitHubDesktop要汉化的资源所在目录");
-        app.add_option("-j,--json", LocalizationJSON, "指定本地化JSON文件的本地路径");
-        app.add_flag("-p,--enableproxy", enable_proxy, "开启代理访问GitHub");
-        app.add_flag("-r,--onlyfromremote", only_read_from_remote, "仅从远程url中读取本地化文件");
-        app.add_flag("--rollback", rollback, "从备份文件中还原汉化前的文件");
+        app.add_option("-g,--githubdesktoppath", Base,              "指定GitHubDesktop要汉化的资源所在目录(js所在目录)");
+        app.add_option("-j,--json", LocalizationJSON,               "指定本地化JSON文件的本地路径");
+        app.add_flag("-p,--enableproxy", enable_proxy,              "开启代理访问GitHub");
+        app.add_flag("-r,--onlyfromremote", only_read_from_remote,  "仅从远程url中读取本地化文件");
+        app.add_flag("--rollback", rollback,                        "从备份文件中还原汉化前的文件");
         
         app.callback([&]() {
             // 手动指定了本地化文件目录
@@ -328,19 +328,17 @@ int main(int argc, char* argv[])
         }
     }
 
-
     // Github Desktop 存在目录没有提前设置
     if (!fs::exists(Base) || !fs::exists(Base / "index.html")) {
-
-
         // 首先要能够成功读取注册表
         //	拿到当前用户sid
-        std::string sid = GetCurrentUserSid();
-        spdlog::debug("sid:{}", sid);
+        //std::string sid = GetCurrentUserSid();
+        //spdlog::debug("sid:{}", sid);
 
         //	检查注册表中是否存在GithubDesktop
         winreg::RegKey key;
-        winreg::RegResult result = key.TryOpen(HKEY_USERS, utils::to_wide_string(sid) + L"\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
+        //winreg::RegResult result = key.TryOpen(HKEY_USERS, utils::to_wide_string(sid) + L"\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
+        winreg::RegResult result = key.TryOpen(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
         if (!result)
         {
             spdlog::warn("注册表中未发现GitHubDesktop相关条目, Reg ErrorMessage: {}" ,utils::to_byte_string(result.ErrorMessage()));
@@ -492,62 +490,67 @@ int main(int argc, char* argv[])
 #if NO_REPLACE
             continue;
 #endif // NO_REPLACE
-
-            std::string rege = item.value()[0].get<std::string>();
-            if (rege.empty() || rege == "\"\"") {
-                continue;
-            }
-            std::regex pattern(rege);
-
-            // 开发者选项 失效检测
-            if (_debug_invalid_check_mode) {
-                bool found = std::regex_search(main_str, pattern);
-                if (!found) {
-                    spdlog::warn("[main] 检测到失效项: {}", rege);
-                    ret_num++;
-                }
-                if(item.value().size() >= 3) {
-                    std::regex pattern3(item.value()[2].get<std::string>());
-                    found = std::regex_search(main_str, pattern3);
-                    if(!found) {
-                        spdlog::warn("[renderer] 检测到失效项: {}", item.value()[2].get<std::string>());
-                        ret_num++;
-                    }
-                }
-                continue;
-            }
-
-
-            if(item.value().size() >= 3) {
-                // 对数组第三项进行全局查找
-                std::string regex_str = item.value()[2].get<std::string>();
-                std::regex pattern3(regex_str);
-                std::sregex_iterator it = std::sregex_iterator(main_str.begin(), main_str.end(), pattern3);
-                if(it != std::sregex_iterator()) {
-                    const std::smatch& match = *it;
-                    for(size_t i = 1; i < match.size(); i++) {
-                        std::string replace_str = "#\\{" + std::to_string(i) + "\\}";
-                        std::regex replace_regx(replace_str);
-                        item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
-                    }
-                }
-                else {
-                    // 如果没有找到，则应该进行提示并跳过此项，以免进行错误的字符插入，造成程序无法打开
-                    spdlog::warn("[main] 出现一处失效项,此项将跳过: {}", regex_str);
+            try {
+                std::string rege = item.value()[0].get<std::string>();
+                if (rege.empty() || rege == "\"\"") {
                     continue;
                 }
-            }
+                std::regex pattern(rege);
 
-            // 替换
-            main_str = std::regex_replace(main_str, pattern, item.value()[1].get<std::string>());
-            if (_debug_error_check_mode_main) {
-                spdlog::info("[main][out:{}]已经替换:{}->{}", out, rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
-                out--;
-                if (out <= 0) {
-                    utils::WriteFile(fs::path(Base / "main.js").string(), main_str);
-                    spdlog::info("已写入. 你希望下次替换多少条后写入:");
-                    std::cin >> out;
+                // 开发者选项 失效检测
+                if (_debug_invalid_check_mode) {
+                    bool found = std::regex_search(main_str, pattern);
+                    if (!found) {
+                        spdlog::warn("[main] 检测到失效项: {}", rege);
+                        ret_num++;
+                    }
+                    if(item.value().size() >= 3) {
+                        std::regex pattern3(item.value()[2].get<std::string>());
+                        found = std::regex_search(main_str, pattern3);
+                        if(!found) {
+                            spdlog::warn("[renderer] 检测到失效项: {}", item.value()[2].get<std::string>());
+                            ret_num++;
+                        }
+                    }
+                    continue;
                 }
+                if(item.value().size() >= 3) {
+                    // 对数组第三项进行全局查找
+                    std::string regex_str = item.value()[2].get<std::string>();
+                    std::regex pattern3(regex_str);
+                    std::sregex_iterator it = std::sregex_iterator(main_str.begin(), main_str.end(), pattern3);
+                    if(it != std::sregex_iterator()) {
+                        const std::smatch& match = *it;
+                        for(size_t i = 1; i < match.size(); i++) {
+                            std::string replace_str = "#\\{" + std::to_string(i) + "\\}";
+                            std::regex replace_regx(replace_str);
+                            item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
+                        }
+                    }
+                    else {
+                        // 如果没有找到，则应该进行提示并跳过此项，以免进行错误的字符插入，造成程序无法打开
+                        spdlog::warn("[main] 出现一处失效项,此项将跳过: {}", regex_str);
+                        continue;
+                    }
+                }
+
+                // 替换
+                main_str = std::regex_replace(main_str, pattern, item.value()[1].get<std::string>());
+                if (_debug_error_check_mode_main) {
+                    spdlog::info("[main][out:{}]已经替换:{}->{}", out, rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
+                    out--;
+                    if (out <= 0) {
+                        utils::WriteFile(fs::path(Base / "main.js").string(), main_str);
+                        spdlog::info("已写入. 你希望下次替换多少条后写入:");
+                        std::cin >> out;
+                    }
+                }
+            }
+            catch(std::regex_error& re) {
+                spdlog::error("处理main.js时匹配正则表达式时出现错误 code:{}, message:{}, LINE: {}", re.code(), re.what(), __LINE__);
+            }
+            catch(std::runtime_error& e) {
+                spdlog::error("处理main.js时出现错误 message:{}, LINE: {}", e.what(), __LINE__);
             }
         }
         if (!_debug_invalid_check_mode && !_debug_no_replace_res) {
@@ -568,60 +571,68 @@ int main(int argc, char* argv[])
 #if NO_REPLACE
             continue;
 #endif // NO_REPLACE
-
-            std::string rege = item.value()[0].get<std::string>();
-            if (rege.empty() || rege == "\"\"") {
-                continue;
-            }
-            std::regex pattern(rege);
-
-            // 开发者选项 失效检测
-            if (_debug_invalid_check_mode) {
-                bool found = std::regex_search(renderer_str, pattern);
-                if (!found) {
-                    spdlog::warn("[renderer] 检测到失效项: {}", rege);
-                    ret_num++;
-                }
-                if(item.value().size() >= 3) {
-                    std::regex pattern3(item.value()[2].get<std::string>());
-                    found = std::regex_search(renderer_str, pattern3);
-                    if(!found) {
-                        spdlog::warn("[renderer] 检测到失效项: {}", item.value()[2].get<std::string>());
-                        ret_num++;
-                    }
-                }
-                continue;
-            }
-
-            if(item.value().size() >= 3) {
-                // 对数组第三项进行全局查找
-                std::string regex_str = item.value()[2].get<std::string>();
-                std::regex pattern3(regex_str);
-                std::sregex_iterator it = std::sregex_iterator(renderer_str.begin(), renderer_str.end(), pattern3);
-                if(it != std::sregex_iterator()) {
-                    const std::smatch& match = *it;
-                    for(size_t i = 1; i < match.size(); i++) {
-                        std::string replace_str = "#\\{" + std::to_string(i) + "\\}";
-                        std::regex replace_regx(replace_str);
-                        item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
-                    }
-                }
-                else {
-                    // 如果没有找到，则应该进行提示并跳过此项，以免进行错误的字符插入，造成程序无法打开
-                    spdlog::warn("[renderer] 出现一处失效项,此项将跳过: {}", regex_str);
+            try {
+                std::string rege = item.value()[0].get<std::string>();
+                if (rege.empty() || rege == "\"\"") {
                     continue;
                 }
-            }
+                std::regex pattern(rege);
 
-            renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
-            if (_debug_error_check_mode_renderer) {
-                spdlog::info("[renderer][out:{}]已经替换:{}->{}",out , rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
-                out--;
-                if (out <= 0) {
-                    utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str);
-                    spdlog::info("已写入. 你希望下次替换多少条后写入:");
-                    std::cin >> out;
+                // 开发者选项 失效检测
+                if (_debug_invalid_check_mode) {
+                    bool found = std::regex_search(renderer_str, pattern);
+                    if (!found) {
+                        spdlog::warn("[renderer] 检测到失效项: {}", rege);
+                        ret_num++;
+                    }
+                    if(item.value().size() >= 3) {
+                        std::regex pattern3(item.value()[2].get<std::string>());
+                        found = std::regex_search(renderer_str, pattern3);
+                        if(!found) {
+                            spdlog::warn("[renderer] 检测到失效项: {}", item.value()[2].get<std::string>());
+                            ret_num++;
+                        }
+                    }
+                    continue;
                 }
+
+                if(item.value().size() >= 3) {
+                    // 对数组第三项进行全局查找
+                    std::string regex_str = item.value()[2].get<std::string>();
+                    std::regex pattern3(regex_str);
+                    std::sregex_iterator it = std::sregex_iterator(renderer_str.begin(), renderer_str.end(), pattern3);
+                    if(it != std::sregex_iterator()) {
+                        const std::smatch& match = *it;
+                        for(size_t i = 1; i < match.size(); i++) {
+                            std::string replace_str = "#\\{" + std::to_string(i) + "\\}";
+                            std::regex replace_regx(replace_str);
+                            item.value()[1] = std::regex_replace(item.value()[1].get<std::string>(), replace_regx, match[i].str());
+                        }
+                    }
+                    else {
+                        // 如果没有找到，则应该进行提示并跳过此项，以免进行错误的字符插入，造成程序无法打开
+                        spdlog::warn("[renderer] 出现一处失效项,此项将跳过: {}", regex_str);
+                        continue;
+                    }
+                }
+
+                renderer_str = std::regex_replace(renderer_str, pattern, item.value()[1].get<std::string>());
+                if (_debug_error_check_mode_renderer) {
+                    spdlog::info("[renderer][out:{}]已经替换:{}->{}",out , rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
+                    out--;
+                    if (out <= 0) {
+                        utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str);
+                        spdlog::info("已写入. 你希望下次替换多少条后写入:");
+                        std::cin >> out;
+                    }
+                }
+
+            }
+            catch(std::regex_error& re) {
+                spdlog::error("处理renderer.js时匹配正则表达式时出现错误 code:{}, message:{}, LINE: {}", re.code(), re.what(), __LINE__);
+            }
+            catch(std::runtime_error& e) {
+                spdlog::error("处理renderer.js时出现错误 message:{}, LINE: {}", e.what(), __LINE__);
             }
         }
         if (!_debug_invalid_check_mode && !_debug_no_replace_res) {
@@ -660,45 +671,45 @@ int main(int argc, char* argv[])
  * @brief 获取当前用户的sid
  * @return 
  */
-std::string GetCurrentUserSid() {
-    const int MAX_NAME = 260;
-    char userName[MAX_NAME] = "";
-    char sid[MAX_NAME] = "";
-    DWORD nameSize = sizeof(userName);
-    GetUserName((LPSTR)userName, &nameSize);
-
-
-    char userSID[MAX_NAME] = "";
-    char userDomain[MAX_NAME] = "";
-    DWORD sidSize = sizeof(userSID);
-    DWORD domainSize = sizeof(userDomain);
-
-
-    SID_NAME_USE snu;
-    LookupAccountName(NULL,
-        (LPSTR)userName,
-        (PSID)userSID,
-        &sidSize,
-        (LPSTR)userDomain,
-        &domainSize,
-        &snu);
-
-
-    PSID_IDENTIFIER_AUTHORITY psia = GetSidIdentifierAuthority(userSID);
-    sidSize = sprintf(sid, "S-%lu-", SID_REVISION);
-    sidSize += sprintf(sid + strlen(sid), "%-lu", psia->Value[5]);
-
-
-    int i = 0;
-    int subAuthorities = *GetSidSubAuthorityCount(userSID);
-
-
-    for (i = 0; i < subAuthorities; i++)
-    {
-        sidSize += sprintf(sid + sidSize, "-%lu", *GetSidSubAuthority(userSID, i));
-    }
-    return std::string(sid);
-}
+//std::string GetCurrentUserSid() {
+//    const int MAX_NAME = 260;
+//    char userName[MAX_NAME] = "";
+//    char sid[MAX_NAME] = "";
+//    DWORD nameSize = sizeof(userName);
+//    GetUserName((LPSTR)userName, &nameSize);
+//
+//
+//    char userSID[MAX_NAME] = "";
+//    char userDomain[MAX_NAME] = "";
+//    DWORD sidSize = sizeof(userSID);
+//    DWORD domainSize = sizeof(userDomain);
+//
+//
+//    SID_NAME_USE snu;
+//    LookupAccountName(NULL,
+//        (LPSTR)userName,
+//        (PSID)userSID,
+//        &sidSize,
+//        (LPSTR)userDomain,
+//        &domainSize,
+//        &snu);
+//
+//
+//    PSID_IDENTIFIER_AUTHORITY psia = GetSidIdentifierAuthority(userSID);
+//    sidSize = sprintf(sid, "S-%lu-", SID_REVISION);
+//    sidSize += sprintf(sid + strlen(sid), "%-lu", psia->Value[5]);
+//
+//
+//    int i = 0;
+//    int subAuthorities = *GetSidSubAuthorityCount(userSID);
+//
+//
+//    for (i = 0; i < subAuthorities; i++)
+//    {
+//        sidSize += sprintf(sid + sidSize, "-%lu", *GetSidSubAuthority(userSID, i));
+//    }
+//    return std::string(sid);
+//}
 
 bool GetBasePath(std::string& out) {
     getline(std::cin, out);

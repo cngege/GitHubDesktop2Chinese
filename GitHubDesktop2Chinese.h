@@ -8,7 +8,7 @@
 
 // TODO: 在此处引用程序需要的其他标头。
 
-std::string GetCurrentUserSid();
+//std::string GetCurrentUserSid();
 
 bool GetBasePath(std::string& out);
 std::string LoopGetBasePath();
