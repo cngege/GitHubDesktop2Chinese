@@ -768,7 +768,7 @@
 		["\" that are to be included in your commit\"","\"在你将要提交文件及其内容中\""],
 		["\"Filter Options\\s?\"","\"过滤器选项\""],
 		["\"\\((\\d+) applied\\)\"","\"($1 个正在使用)\""],
-		["label:`Included in commit \\(\\$\\{(.)\\}\\)`","label:`包含已选择的提交项 (${$1})`"],
+		["label:`Included in commit \\(\\$\\{(.)\\}\\)`","label:`仅包含已选择的提交项 (${$1})`"],
 		["\"Hidden changes will be committed. \"","\"未显示的更改将会被提交\""],
 		["\"Adjust the filters to see all \",(.)\\.length,\" changes\"","\"调整筛选条件以查看全部的\",$1.length,\"项更改\""],
 		["\" \",\"is already up to date with \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
