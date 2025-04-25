@@ -584,7 +584,7 @@ int main(int argc, char* argv[])
                             // 询问提示 输出json中的输出提示字符串
                             spdlog::info(">>>>>> {}", item_select.value()["tooltip"].get<std::string>().c_str());
                             // 读取用户输入
-                            if(utils::ReadUserInput_bool()) {
+                            if(utils::ReadUserInput_bool({ "n","Y" }, 1)) {
                                 // 循环两层数组的外层数组
                                 for(auto& v_item : replaces) {
                                     // 如果此替换字符串第一个是空字符串，如果是空 则跳出此次循环
@@ -742,7 +742,7 @@ int main(int argc, char* argv[])
                             // 询问提示 输出json中的输出提示字符串
                             spdlog::info(">>>>>> {}", item_select.value()["tooltip"].get<std::string>().c_str());
                             // 读取用户输入
-                            if(utils::ReadUserInput_bool()) {
+                            if(utils::ReadUserInput_bool({"n","Y"},1)) {
                                 // 循环两层数组的外层数组
                                 for(auto& v_item : replaces) {
                                     // 如果此替换字符串第一个是空字符串，如果是空 则跳出此次循环
