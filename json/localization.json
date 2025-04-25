@@ -853,12 +853,12 @@
 		["title:\"Commit message override\"","title:\"提交信息覆盖\""],
 		["\"The commit message you have entered will be overridden by the generated commit message.\"","\"你输入的提交信息将被生成的提交信息所覆盖。\""],
 		["okButtonText:\"Override\"","okButtonText:\"覆盖\""],
+		["\"Responsible use of Copilot in GitHub Desktop\"","\"在GitHub Desktop中合理使用GitHub Copilot\""],
+		["\"Previous tags\"","\"以前的标签\""],
+		["`No matches found for '\\$\\{(.)\\}'`","`未找到'${$1}'的匹配项`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
