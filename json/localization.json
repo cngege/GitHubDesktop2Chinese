@@ -777,9 +777,14 @@
 		"\"当前分支已经与所选分支保持同步（更新）了。 \""],
 		["label:\"Copy paths\"","label:\"复制路径\""],
 		["label:\"Copy relative paths\"","label:\"复制相对路径\""],
+		["`Could not find user with username \\$\\{(.)\\.username\\}`","`无法使用用户名'${$1.username}'查找到用户`"],
+		["`Searching for @\\$\\{(.)\\.username\\}`","`正在搜索用户Searching for @${$1.username}`"],
+		["\"Search for user\"","\"搜索这个用户\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
