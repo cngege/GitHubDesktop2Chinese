@@ -1,6 +1,24 @@
 {
-	"version":1,
+	"version":2,
 	"minversion": "1.0.0",
+	"select":[
+		{
+			"replaceFile":"renderer.js",
+			"tooltip":"是否强制开启预览版选项",
+			"enable": true,
+			"replace": [
+				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\}","===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/\"1\"}"]
+			]
+		},
+		{
+			"replaceFile":"renderer.js",
+			"tooltip":"是否要求AI将生成结果转为中文",
+			"enable": false,
+			"replace":[
+				["",""]
+			]
+		}
+	],
     "main": [
 		["&File","文件(&F)"],
 		["New &repository…","新建存储库(&R)"],
@@ -71,7 +89,7 @@
 		["\"Contract active resizable\"","\"折叠可调大小的活动项\""],
 		["id:\"about\"\\}\\]","id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){#{1}.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]","click\\(\\)\\{([a-zA-z\\$_]{1,3})\\.shell\\.openExternal"],
 		["\\)(.).append\\((.)\\);else",
-		"){$2.label=$2.label.replace(/Undo/,'撤销').replace(/Redo/,'恢复').replace(/Cut/,'剪切').replace(/Copy/,'复制').replace(/Paste/,'粘贴').replace(/Delete/,'删除').replace(/Select All/,'全选');$1.append($2);}else"],
+		"){$2.label=$2.label.replace(/Undo/,'撤销').replace(/Redo/,'恢复').replace(/Cut/,'剪切').replace(/Copy/,'复制').replace(/Paste/,'粘贴').replace(/Delete/,'删除').replace(/Select All/,'全选').replace(/Add to dictionary/,'添加到字典');$1.append($2);}else"],
 		["\"\"","\"\""]
 	],
 	"main_dev":[
@@ -780,11 +798,18 @@
 		["`Could not find user with username \\$\\{(.)\\.username\\}`","`无法使用用户名'${$1.username}'查找到用户`"],
 		["`Searching for @\\$\\{(.)\\.username\\}`","`正在搜索用户Searching for @${$1.username}`"],
 		["\"Search for user\"","\"搜索这个用户\""],
+		["\"Generate commit message with Copilot\"\\+\\((.)\\?\"\\. Files must be selected to generate a commit message\\.\"",
+		"\"使用 GitHub Copilot 生成提交信息\"+($1?\". 必须选择文件才能生成提交信息.\""],
+		["\"Copilot is powered by AI, so mistakes are possible. Review and edit the generated message carefully before use.\"","\"GitHub Copilot由人工智能驱动，所以有可能出现错误。在使用生成的提交信息之前，请仔细检查并编辑它。 \""],
+		["\"Learn more about Copilot in GitHub Desktop.\"","\"了解更多关于GitHub Desktop中Copilot的信息。 \""],
+		["okButtonText:\"I understand\"","okButtonText:\"我明白了\""],
+		["\"Generating commit details…\"","\"正在生成提交详情…\""],
+		["title:\"Commit message override\"","title:\"提交信息覆盖\""],
+		["\"The commit message you have entered will be overridden by the generated commit message.\"","\"你输入的提交信息将被生成的提交信息所覆盖。\""],
+		["okButtonText:\"Override\"","okButtonText:\"覆盖\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
