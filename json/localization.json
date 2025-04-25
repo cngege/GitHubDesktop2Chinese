@@ -3,8 +3,16 @@
 	"minversion": "1.0.0",
 	"select":[
 		{
-			"replaceFile":"renderer.js",
+			"replaceFile":"main.js",
 			"tooltip":"是否强制开启预览版选项",
+			"enable": true,
+			"replace": [
+				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\|\\|!1","===process.env.GITHUB_DESKTOP_PREVIEW_FEATURES||!0"]
+			]
+		},
+		{
+			"replaceFile":"renderer.js",
+			"tooltip":"是否强制开启AI功能",
 			"enable": true,
 			"replace": [
 				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\}","===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/\"1\"}"]
