@@ -859,9 +859,17 @@
 		["\"Responsible use of Copilot in GitHub Desktop\"","\"在GitHub Desktop中合理使用GitHub Copilot\""],
 		["\"Previous tags\"","\"以前的标签\""],
 		["`No matches found for '\\$\\{(.)\\}'`","`未找到'${$1}'的匹配项`"],
+		["\"The file was renamed and includes changes.\"","\"文件已重命名，且包含有改动内容。 \""],
+		["\"The file was renamed but not changed\"","\"文件已重命名，但未作修改\""],
+		["\"The file is in conflict and must be resolved via the command line.\"","\"该文件存在冲突，必须通过命令行来解决。 \""],
+		["\"Only whitespace changes found\"","\"仅发现了空白字符方面的更改\""],
+		["\"No content changes found\"","\"未发现内容变更\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
