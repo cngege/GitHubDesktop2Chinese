@@ -40,6 +40,12 @@
 - 路径: [项目目录]/json/localization.json
 - 主节点 - version(int): 此json文件的版本,此值仅会因未来格式更新而更新
 - 主节点 - minversion(string): 需要最低的加载器版本
+- 主节点 - select(JSON): 本地化时提示进行选择性修改
+  - array[]
+    - replaceFile(string): 进行替换的文件
+    - tooltip(string): 提示信息
+    - enable(bool)：此条是否启用
+    - replace(array[]): 二维数组, 用户启用时的替换项 
 - 主节点 - main(array): 存储用于替换GitHubDesktop的main.js的映射
 - 主节点 - main_dev(array): 存储用于替换GitHubDesktop的main.js的映射,区别于开发时快速替换
 - 主节点 - renderer(array): 存储用于替换GitHubDesktop的renderer.js的映射
@@ -76,7 +82,8 @@
   如果你有任何建议可以提issues.
 
 > [!tip]
-> 如果打开 GitHubDesktop2Chinese.exe 时发现缺失 `MSVCP140_ATOMIC_WAIT.dll`，可以尝试下载微软运行库 [Microsoft Visual C++ Redistributable 14.42.34433.0](https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170)。找到 `最新的 Microsoft Visual C++ 可再发行程序包版本`，选择与你相应的操作系统的版本进行下载（比如64位的电脑选择 `vc_redist.x64.exe	`，32位的电脑选择 `vc_redist.x86.exe`），安装即可。
+> 如果打开 GitHubDesktop2Chinese.exe 时发现缺失 `MSVCP140_ATOMIC_WAIT.dll`，可以尝试下载微软运行库 [Microsoft Visual C++ Redistributable 14.42.34433.0](https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170)。
+> 找到 `最新的 Microsoft Visual C++ 可再发行程序包版本`，选择与你相应的操作系统的版本进行下载（比如64位的电脑选择 `vc_redist.x64.exe	`，32位的电脑选择 `vc_redist.x86.exe`），安装即可。
 
 ## 🍬第三方库  
 **感谢以下诸位提供的优质的开源项目**  
@@ -100,8 +107,8 @@
  - [ ] JSON文件附加描述文本，在加载器中显示
  - [x] 加载器显示所有项目参与者并在汉化后显示
  - [x] 汉化异常后恢复汉化前文件
- - [ ] 改动json格式允许进行提示后选择性汉化
- - [ ] 在映射文件中添加转为预览版
+ - [x] 改动json格式允许进行提示后选择性汉化
+ - [x] 在映射文件中添加转为预览版
 
 ## 🍬星标(收藏)历史
 ![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
