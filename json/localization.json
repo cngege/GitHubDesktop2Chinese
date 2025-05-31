@@ -864,6 +864,8 @@
 		["\"The file is in conflict and must be resolved via the command line.\"","\"该文件存在冲突，必须通过命令行来解决。 \""],
 		["\"Only whitespace changes found\"","\"仅发现了空白字符方面的更改\""],
 		["\"No content changes found\"","\"未发现内容变更\""],
+		["\"You have changes in progress\\. Undoing the commit might result in some of these changes being lost\\. Do you want to continue anyway\\?\"",
+		"\"您有进行中的更改。撤销提交可能会导致其中一些更改丢失。您确定仍要继续吗？\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
