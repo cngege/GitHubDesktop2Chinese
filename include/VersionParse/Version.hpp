@@ -71,6 +71,7 @@ public:
         //return true;
     }
 
+    // 正式版 1.13.1 大于 非正式版 1.13.1.beta.1
     bool operator<(const Version& b) const {
         if(major < b.major) return true;
         else if(major > b.major) return false;
@@ -80,13 +81,36 @@ public:
 
         if(revision < b.revision) return true;
         else if(revision > b.revision) return false;
-
-        if(this->status == Status::Release) return true;
-        else if(this->status == b.status) {
-            if(betaversion < b.betaversion) return true;
-            else if(betaversion > b.betaversion) return false;
+        // 到这里表示主版本号相同
+        // 如果两份的公开版本类型相同
+        if(this->status == b.status) {
+            if(this->status == Status::Release) {// 如果都是发布版, 应该相等
+                return false;
+            }
+            else {
+                if(betaversion < b.betaversion) return true;
+                else return false;
+            }
         }
-        return false;
+        else { // 公开版本类型不同
+            if(status == Status::Release) {
+                // 如果我是正式版, 则我大于它
+                return false;
+            }
+            else if(b.status == Status::Release){
+                // 如果对方是正式版, 则我肯定小于它
+                return true;
+            }
+            else if(status == Status::Beta) {
+                // 如果我是测试版, 对方只能是 开发版
+                // 则我大于他
+                return false;
+            }
+            else {
+                // 我是开发板 对方测试版
+                return true;
+            }
+        }
     }
 
     bool operator>=(const Version& b) const {
