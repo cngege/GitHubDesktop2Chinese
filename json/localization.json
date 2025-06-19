@@ -13,7 +13,7 @@
 		{
 			"replaceFile":"renderer.js",
 			"tooltip":"是否强制开启AI功能",
-			"enable": true,
+			"enable": false,
 			"replace": [
 				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\}","===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/\"1\"}"]
 			]
@@ -138,10 +138,10 @@
 		["label:\"Update Existing Git LFS Filters\\?\"","label:\"是否更新现有的Git LFS过滤器？ \""],
 		["label:\"Upstream Already Exists\"","label:\"上游（仓库）已存在\""],
 		["label:\"Add to dictionary\"","label:\"添加到字典\""],
+		["label:\\((.)\\?\"Hide\":\"Show\"\\)\\+\" Toggle Chan&ges Filter\"","label:($1?\"隐藏\":\"显示\")+\"更改内容过滤器(&G)\""],
 		["\"\"","\"\""]
 	],
 	"main_dev":[
-		["label:\\((.)\\?\"Hide\":\"Show\"\\)\\+\" Toggle Chan&ges Filter\"","label:($1?\"隐藏\":\"显示\")+\"更改内容过滤器(&G)\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],

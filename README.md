@@ -45,7 +45,7 @@
     - replaceFile(string): 进行替换的文件
     - tooltip(string): 提示信息
     - enable(bool)：此条是否启用
-    - replace(array[]): 二维数组, 用户启用时的替换项 
+    - replace(array[]): 二维数组, 用户启用时的替换项
 - 主节点 - main(array): 存储用于替换GitHubDesktop的main.js的映射
 - 主节点 - main_dev(array): 存储用于替换GitHubDesktop的main.js的映射,区别于开发时快速替换
 - 主节点 - renderer(array): 存储用于替换GitHubDesktop的renderer.js的映射
@@ -67,11 +67,11 @@
  > set GITHUB_DESKTOP_PREVIEW_FEATURES=1
  > "GitHub Desktop.lnk"
 ```
- - **或者通过加载器按提示选择自动开启预览版功能(TODO:下一步开发的功能)**
+ - **或者通过加载器按提示选择自动开启预览版功能**
 
-## 🤖3.4.19版本开始支持AI生成提交摘要
-> 仅预览版支持显示AI按钮,或者通过上述手段开启预览版选项
-
+## 🤖3.4.19版本代码开始支持, 3.5.0正式版前端界面支持AI生成提交摘要
+> 3.4.19 仅预览版支持显示AI按钮,或者通过上述手段开启预览版选项  
+  3.5.0  已经默认在添加协作者右侧显示
 <p align="center">
   <img src="https://github.com/user-attachments/assets/cf9eff13-4bfc-4965-ac09-15d9e4d2b6dc" alt="AI机器人" width="300px">
 </p>
