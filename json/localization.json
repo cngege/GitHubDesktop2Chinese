@@ -12,8 +12,8 @@
 		},
 		{
 			"replaceFile":"renderer.js",
-			"tooltip":"是否强制开启AI功能",
-			"enable": false,
+			"tooltip":"是否强制开启预览版选项对应的功能",
+			"enable": true,
 			"replace": [
 				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\}","===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/\"1\"}"]
 			]
