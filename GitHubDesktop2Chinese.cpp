@@ -481,6 +481,7 @@ int main(int argc, char* argv[])
     int ret_num = 0;
     // 处理 main[_dev].json文件
     {
+        spdlog::info("正在处理{}文件,{}请勿关闭...{}", "main.js","\033[33m","\033[0m");
         int out = 0;
         // 如果"从备份文件中汉化"选项打开 则判断备份文件是否存在,以便尝试从备份文件中读取
         std::string main_str = ((_debug_translation_from_bak || _debug_invalid_check_mode) && fs::exists(Base / "main.js.bak")) ? utils::ReadFile(fs::path(Base / "main.js.bak").string()) : utils::ReadFile(fs::path(Base / "main.js").string());
@@ -633,13 +634,14 @@ int main(int argc, char* argv[])
             // 写入
             utils::WriteFile(fs::path(Base / "main.js").string(), main_str);
         }
-        spdlog::info("{} 汉化结束.", "main.js");
+        spdlog::info("{} 文件汉化结束.", "main.js");
     }
 
 
 
     // 处理renderer.js文件
     {
+        spdlog::info("正在处理{}文件,{}请勿关闭...{}", "renderer.js", "\033[33m", "\033[0m");
         int out = 0;
         std::string renderer_str = ((_debug_translation_from_bak || _debug_invalid_check_mode) && fs::exists(Base / "renderer.js.bak")) ? utils::ReadFile(fs::path(Base / "renderer.js.bak").string()) :  utils::ReadFile(fs::path(Base / "renderer.js").string());
         try{
@@ -791,7 +793,7 @@ int main(int argc, char* argv[])
             // 写入
             utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str);
         }
-        spdlog::info("{} 汉化结束.", "renderer.js");
+        spdlog::info("{} 文件汉化结束.", "renderer.js");
     }
 
 
