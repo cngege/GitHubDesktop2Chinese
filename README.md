@@ -25,12 +25,14 @@
 
 ## 🎏怎么编译源代码
 
-> 下载克隆项目 本地使用VS2022 使用CMAKE打开，即可构建
+> 下载克隆项目 本地使用VS2022 使用CMAKE打开（直接用vs2022打开项目文件夹），即可构建
 
 ## 👕我怎么帮助完成汉化或者后续更新时如何补充汉化
 
 > 只需要克隆仓库，阅读`json/关于一些注意事项.txt`，注意一些编写时的事项, 然后在`json/localization.json` 文件中参照已经写过的格式补充要汉化的条目即可  
   将此文件放在程序目录下,确保程序可以读取运行 然后提交PR
+> 如果你写了部分翻译条目，可以先将其放在`main_dev`或者`renderer_dev`条目中, 然后按下`shift`运行软件,开启 `仅替换指定映射项，以优化汉化作者替换时间` 进行汉化测试
+  完成之后, 将对应条目移动到`main` 或 `renderer` 数组最后, 提交PR
 
 ## 🍬映射文件：localization.json
 > 此文件存储所有GitHubDesktop中英文文本到本地化(中文)文本之间的映射，  
@@ -109,6 +111,7 @@
  - [x] 汉化异常后恢复汉化前文件
  - [x] 改动json格式允许进行提示后选择性汉化
  - [x] 在映射文件中添加转为预览版
+ - [ ] 支持使用系统http代理,包括环境变量和读系统代理注册表
 
 ## 🍬星标(收藏)历史
 ![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
