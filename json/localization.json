@@ -887,10 +887,10 @@
 		["\"Successfully reordered \"","\"已成功排序了\""],
 		["\"Undo\"","\"撤销\""],
 		["\"There are unresolved conflicts in the working directory\\.\"","\"工作目录中存在未解决的冲突。\""],
+		["\"Undo is disabled while the repository is being updated\"","\"当仓库正在更新时，撤销功能已禁用。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
