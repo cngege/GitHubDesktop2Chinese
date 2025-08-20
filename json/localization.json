@@ -891,10 +891,10 @@
 		["\"This will merge\"","\"这将会合并\""],
 		["\" from \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \"","\"从\",$1().createElement(\"strong\",null,$2.name),\"分支到\""],
 		["\" The following files would be overwritten:\"","\"以下文件将被覆盖\""],
+		["showInputLabels\\?\"Summary\"","showInputLabels?\"摘要\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
-		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
 		["\"\"","\"\""],
