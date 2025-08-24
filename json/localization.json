@@ -882,7 +882,7 @@
 		["\"Successfully squashed \"","\"已成功压缩了\""],
 		["\"Successfully copied \"","\"已成功复制了\""],
 		["\"Successfully rebased \"","\"已成功变基了\""],
-		["\"uccessfully merged into \"","\"已成功合并到\""],
+		["\"Successfully merged into \"","\"已成功合并到\""],
 		["\"Successfully merged \"","\"已成功合并了\""],
 		["\"Successfully reordered \"","\"已成功排序了\""],
 		["\"Undo\"","\"撤销\""],
