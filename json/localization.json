@@ -901,6 +901,7 @@
 		["\"These changes will be unrecoverable from the \", (..), \".\"","\"这些更改将无法从\", $1, \"中恢复.\""],
 		["\"Permanently discard changes\"","\"永久丢弃更改\""],
 		["\"This will discard changes and they will be unrecoverable.\"","\"此操作将丢弃更改，且这些更改将无法恢复.\""],
+		["\"Are you sure you want to discard all \",this\\.props\\.files\\.length,\" changed files\\?\"","\"你确定要放弃所有\",this.props.files.length,\"个已修改的文件吗？\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
