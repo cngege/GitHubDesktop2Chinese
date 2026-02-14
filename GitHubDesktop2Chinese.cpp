@@ -69,6 +69,31 @@ bool _debug_dev_setversion = false;				// 开发模式可以指定当前版本
 
 std::optional<std::string> formatTime(std::string time_str);
 
+
+BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
+    // 仅拦截窗口关闭事件
+    if(dwCtrlType == CTRL_CLOSE_EVENT) {
+        // 弹出确认对话框（使用 Unicode 字符串）
+        int result = MessageBoxW(NULL,
+                                 L"程序中止， 汉化可能失败， 请重新运行后按照程序的流程走，汉化完成后会自动关闭，不建议手动关闭窗口\n开发者:“按任意键继续”是继续的意思，不是已完成的意思",
+                                 L"汉化程序已关闭，本提示五秒后自动关闭",
+                                 MB_OK | MB_ICONQUESTION | MB_DEFBUTTON2);
+
+        if(result == IDYES) {
+            // 用户确认：执行清理并退出
+            // 注意：ExitProcess 会立即终止进程，不会返回
+            ExitProcess(0);
+        }
+        else {
+            // 用户取消：阻止默认关闭行为
+            return TRUE;
+        }
+    }
+    // 其他事件（Ctrl+C、Ctrl+Break、关机等）不处理，让系统默认执行
+    return FALSE;
+}
+
+
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
 {
@@ -174,8 +199,13 @@ int main(int argc, char* argv[])
         }
     }
     
+    if(!SetConsoleCtrlHandler(ConsoleHandler, TRUE)) {
+        spdlog::error("注册关闭二次确认弹窗处理失败！");
+    }
+
     // 开发者声明
     spdlog::info("开发者：CNGEGE > 2024/04/13");
+    spdlog::info("按程序提示流程走，完成后自动会退出，{}请勿手动关闭{}程序，手动关闭可能导致汉化失败", "\033[33m", "\033[0m");
 
     // 打印构建平台与版本
 #ifdef CURRENT_PLATFORM_ISX64
@@ -207,7 +237,7 @@ int main(int argc, char* argv[])
                 auto infojson = json::parse(repoinfo);
                 std::optional<std::string> info = formatTime(infojson["updated_at"]);
                 if(info) {
-                    spdlog::info("仓库最新更新时间: {}{}{}", "\033[33m", *info, "\033[0m");
+                    spdlog::info("仓库最新更新时间: {}{}{}", "\033[32m", *info, "\033[0m");
                 }
             }
         }
