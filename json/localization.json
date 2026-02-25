@@ -906,6 +906,7 @@
 		["\"Undoing a merge commit will apply the changes from the merge into\\\\n    your working directory, and committing again will create an entirely new\\\\n    commit. This means you will lose the merge commit and, as a result, commits\\\\n    from the merged branch could disappear from this branch.\"",
         "\"撤销合并提交会将合并所带来的更改应用到你的工作目录中，\\n再次提交则会创建一个全新的提交。\\n这意味着你将丢失该合并提交，\\n进而导致来自被合并分支的提交可能会从当前分支中消失。\""],
 		["\"Overwrite any changes on \",(.),\" with your local changes\"","\"用你的本地更改覆盖\",$1.replace(\"origin\",\"远程仓库(origin)\"),\"上的所有更改\""],
+		["\"Date: \"","\"日期: \""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
