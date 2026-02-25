@@ -50,11 +50,15 @@ public:
     }
 
     static auto ReadFile(const std::string& filename)->std::string {
-        std::ifstream fin(filename);
-        std::stringstream buffer{};
-        buffer << fin.rdbuf();
-        std::string str(buffer.str());
-        return str;
+        std::ifstream fin(filename, std::ios::binary);
+        //std::stringstream buffer{};
+        //buffer << fin.rdbuf();
+        //std::string str(buffer.str());
+        return std::string(
+            std::istreambuf_iterator<char>(fin),
+            std::istreambuf_iterator<char>()
+        );
+        //return str;
     }
 
     static auto WriteFile(const std::string& filename, std::string& txt) -> void {
