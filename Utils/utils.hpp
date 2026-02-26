@@ -190,7 +190,10 @@ public:
                 spdlog::info("请输入一个表示bool的值({}/{} 默认 {})", input[0], input[1], input[defaultval]);
 
             std::string instr;
-            std::cin >> instr;
+            //std::cin >> instr;
+            std::cin.clear();
+            if(std::cin.rdbuf()->in_avail() > 0) std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::getline(std::cin, instr);
 
             if (instr == input[0]) {
                 return false;
