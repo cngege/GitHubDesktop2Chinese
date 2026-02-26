@@ -8,7 +8,7 @@
 6. 如果汉化后主程序无法打开，请更新加载器后执行参数 `GitHubDesktop2Chinese.exe dev --translationfrombak` 或执行 x86.exe程序
 
 
-### 1.1.x 程序修复的bug和更新内容
+### 1.2.x 程序修复的bug和更新内容
 
 
 #### 修复BUG:
