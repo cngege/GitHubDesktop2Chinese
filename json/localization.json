@@ -909,6 +909,7 @@
 		["\"Date: \"","\"日期: \""],
 		["\"remote: Counting objects\"","\"远程：正在统计对象数量\""],
 		["\"Fast-forwarding branches\"","\"快速推进分支\""],
+		[",\"This submodule changed its commit from\",\" \",this.renderCommitSHA\\(n,\"previous\"\\),\" to\",",",\"此子模块已将其提交从\",\" \",this.renderCommitSHA(n,\"previous\"),\"更改为\","],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
