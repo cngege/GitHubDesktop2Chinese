@@ -908,6 +908,7 @@
 		["\"Overwrite any changes on \",(.),\" with your local changes\"","\"用你的本地更改覆盖\",$1.replace(\"origin\",\"远程仓库(origin)\"),\"上的所有更改\""],
 		["\"Date: \"","\"日期: \""],
 		["\"remote: Counting objects\"","\"远程：正在统计对象数量\""],
+		["\"Fast-forwarding branches\"","\"快速推进分支\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
