@@ -916,6 +916,7 @@
 		["\"The currently checked out branch is\"","\"当前检出的分支与其跟踪的分支相比有\""],
 		["\"its tracked branch.\"","\"\""],
 		["\"There are uncommitted changes in this repository.\"","\"该代码仓库中存在未提交的更改。\""],
+		["\"Generate commit message with Copilot\"","\"借助 Copilot 生成提交说明\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
