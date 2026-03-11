@@ -910,6 +910,12 @@
 		["\"remote: Counting objects\"","\"远程：正在统计对象数量\""],
 		["\"Fast-forwarding branches\"","\"快速推进分支\""],
 		[",\"This submodule changed its commit from\",\" \",this.renderCommitSHA\\(n,\"previous\"\\),\" to\",",",\"此子模块已将其提交从\",\" \",this.renderCommitSHA(n,\"previous\"),\"更改为\","],
+		["\"Full Name: \"","\"全名: \""],
+		["\"Last Modified: \"","\"最后修改时间: \""],
+		["\"label\"\\},\"Path: \"\\)","\"label\"},\"路径: \")"],
+		["\"The currently checked out branch is\"","\"当前检出的分支与其跟踪的分支相比有\""],
+		["\"its tracked branch.\"","\"\""],
+		["\"There are uncommitted changes in this repository.\"","\"该代码仓库中存在未提交的更改。\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
