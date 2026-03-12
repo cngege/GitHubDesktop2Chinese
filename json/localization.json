@@ -838,7 +838,7 @@
 		["label:\"Copy paths\"","label:\"复制路径\""],
 		["label:\"Copy relative paths\"","label:\"复制相对路径\""],
 		["`Could not find user with username \\$\\{(.)\\.username\\}`","`无法使用用户名'${$1.username}'查找到用户`"],
-		["`Searching for @\\$\\{(.)\\.username\\}`","`正在搜索用户Searching for @${$1.username}`"],
+		["`Searching for @\\$\\{(.)\\.username\\}`","`正在搜索用户 @${$1.username}`"],
 		["\"Search for user\"","\"搜索这个用户\""],
 		["\"Generate commit message with Copilot\"\\+\\((.)\\?\"\\. Files must be selected to generate a commit message\\.\"",
 		"\"使用 GitHub Copilot 生成提交信息\"+($1?\". 必须选择文件才能生成提交信息.\""],
