@@ -139,6 +139,7 @@
 		["label:\"Upstream Already Exists\"","label:\"上游（仓库）已存在\""],
 		["label:\"Add to dictionary\"","label:\"添加到字典\""],
 		["label:\\((.)\\?\"Hide\":\"Show\"\\)\\+\" Toggle Chan&ges Filter\"","label:($1?\"隐藏\":\"显示\")+\"更改内容过滤器(&G)\""],
+		["\"Open &with…\"","\"使用...打开(&W)\""],
 		["\"\"","\"\""]
 	],
 	"main_dev":[
@@ -917,6 +918,9 @@
 		["\"its tracked branch.\"","\"\""],
 		["\"There are uncommitted changes in this repository.\"","\"该代码仓库中存在未提交的更改。\""],
 		["\"Generate commit message with Copilot\"","\"借助 Copilot 生成提交说明\""],
+		["\"Open with…\"","\"用...打开\""],
+		["\"Select an editor\"","\"选择一个编辑器\""],
+		["okButtonText:\"Open\"","okButtonText:\"打开\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
