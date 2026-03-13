@@ -921,6 +921,17 @@
 		["\"Open with…\"","\"用...打开\""],
 		["\"Select an editor\"","\"选择一个编辑器\""],
 		["okButtonText:\"Open\"","okButtonText:\"打开\""],
+		["\"Author\"","\"作者\""],
+		["\"Hooks \"","\"钩子 \""],
+		["\"GitHub Desktop hook support is experimental and currently only supports hooks related to committing. Please\"","\"GitHub Desktop钩子支持处于试验阶段，目前仅支持与提交相关的钩子。请\""],
+		["\"let us know\"","\"告知我们\""],
+		["\"if you encounter any issues or have feedback!\"","\"你遇到的任何问题或者反馈！\""],
+		["\"Load Git hook environment variables from shell\"","\"从Shell环境中加载Git钩子环境变量\""],
+		["\"When enabled, GitHub Desktop will attempt to load environment variables from your shell when executing Git hooks. This is useful if your Git hooks depend on environment variables set in your shell configuration files, a common practive for version managers such as nvm, rbenv, asdf, etc.\"","\"启用该功能后，GitHub Desktop在执行Git钩子时，将尝试从您的Shell环境中加载环境变量。若您的Git钩子依赖于Shell配置文件中所设定的环境变量，此举将极为有益，这在nvm、rbenv、asdf等版本管理工具中属常见做法。\""],
+		["\"Shell to use when loading environment\"","\"加载环境时所采用的Shell\""],
+		["\"Cache Git hook environment variables\"","\"缓存Git钩子环境变量\""],
+		["\"Cache hook environment variables to improve performance. Disable if your hooks rely on frequently changing environment variables.\"","\"将钩子的环境变量进行缓存以提升性能。若您的钩子依赖于频繁变动的环境变量，则请禁用此项功能。\""],
+		["\"Overriding commit message with generated message\"","\"以生成的消息覆盖提交消息\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
