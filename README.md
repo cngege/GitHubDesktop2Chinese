@@ -111,7 +111,7 @@
  - [x] 汉化异常后恢复汉化前文件
  - [x] 改动json格式允许进行提示后选择性汉化
  - [x] 在映射文件中添加转为预览版
- - [ ] 支持使用系统http代理,包括环境变量和读系统代理注册表
+ - [x] 支持使用系统http代理,包括环境变量和读系统代理注册表
 
 ## 🍬星标(收藏)历史
 ![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
