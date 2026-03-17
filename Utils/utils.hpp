@@ -5,7 +5,8 @@
 #include <codecvt>
 #include <tchar.h>
 #include <filesystem>
-
+#include <windows.h>
+#include <winhttp.h>
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "http/httplib.h"
 
@@ -14,7 +15,91 @@ namespace fs = std::filesystem;
 
 class utils {
 public:
-    
+    static std::string GetEnvVar(const std::string& varName) {
+        // Windows API 优先使用宽字符版本，避免编码问题
+        std::wstring wVarName(varName.begin(), varName.end());
+        wchar_t* wValue = _wgetenv(wVarName.c_str());
+
+        if(wValue == nullptr) return "";
+
+        // 转换 UTF-16 到 UTF-8
+        int len = WideCharToMultiByte(CP_UTF8, 0, wValue, -1, nullptr, 0, nullptr, nullptr);
+        std::string value(len, 0);
+        WideCharToMultiByte(CP_UTF8, 0, wValue, -1, &value[0], len, nullptr, nullptr);
+        value.pop_back(); // 移除末尾的空字符
+        return value;
+    }
+
+    static std::optional<std::pair<std::string, int>> get_proxy_env() {
+        auto p1 = GetEnvVar("HTTPS_PROXY");
+        if(p1.empty()) p1= GetEnvVar("https_proxy");
+
+        if(p1.empty()) {
+            return {};
+        }
+        size_t protocolEnd = p1.find("://");
+        std::string addrWithoutProtocol = (protocolEnd != std::string::npos)
+            ? p1.substr(protocolEnd + 3)
+            : p1;
+
+        // 2. 分割主机和端口（以第一个 : 为界）
+        size_t colonPos = addrWithoutProtocol.find(':');
+        if(colonPos == std::string::npos) {
+            std::cerr << "错误：代理地址无端口号！" << std::endl;
+            return {};
+        }
+        // 3. 提取主机和端口
+        int port = 0;
+        std::string host = addrWithoutProtocol.substr(0, colonPos);
+        try {
+            port = std::stoi(addrWithoutProtocol.substr(colonPos + 1));
+        }
+        catch(const std::exception& e) {
+            std::cerr << "错误：端口号格式无效 - " << e.what() << std::endl;
+            return {};
+        }
+        if(port) {
+            return std::make_pair(host, port);
+        }
+        return {};
+    }
+
+    static std::optional<std::pair<std::string, int>> GetSystemProxySettings() {
+        std::string address;
+        int port = 0;
+        // Windows 实现
+        WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ieProxyConfig = { 0 };
+
+        if(WinHttpGetIEProxyConfigForCurrentUser(&ieProxyConfig)) {
+            if(ieProxyConfig.lpszProxy) {
+                //config.enabled = true;
+                std::wstring proxyW(ieProxyConfig.lpszProxy);
+                address = { proxyW.begin(), proxyW.end() };
+                
+                // 尝试解析端口 (格式: address:port 或 http=address:port)
+                size_t pos = address.find(':');
+                if(pos != std::string::npos) {
+                    try {
+                        port = std::stoi(address.substr(pos + 1));
+                        address = address.substr(0, pos);
+                    }
+                    catch(...) {
+                        // 端口解析失败
+                    }
+                }
+            }
+
+            // 清理资源
+            if(ieProxyConfig.lpszProxy) GlobalFree(ieProxyConfig.lpszProxy);
+            if(ieProxyConfig.lpszProxyBypass) GlobalFree(ieProxyConfig.lpszProxyBypass);
+            if(ieProxyConfig.lpszAutoConfigUrl) GlobalFree(ieProxyConfig.lpszAutoConfigUrl);
+        }
+        if(port) {
+            return std::make_pair(address, port);
+        }
+        return {};
+    }
+
     static auto ansiToUtf8(const std::string& ansiString) -> std::string {
         int ansiSize = static_cast<int>(ansiString.size());
         int utf8Size = MultiByteToWideChar(CP_ACP, 0, ansiString.c_str(), ansiSize, nullptr, 0);
@@ -77,11 +162,21 @@ public:
      * @param out 成功后输出读取到的数据
      * @return 是否成功
      */
-    static auto ReadHttpDataString(std::string url_host, std::string params, std::string& out) -> bool {
+    static auto ReadHttpDataString(std::string url_host, std::string params, std::string& out, std::pair<std::string, int> proxy = {}) -> bool {
         httplib::Client cli(url_host);
+        if(proxy.second) {
+            cli.set_proxy(proxy.first, proxy.second);
+        }
         cli.enable_server_certificate_verification(false);
         cli.set_follow_location(true);                          //https://raw.github.com 会要求301重定向
-        if (auto res = cli.Get(params)) {
+        auto res = cli.Get(params);
+        if(!res) {
+            for(int i = 0; i < 3; i++) {
+                res = cli.Get(params);
+                if(res) break;
+            }
+        }
+        if (res) {
             if (res->status == httplib::StatusCode::OK_200) {
                 out = res->body;
                 return true;

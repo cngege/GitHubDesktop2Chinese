@@ -21,6 +21,8 @@
 #include "Utils/utils.hpp"
 #include "VersionParse/Version.hpp"
 
+#pragma comment(lib, "winhttp.lib")
+
 // 不进行替换 以便调试
 #define NO_REPLACE 0
 
@@ -129,7 +131,7 @@ int main(int argc, char* argv[])
         app.add_flag("--nopause", no_pause,                         "程序在结束前不再暂停等待");
         app.add_option("-g,--githubdesktoppath", Base,              "指定GitHubDesktop要汉化的资源所在目录(js所在目录)");
         app.add_option("-j,--json", LocalizationJSON,               "指定本地化JSON文件的本地路径");
-        app.add_flag("-p,--enableproxy", enable_proxy,              "开启代理访问GitHub");
+        //app.add_flag("-p,--enableproxy", enable_proxy,              "开启代理访问GitHub");
         app.add_flag("-r,--onlyfromremote", only_read_from_remote,  "仅从远程url中读取本地化文件");
         app.add_flag("--rollback", rollback,                        "从备份文件中还原汉化前的文件");
         
@@ -207,6 +209,24 @@ int main(int argc, char* argv[])
     spdlog::info("开发者：CNGEGE > 2024/04/13");
     spdlog::info("按程序提示流程走，完成后自动会退出，{}请勿手动关闭{}程序，手动关闭可能导致汉化失败", "\033[33m", "\033[0m");
 
+    std::pair<std::string, int> proxy = { "", 0 };
+    {
+        auto p1 = utils::get_proxy_env();
+        if(p1) {
+            proxy = *p1;
+        }
+        else {
+            auto p2 = utils::GetSystemProxySettings();
+            if(p2) {
+                proxy = *p2;
+            }
+        }
+    }
+    if(proxy.second) {
+        spdlog::info("检测到已开启代理:，{}:{}", proxy.first, proxy.second);
+    }
+
+
     // 打印构建平台与版本
 #ifdef CURRENT_PLATFORM_ISX64
     std::string arch_str("x64");
@@ -233,7 +253,7 @@ int main(int argc, char* argv[])
         // 读取项目更新时间
         try {
             std::string repoinfo;
-            if(utils::ReadHttpDataString(enable_proxy ? "https://api.github.com" : "https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese", repoinfo)) {
+            if(utils::ReadHttpDataString("https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese", repoinfo, proxy)) {
                 auto infojson = json::parse(repoinfo);
                 std::optional<std::string> info = formatTime(infojson["updated_at"]);
                 if(info) {
@@ -251,7 +271,7 @@ int main(int argc, char* argv[])
             spdlog::info("检查更新中..");
             try {
                 std::string repoinfo;
-                if(utils::ReadHttpDataString(enable_proxy ? "https://api.github.com" : "https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/releases/latest", repoinfo)) {
+                if(utils::ReadHttpDataString("https://api.github.com" , "/repos/cngege/GitHubDesktop2Chinese/releases/latest", repoinfo, proxy)) {
                     auto infojson = json::parse(repoinfo);
                     auto tag_name = infojson["tag_name"].get<std::string>();
                     std::Version remoteVer(tag_name.c_str());
@@ -303,7 +323,7 @@ int main(int argc, char* argv[])
     if (only_read_from_remote) {
         spdlog::info("尝试从远程仓库中获取");
         std::string httpjson;
-        if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.githubusercontent.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+        if (utils::ReadHttpDataString("https://raw.githubusercontent.com" , "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson, proxy)) {
             localization = json::parse(httpjson);
             spdlog::info("远程读取成功");
         }
@@ -321,18 +341,12 @@ int main(int argc, char* argv[])
             spdlog::warn("没有指定,或从指定位置没有发现 {} 文件", "localization.json");
             spdlog::info("尝试从远程仓库中获取");
             std::string httpjson;
-            if (utils::ReadHttpDataString(enable_proxy ? "https://raw.kkgithub.com" : "https://raw.githubusercontent.com", "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson)) {
+            if (utils::ReadHttpDataString("https://raw.githubusercontent.com" , "/cngege/GitHubDesktop2Chinese/master/json/localization.json", httpjson, proxy)) {
                 localization = json::parse(httpjson);
                 spdlog::info("远程读取成功");
             }
             else {
-                spdlog::warn("远程获取失败 - 请尝试使用(-p)参数开启代理或重试");
-                //if (utils::ReadUserInput_bool({ "n","y" }, 0)) {
-                //    spdlog::warn("远程获取失败: {}, 已创建框架,请先编辑创建翻译映射", "localization.json");
-                //    std::ofstream io(LocalizationJSON);
-                //    io << std::setw(4) << localization << std::endl;
-                //    io.close();
-                //}
+                spdlog::warn("远程获取失败 - 请{}重试", !proxy.second ? "尝试开启代理或":"");
                 PAUSE
                 return 1;
             }
@@ -835,7 +849,7 @@ int main(int argc, char* argv[])
     try {
         spdlog::info("正在获取项目参与者");
         std::string contributors;
-        if(utils::ReadHttpDataString(enable_proxy ? "https://api.github.com" : "https://api.github.com", "/repos/cngege/GitHubDesktop2Chinese/contributors", contributors)) {
+        if(utils::ReadHttpDataString("https://api.github.com" , "/repos/cngege/GitHubDesktop2Chinese/contributors", contributors, proxy)) {
             auto contributorsjson = json::parse(contributors);
             spdlog::info("人数: {}", contributorsjson.size());
             int num = 0;
@@ -854,50 +868,6 @@ int main(int argc, char* argv[])
     PAUSE
     return ret_num;
 }
-
-/**
- * @brief 获取当前用户的sid
- * @return 
- */
-//std::string GetCurrentUserSid() {
-//    const int MAX_NAME = 260;
-//    char userName[MAX_NAME] = "";
-//    char sid[MAX_NAME] = "";
-//    DWORD nameSize = sizeof(userName);
-//    GetUserName((LPSTR)userName, &nameSize);
-//
-//
-//    char userSID[MAX_NAME] = "";
-//    char userDomain[MAX_NAME] = "";
-//    DWORD sidSize = sizeof(userSID);
-//    DWORD domainSize = sizeof(userDomain);
-//
-//
-//    SID_NAME_USE snu;
-//    LookupAccountName(NULL,
-//        (LPSTR)userName,
-//        (PSID)userSID,
-//        &sidSize,
-//        (LPSTR)userDomain,
-//        &domainSize,
-//        &snu);
-//
-//
-//    PSID_IDENTIFIER_AUTHORITY psia = GetSidIdentifierAuthority(userSID);
-//    sidSize = sprintf(sid, "S-%lu-", SID_REVISION);
-//    sidSize += sprintf(sid + strlen(sid), "%-lu", psia->Value[5]);
-//
-//
-//    int i = 0;
-//    int subAuthorities = *GetSidSubAuthorityCount(userSID);
-//
-//
-//    for (i = 0; i < subAuthorities; i++)
-//    {
-//        sidSize += sprintf(sid + sidSize, "-%lu", *GetSidSubAuthority(userSID, i));
-//    }
-//    return std::string(sid);
-//}
 
 bool GetBasePath(std::string& out) {
     getline(std::cin, out);
