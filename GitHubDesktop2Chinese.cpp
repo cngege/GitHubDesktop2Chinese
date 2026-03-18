@@ -102,6 +102,15 @@ int main(int argc, char* argv[])
     // 设置控制台的输入 输出编码：
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
+
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if(hOut != INVALID_HANDLE_VALUE) {
+        DWORD mode = 0;
+        GetConsoleMode(hOut, &mode);
+        SetConsoleMode(hOut, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    }
+
+
     FileVer = std::Version(FILEVERSION);
     // 设置控制台打印日志输出等级
     if(FileVer.status == FileVer.Dev) {
