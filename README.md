@@ -112,6 +112,8 @@
  - [x] 改动json格式允许进行提示后选择性汉化
  - [x] 在映射文件中添加转为预览版
  - [x] 支持使用系统http代理,包括环境变量和读系统代理注册表
+ - [ ] 下载更新的断点续传功能
+ - [ ] 读取GitHub Desktop的最新版和本地版本比较，如果有新版，则用其他颜色给出提示
 
 ## 🍬星标(收藏)历史
 ![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
