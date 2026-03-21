@@ -934,7 +934,8 @@
 		["\"Overriding commit message with generated message\"","\"以生成的消息覆盖提交消息\""],
 		["\"About \"","\"关于 \""],
 		["\\}return\"Error\"\\}","}return\"出错了\"}"],
-		["\"Cloning \"","\"正在克隆 \""],
+		["\"Updating submodules\"","\"更新子模块\""],
+    ["\"Cloning \"","\"正在克隆 \""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
