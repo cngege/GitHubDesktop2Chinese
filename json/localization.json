@@ -935,7 +935,7 @@
 		["\"About \"","\"关于 \""],
 		["\\}return\"Error\"\\}","}return\"出错了\"}"],
 		["\"Updating submodules\"","\"更新子模块\""],
-    ["\"Cloning \"","\"正在克隆 \""],
+		["\"Cloning \"","\"正在克隆 \""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
