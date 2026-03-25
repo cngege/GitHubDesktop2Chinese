@@ -936,7 +936,7 @@
 		["\\}return\"Error\"\\}","}return\"出错了\"}"],
 		["\"Updating submodules\"","\"更新子模块\""],
 		["\"Cloning \"","\"正在克隆 \""],
-		["\"You don't have write access to \",_e.createElement\\(\"strong\",null,i.name\\),\". Want to\",\" \",_e.createElement\\(lT,\\{onClick:this.props.onShowCreateForkDialog\\},\"create a fork\"","\"你对\",_e.createElement(\"strong\",null,i.name),\"没有写入权限，是否需要\",\" \",_e.createElement(lT,{onClick:this.props.onShowCreateForkDialog},\"创建一个分支\""],
+		["\"You don't have write access to \",(..).createElement\\(\"strong\",null,(.).name\\),\". Want to\",\" \",(..).createElement\\((..),\\{onClick:this.props.onShowCreateForkDialog\\},\"create a fork\"","\"你对\",$1.createElement(\"strong\",null,$2.name),\"没有写入权限，是否需要\",\" \",$3.createElement($4,{onClick:this.props.onShowCreateForkDialog},\"创建一个分支\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
