@@ -419,11 +419,27 @@ int main(int argc, char* argv[])
                 std::wstring ver = key.GetStringValue(L"DisplayVersion");
                 std::wstring path = key.GetStringValue(L"InstallLocation");
                 Base = path + L"\\" + L"app-" + ver + L"\\resources\\app";
+                std::string desktop_local_ver_str = utils::to_byte_string(ver);
 
-                spdlog::info("已从注册表中读取信息:");
-                spdlog::info("Github Desktop 版本: {}", utils::to_byte_string(ver));
+
+                spdlog::info("正在读取GitHubDesktop最新版...");
+                std::string httpjson_str;
+                json httpjson;
+                if(utils::ReadHttpDataString("https://central.github.com", "/deployments/desktop/desktop/changelog.json", httpjson_str, proxy)) {
+                    httpjson = json::parse(httpjson_str);
+                    std::string v = httpjson[0]["version"].get<std::string>();
+                    std::Version desktop_remote_ver(v.c_str());
+                    std::Version desktop_local_ver(desktop_local_ver_str.c_str());
+                    spdlog::info("已读取到远程GitHubDesktop最新版:{} {}", v, desktop_remote_ver > desktop_local_ver ? "(\033[1;33m需更新\033[0m)" : "");
+                }else{
+                    spdlog::warn("远程GitHubDesktop版本读取失败.");
+                }
+
+                spdlog::info("已从注册表中读取本地GitHubDesktop信息:");
+                spdlog::info("本地GitHubDesktop版本: {}", desktop_local_ver_str);
                 spdlog::info("安装目录: {}", utils::to_byte_string(path));
                 spdlog::info("最后拼接完整目录: {}", Base.string());
+
 
                 if (!fs::exists(Base)) {
                     spdlog::warn("注册表最终获取到的目录不存在,请手动指定main.js所在的文件夹目录");
