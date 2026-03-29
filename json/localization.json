@@ -946,6 +946,7 @@
 		["\\(\"p\",null,(.)\\.message\\),(..)\\.createElement","(\"p\",null,$1.message.replace(\"Payment Required\",\"需要付款\")),$2.createElement"],
 		["\"View Branch on GitHub\"","\"在 GitHub 上查看分支\""],
 		["\\{className:\"call-to-action-bubble\"\\},\"New\"","{className:\"call-to-action-bubble\"},\"新功能\""],
+		["\"Beta\"","\"测试\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
