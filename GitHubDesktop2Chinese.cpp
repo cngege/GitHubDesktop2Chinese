@@ -384,6 +384,16 @@ int main(int argc, char* argv[])
         }
     }
 
+    // 读取映射文件中的提示信息
+    if (localization.contains("tip") && localization.at("tip").is_array() && !localization.empty()) {
+        for(auto& it : localization.at("tip")) {
+            if (it.is_string()) {
+                spdlog::info(" **通知** {}", it.get<std::string>());
+            }
+        }
+    }
+
+
     // Github Desktop 存在目录没有提前设置
     if (!fs::exists(Base) || !fs::exists(Base / "index.html")) {
         // 首先要能够成功读取注册表

@@ -1,6 +1,7 @@
 {
 	"version":2,
 	"minversion": "1.0.0",
+    "tip": [],
 	"select":[
 		{
 			"replaceFile":"main.js",
