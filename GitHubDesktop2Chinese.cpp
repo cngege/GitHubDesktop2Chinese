@@ -290,16 +290,20 @@ int main(int argc, char* argv[])
                     else {
                         if(FileVer < remoteVer) {
                             spdlog::info("发现新版本: {}", remoteVer.toString());
-                            std::string downlink = infojson["assets"][0]["browser_download_url"].get<std::string>();
-                            spdlog::info("下载链接: {}", downlink);
+                            std::string browser_download_url = infojson["assets"][0]["browser_download_url"].get<std::string>();
+                            std::string downlink = infojson["assets"][0]["url"].get<std::string>();
+                            int download_count = infojson["assets"][0]["download_count"].get<int>();
+                            size_t max_size = infojson["assets"][0]["size"].get<int64_t>();
+                            spdlog::info("下载链接({}次下载): {}", download_count, browser_download_url);
                             spdlog::info("是否自动更新:");
                             bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
                             if(autoupdate) {
                                 //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
+                                //https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/assets/376558079
                                 std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
                                 std::smatch matches;
                                 if(std::regex_match(downlink, matches, url_regex)) {
-                                    auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]));
+                                    auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy);
                                     if(!result) {
                                         spdlog::error("失败 更新过程出现异常");
                                     }
