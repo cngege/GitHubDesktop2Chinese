@@ -42,6 +42,7 @@
 - 路径: [项目目录]/json/localization.json
 - 主节点 - version(int): 此json文件的版本,此值仅会因未来格式更新而更新
 - 主节点 - minversion(string): 需要最低的加载器版本
+- 主节点 - tip(array[string]): 用于在加载器中显示的通知信息
 - 主节点 - select(JSON): 本地化时提示进行选择性修改
   - array[]
     - replaceFile(string): 进行替换的文件
