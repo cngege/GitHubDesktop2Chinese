@@ -946,6 +946,7 @@
 		["\"Configure commit options\"","\"配置提交选项\""],
 		["label:\"Add Signed-off-by trailer\"","label:\"添加 Signed-off-by 签名尾注\""],
 		["label:\"Allow empty commit\"","label:\"允许空提交\""],
+		["\"Your new branch will be based on the commit '\",(.)\\.summary,\"' \\(\",(.)\\.sha\\.substring\\(0,7\\),\"\\) from your repository\\.\"","\"你的新分支将基于代码仓库中的提交记录“\",$1.summary,\"” (\",$2.sha.substring(0,7),\")创建.\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
