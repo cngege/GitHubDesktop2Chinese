@@ -9,7 +9,7 @@
 #include <winhttp.h>
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "http/httplib.h"
-
+#include <spdlog/spdlog.h>
 
 namespace fs = std::filesystem;
 
@@ -189,58 +189,93 @@ public:
     }
 
     //static auto DownloadHttpResource(std::string url_host, std::string params);
-    static auto UpdateProgram(std::string url_host, std::string params, fs::path Self) ->bool{
+    static auto UpdateProgram(std::string url_host, std::string params, fs::path Self, int64_t max_size, std::pair<std::string, int> proxy) ->bool{
         fs::path parent_dir = Self.parent_path();   // 文件所在目录
-        fs::path stem = Self.filename();                // 文件名 不包含扩展名
+        fs::path exe_name = Self.filename();                // 文件名 包含扩展名,但不包含路径
 
+        fs::path new_file = Self;
+        fs::path tmp_file = Self;
+        tmp_file += ".new"; // 下载临时文件
         //printf_s(url_host.c_str()); printf_s("\n");
         //printf_s(params.c_str());        printf_s("\n");
-        //printf_s(stem.string().c_str());        printf_s("\n");
-        //printf_s(stem.string().c_str());        printf_s("\n");
+        //printf_s(exe_name.string().c_str());        printf_s("\n");
+        //printf_s(tmp_file.string().c_str());        printf_s("\n"); return false;
 
-        httplib::Client cli(url_host);
-        cli.enable_server_certificate_verification(false);
-        cli.set_follow_location(true);                          //https://raw.github.com 会要求301重定向
-        auto res = cli.Get(params, [](uint64_t len, uint64_t total) {
-            printf_s("\r %d%% ==>  %lld / %lld", (int)(len * 100 / total), len, total);
-            return true;
-        });
-        printf_s("\n");
-        if(res && res->status == httplib::StatusCode::OK_200) {
-            // 讲数据写入到本地文件中
-            std::ofstream downfile(Self.string() + ".new", std::ios::binary | std::ios::out | std::ios::trunc);
-            if(downfile.is_open()) {
-                printf_s("下载完成, 请稍等, 随后自动完成并(无参)重启.. \n");
-                // 写入文件
-                downfile.write(res->body.data(), res->body.length());
-                downfile.flush();
-                downfile.close();
-                // 完成后创建进程
-                // 构建参数
-                std::string p = "/c \"ping 127.0.0.1 -n 6 > nul & move /Y ";
-                p += stem.string() + ".new ";
-                p += stem.string();
-                p += " & start ";
-                p += stem.string();
-                p += "\"";
+            // 1. 如果临时文件已存在，获取已下载大小（用于断点续传）
+        uint64_t downloaded_bytes = 0;
+        if(fs::exists(tmp_file)) {
+            downloaded_bytes = fs::file_size(tmp_file);
+        }
 
-                ShellExecute(
-                    NULL,                   // 父窗口句柄
-                    _T("open"),             // 操作
-                    _T("cmd.exe"),          // 应用程序
-                    p.c_str(),              // 参数
-                    parent_dir.string().c_str(),                   // 工作目录
-                    SW_SHOW);               // 显示方式
-
-                return true;
+        if(downloaded_bytes < max_size) {
+            // 以 二进制追加模式 打开文件（断点续传关键）
+            std::ofstream downfile(tmp_file, std::ios::binary | std::ios::out | std::ios::app);
+            if(!downfile.is_open()) {
+                spdlog::error("无法打开临时文件写入新版本");
+                return false;
             }
-            else {
+
+            httplib::Client cli(url_host);
+            if(proxy.second) {
+                cli.set_proxy(proxy.first, proxy.second);
+            }
+            cli.enable_server_certificate_verification(false);
+            cli.set_follow_location(true);                          //https://raw.github.com 会要求301重定向
+            httplib::Headers headers;
+            if(downloaded_bytes > 0) {
+                headers.emplace("Range", "bytes=" + std::to_string(downloaded_bytes) + "-");
+            }
+            headers.emplace("Accept", "application/octet-stream");
+
+            auto res = cli.Get(params, headers, 
+            [&](const char* data, size_t data_length) {
+                if(data_length > 0 && downfile.is_open()) {
+                    downfile.write(data, data_length);
+                    downfile.flush(); // 立即刷入磁盘，不缓存
+                }
+                return downfile.is_open();
+            },
+            [&](uint64_t len, uint64_t total) {
+                uint64_t total_ = downloaded_bytes + total;  // 文件总大小
+                uint64_t now_ = downloaded_bytes + len;
+                int percent_ = static_cast<int>(now_ * 100 / total_);
+
+                printf_s("\r %s %d%% ==>  %lld / %lld", (downloaded_bytes > 0) ? "[续传]" : "[下载]", percent_, now_, total_);
+                return true;
+            });
+            printf_s("\n");
+            downfile.close();
+
+            if(!res) {
+                spdlog::error("网络请求失败:{}", httplib::to_string(res.error()));
+                return false;
+            }
+            if(res->status != httplib::StatusCode::OK_200 && res->status != httplib::StatusCode::PartialContent_206) {
+                spdlog::error("更新错误, 服务器返回错误的状态码: {}", res->status);
                 return false;
             }
         }
-        else {
-            return false;
-        }
+
+        
+        spdlog::info("下载完成, 请稍等, 随后自动完成并(无参)重启..");
+        // 完成后创建进程
+        // 构建参数
+        std::string p = "/c \"ping 127.0.0.1 -n 6 > nul & move /Y ";
+        p += tmp_file.filename().string();
+        p += " ";
+        p += exe_name.string();
+        p += " & start ";
+        p += exe_name.string();
+        p += "\"";
+        ShellExecute(
+            NULL,                   // 父窗口句柄
+            _T("open"),             // 操作
+            _T("cmd.exe"),          // 应用程序
+            p.c_str(),              // 参数
+            parent_dir.string().c_str(),                   // 工作目录
+            SW_SHOW);               // 显示方式
+
+        return true;
     }
 
     static auto ReadUserInput_string(std::vector<std::string> input, int defaultval = -1) -> std::string {

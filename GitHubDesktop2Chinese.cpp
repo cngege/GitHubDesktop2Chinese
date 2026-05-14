@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
 
     // 开发者声明
     spdlog::info("开发者：CNGEGE > 2024/04/13");
-    spdlog::info("按程序提示流程走，完成后自动会退出，{}请勿手动关闭{}程序，手动关闭可能导致汉化失败", "\033[33m", "\033[0m");
+    spdlog::info("按程序提示流程走，完成后自动会退出，{}请勿手动关闭{}程序，手动关闭可能导致汉化失败", "\033[1;33m", "\033[0m");
 
     std::pair<std::string, int> proxy = { "", 0 };
     {
@@ -290,16 +290,20 @@ int main(int argc, char* argv[])
                     else {
                         if(FileVer < remoteVer) {
                             spdlog::info("发现新版本: {}", remoteVer.toString());
-                            std::string downlink = infojson["assets"][0]["browser_download_url"].get<std::string>();
-                            spdlog::info("下载链接: {}", downlink);
+                            std::string browser_download_url = infojson["assets"][0]["browser_download_url"].get<std::string>();
+                            std::string downlink = infojson["assets"][0]["url"].get<std::string>();
+                            int download_count = infojson["assets"][0]["download_count"].get<int>();
+                            size_t max_size = infojson["assets"][0]["size"].get<int64_t>();
+                            spdlog::info("下载链接({}次下载): {}", download_count, browser_download_url);
                             spdlog::info("是否自动更新:");
                             bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
                             if(autoupdate) {
                                 //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
+                                //https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/assets/376558079
                                 std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
                                 std::smatch matches;
                                 if(std::regex_match(downlink, matches, url_regex)) {
-                                    auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]));
+                                    auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy);
                                     if(!result) {
                                         spdlog::error("失败 更新过程出现异常");
                                     }
@@ -380,6 +384,16 @@ int main(int argc, char* argv[])
         }
     }
 
+    // 读取映射文件中的提示信息
+    if (localization.contains("tip") && localization.at("tip").is_array() && !localization.empty()) {
+        for(auto& it : localization.at("tip")) {
+            if (it.is_string()) {
+                spdlog::info(" **通知** {}", it.get<std::string>());
+            }
+        }
+    }
+
+
     // Github Desktop 存在目录没有提前设置
     if (!fs::exists(Base) || !fs::exists(Base / "index.html")) {
         // 首先要能够成功读取注册表
@@ -405,11 +419,27 @@ int main(int argc, char* argv[])
                 std::wstring ver = key.GetStringValue(L"DisplayVersion");
                 std::wstring path = key.GetStringValue(L"InstallLocation");
                 Base = path + L"\\" + L"app-" + ver + L"\\resources\\app";
+                std::string desktop_local_ver_str = utils::to_byte_string(ver);
 
-                spdlog::info("已从注册表中读取信息:");
-                spdlog::info("Github Desktop 版本: {}", utils::to_byte_string(ver));
+
+                spdlog::info("正在读取GitHubDesktop最新版...");
+                std::string httpjson_str;
+                json httpjson;
+                if(utils::ReadHttpDataString("https://central.github.com", "/deployments/desktop/desktop/changelog.json", httpjson_str, proxy)) {
+                    httpjson = json::parse(httpjson_str);
+                    std::string v = httpjson[0]["version"].get<std::string>();
+                    std::Version desktop_remote_ver(v.c_str());
+                    std::Version desktop_local_ver(desktop_local_ver_str.c_str());
+                    spdlog::info("已读取到远程GitHubDesktop最新版:{} {}", v, desktop_remote_ver > desktop_local_ver ? "(\033[1;33m需更新\033[0m)" : "");
+                }else{
+                    spdlog::warn("远程GitHubDesktop版本读取失败.");
+                }
+
+                spdlog::info("已从注册表中读取本地GitHubDesktop信息:");
+                spdlog::info("本地GitHubDesktop版本: {}", desktop_local_ver_str);
                 spdlog::info("安装目录: {}", utils::to_byte_string(path));
                 spdlog::info("最后拼接完整目录: {}", Base.string());
+
 
                 if (!fs::exists(Base)) {
                     spdlog::warn("注册表最终获取到的目录不存在,请手动指定main.js所在的文件夹目录");
