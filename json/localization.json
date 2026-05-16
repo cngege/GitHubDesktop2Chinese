@@ -948,7 +948,7 @@
 		["label:\"Allow empty commit\"","label:\"允许空提交\""],
 		["\"Your new branch will be based on the commit '\",(.)\\.summary,\"' \\(\",(.)\\.sha\\.substring\\(0,7\\),\"\\) from your repository\\.\"","\"你的新分支将基于代码仓库中的提交记录“\",$1.summary,\"” (\",$2.sha.substring(0,7),\")创建.\""],
 		["\"GitHub Enterprise\"\\)","\"GitHub企业版\")"],
-		["\"No history\""，"\"无历史记录\""],
+		["\"No history\"","\"无历史记录\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
