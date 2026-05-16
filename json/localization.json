@@ -1,429 +1,429 @@
 {
-	"version":3，
-	"minversion": "1.0.0"，
-    "tip": []，
+	"version":3,
+	"minversion": "1.0.0",
+    "tip": [],
 	"select":[
 		{
-			"replaceFile":"main.js"，
-			"tooltip":"是否强制开启预览版选项"，
-			"enable": true，
+			"replaceFile":"main.js",
+			"tooltip":"是否强制开启预览版选项",
+			"enable": true,
 			"replace": [
-				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\|\\|!1"，"===process.env.GITHUB_DESKTOP_PREVIEW_FEATURES||!0"]
+				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\|\\|!1","===process.env.GITHUB_DESKTOP_PREVIEW_FEATURES||!0"]
 			]
-		}，
+		},
 		{
-			"replaceFile":"renderer.js"，
-			"tooltip":"是否强制开启预览版选项对应的功能"，
-			"enable": true，
+			"replaceFile":"renderer.js",
+			"tooltip":"是否强制开启预览版选项对应的功能",
+			"enable": true,
 			"replace": [
-				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\}"，"===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/\"1\"}"]
+				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\}","===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/\"1\"}"]
 			]
-		}，
+		},
 		{
-			"replaceFile":"renderer.js"，
-			"tooltip":"是否要求AI将生成结果转为中文"，
-			"enable": false，
+			"replaceFile":"renderer.js",
+			"tooltip":"是否要求AI将生成结果转为中文",
+			"enable": false,
 			"replace":[
-				[""，""]
+				["",""]
 			]
 		}
-	]，
+	],
     "main": [
-		["&File"，"文件(&F)"]，
-		["New &repository…"，"新建存储库(&R)"]，
-		["Add &local repository…"，"添加本地存储库(&L)"]，
-		["Clo&ne repository…"，"克隆存储库(&N)"]，
-		["&Options…"，"选项…(&O)"]，
-		["E&xit"，"退出(&X)"]，
-		["&Edit"，"编辑(&E)"]，
-		["&Undo"，"撤销(&U)"]，
-		["&Redo"，"恢复(&R)"]，
-		["Cu&t"，"剪切(&T)"]，
-		["&Copy"，"复制(&C)"]，
-		["&Paste"，"粘贴(&P)"]，
-		["Select &all"，"全选(&A)"]，
-		["&Find"，"查找(&F)"]，
-		["&View\""，"视图(&V)\""]，
-		["&Changes"，"更改(&C)"]，
-		["&History"，"历史(&H)"]，
-		["Repository &list"，"存储库列表(&L)"]，
-		["&Branches list"，"分支列表(&B)"]，
-		["Go to &Summary"，"转到摘要(&S)"]，
-		["Toggle &full screen"，"切换全屏(&F)"]，
-		["Reset zoom"，"重置缩放"]，
-		["Zoom in"，"放大"]，
-		["Zoom out"，"缩小"]，
-		["&Reload"，"重载(&R)"]，
-		["&Toggle developer tools"，"切换开发工具(&T)"]，
-		["e\\?t\\?\"Force P&ush…\":\"Force P&ush\":\"P&ush\""，"e?t?\"强制推送…(&U)\":\"强制推送(&U)\":\"推送(&U)\""]，
-		["&Repository"，"存储库(&R)"]，
-		["Pu&ll"，"拉取(&L)"]，
-		["&Fetch"，"同步(&F)"]，
-		["&View on GitHub"，"在GitHub中显示(&V)"]，
-		["label:`O&pen in \\$\\{(.)\\?\\?\"shell\"\\}`"，"label:`使用$${$1??\"shell\"}打开(&P)`"]，
-		["Show in E&xplorer"，"在文件管理器中显示(&X)"]，
-		["`&Open in \\$\\{e\\?\\?\"external editor\"\\}`"，"`用 $${e??\"默认编辑器\"} 打开(&O)`"]，
-		["\"Create &issue on GitHub\""，"\"在GitHub中新建议题(&I)\""]，
-		["\"Repository &settings…\""，"\"存储库设置…(&S)\""]，
-		["\"New &branch…\""，"\"新建分支…(&B)\""]，
-		["\"&Rename…\""，"\"重命名…(&R)\""]，
-		["\"&Delete…\""，"\"删除…(&D)\""]，
-		["\"Discard all changes…\""，"\"放弃所有更改…\""]，
-		["\"&Stash all changes…\":\"&Stash all changes\""，"\"暂存所有更改…(&S)\":\"暂存所有更改(&S)\""]，
-		["`&Update from \\$\\{a\\}`"，"`从 $${a} 中更新(&U)`"]，
-		["\"&Compare to branch\""，"\"在分支中比较(&C)\""]，
-		["\"&Merge into current branch…\""，"\"合并到当前分支…(&M)\""]，
-		["\"Squas&h and merge into current branch…\""，"\"压缩合并到当前分支…(&H)\""]，
-		["\"R&ebase current branch…\""，"\"对当前分支进行变基…(&E)\""]，
-		["\"Compare on &GitHub\""，"\"在GitHub上比较(&G)\""]，
-		["\"View branch on GitHub\""，"\"在GitHub上显示分支\""]，
-		["\"Preview pull request\""，"\"预览拉取请求\""]，
-		["\"&Branch\""，"\"分支(&B)\""]，
-		["\"&Help\""，"\"帮助(&H)\""]，
-		["\"Report issue…\""，"\"报告问题…\""]，
-		["\"Failed opening issue creation page\""，"\"打开议题页面出错\""]，
-		["\"&Contact GitHub support…\""，"\"联系GitHub支持…(&C)\""]，
-		["\"Failed opening contact support page\""，"\"打开Github支持页出错\""]，
-		["\"Show User Guides\""，"\"显示用户指南\""]，
-		["\"Failed opening user guides page\""，"\"打开用户指南页出错\""]，
-		["\"Show keyboard shortcuts\""，"\"显示快捷键\""]，
-		["\"Failed opening keyboard shortcuts page\""，"\"打开键盘快捷键页面失败\""]，
-		["\"S&how logs in Explorer\""，"\"在文件管理器中显示日志(&H)\""]，
-		["\"Failed opening logs directory\""，"\"打开日志文件夹错误\""]，
-		["\"&About GitHub Desktop\""，"\"关于GitHub Desktop(&A)\""]，
-		["e\\?\"H&ide stashed changes\":\"Sho&w stashed changes\""，"e?\"隐藏暂存的更改(&I)\":\"显示暂存的更改(&W)\""]，
-		["\"&Remove…\":\"&Remove\""，"\"删除…(&R)\":\"删除(&R)\""]，
-		["\"View &pull request on GitHub\":\"Create &pull request\""，"\"在GitHub上查看拉取请求(&P)\":\"创建拉取请求(&P)\""]，
-		["\"Expand active resizable\""，"\"展开可调大小的活动项\""]，
-		["\"Contract active resizable\""，"\"折叠可调大小的活动项\""]，
-		["id:\"about\"\\}\\]"，"id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){#{1}.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]"，"click\\(\\)\\{([a-zA-z\\$_]{1,3})\\.shell\\.openExternal"]，
-		["\\)(.).append\\((.)\\);else"，
-		"){$2.label=$2.label.replace(/Undo/,'撤销').replace(/Redo/,'恢复').replace(/Cut/,'剪切').replace(/Copy/,'复制').replace(/Paste/,'粘贴').replace(/Delete/,'删除').replace(/Select All/,'全选');$1.append($2);}else"]，
-		["label:\"Command Line Tool\""，"label:\"命令行工具\""]，
-		["label:\"Install\""，"label:\"安装\""]，
-		["label:\"Uninstall\""，"label:\"卸载\""]，
-		["label:\"Crash main process…\""，"label:\"崩掉主进程…\""]，
-		["label:\"Crash renderer process…\""，"label:\"崩掉渲染进程…\""]，
-		["label:\"Prune branches\""，"label:\"修剪分支\""]，
-		["label:\"Show notification\""，"label:\"显示通知\""]，
-		["label:\"Show popup\""，"label:\"显示弹出窗口\""]，
-		["label:\"Release notes\""，"label:\"发布说明\""]，
-		["label:\"Thank you\""，"label:\"谢谢你\""]，
-		["label:\"Show App Error\""，"label:\"显示程序错误\""]，
-		["label:\"Octicons\""，"label:\"图标\""]，
-		["label:\"Show banner\""，"label:\"显示横幅\""]，
-		["label:\"Update banner\""，"label:\"更新横幅\""]，
-		["label:\"Showcase Update banner\""，"label:\"展示更新横幅\""]，
-		["label:\"Arm64 banner\""，"label:\"适用ARM64的横幅\""]，
-		["label:\"Reorder Successful\""，"label:\"重新排序成功\""]，
-		["label:\"Reorder Undone\""，"label:\"重新排序已撤销\""]，
-		["label:\"Cherry Pick Conflicts\""，"label:\"挑拣时出现冲突\""]，
-		["label:\"Merge Successful\""，"label:\"合并成功\""]，
-		["label:\"OS Version No Longer Supported\""，"label:\"操作系统版本不再受支持\""]，
-		["label:\"Show Error Dialogs\""，"label:\"显示错误对话框\""]，
-		["label:\"About dialog \\(test mode\\)\""，"label:\"关于对话框（测试模式）\""]，
-		["label:\"Update banner \\(priority\\)\""，"label:\"更新横幅（优先）\""]，
-		["label:\"Confirm Committing Conflicted Files\""，"label:\"确认提交存在冲突的文件\""]，
-		["label:\"Discarded Changes Will Be Unrecoverable\""，"label:\"已丢弃的更改将无法恢复\""]，
-		["label:\"Do you want to fork this repository\\?\""，"label:\"你想要复刻这个代码仓库吗？ \""]，
-		["label:\"Newer Commits On Remote\""，"label:\"远程仓库上有更新的提交记录\""]，
-		["label:\"Files Too Large\""，"label:\"文件太大\""]，
-		["label:\"Generic Git Authentication\""，"label:\"通用的Git身份验证\""]，
-		["label:\"Invalidated Account Token\""，"label:\"账户令牌已失效\""]，
-		["label:\"Push Rejected\""，"label:\"推送被拒绝\""]，
-		["label:\"Re-Authorization Required\""，"label:\"需要重新进行授权\""]，
-		["label:\"Unable to Locate Git\""，"label:\"无法找到本地Git程序\""]，
-		["label:\"Unable to Open External Editor\""，"label:\"无法打开外部编辑器\""]，
-		["label:\"Unable to Open Shell\""，"label:\"无法打开 shell（命令行界面） \""]，
-		["label:\"Untrusted Server\""，"label:\"不可信的服务器\""]，
-		["label:\"Update Existing Git LFS Filters\\?\""，"label:\"是否更新现有的Git LFS过滤器？ \""]，
-		["label:\"Upstream Already Exists\""，"label:\"上游（仓库）已存在\""]，
-		["label:\"Add to dictionary\""，"label:\"添加到字典\""]，
-		["label:\\((.)\\?\"Hide\":\"Show\"\\)\\+\" Toggle Chan&ges Filter\""，"label:($1?\"隐藏\":\"显示\")+\"更改内容过滤器(&G)\""]，
-		["\"Open &with…\""，"\"使用...打开(&W)\""]，
-		["\"\""，"\"\""]
-	]，
+		["&File","文件(&F)"],
+		["New &repository…","新建存储库(&R)"],
+		["Add &local repository…","添加本地存储库(&L)"],
+		["Clo&ne repository…","克隆存储库(&N)"],
+		["&Options…","选项…(&O)"],
+		["E&xit","退出(&X)"],
+		["&Edit","编辑(&E)"],
+		["&Undo","撤销(&U)"],
+		["&Redo","恢复(&R)"],
+		["Cu&t","剪切(&T)"],
+		["&Copy","复制(&C)"],
+		["&Paste","粘贴(&P)"],
+		["Select &all","全选(&A)"],
+		["&Find","查找(&F)"],
+		["&View\"","视图(&V)\""],
+		["&Changes","更改(&C)"],
+		["&History","历史(&H)"],
+		["Repository &list","存储库列表(&L)"],
+		["&Branches list","分支列表(&B)"],
+		["Go to &Summary","转到摘要(&S)"],
+		["Toggle &full screen","切换全屏(&F)"],
+		["Reset zoom","重置缩放"],
+		["Zoom in","放大"],
+		["Zoom out","缩小"],
+		["&Reload","重载(&R)"],
+		["&Toggle developer tools","切换开发工具(&T)"],
+		["e\\?t\\?\"Force P&ush…\":\"Force P&ush\":\"P&ush\"","e?t?\"强制推送…(&U)\":\"强制推送(&U)\":\"推送(&U)\""],
+		["&Repository","存储库(&R)"],
+		["Pu&ll","拉取(&L)"],
+		["&Fetch","同步(&F)"],
+		["&View on GitHub","在GitHub中显示(&V)"],
+		["label:`O&pen in \\$\\{(.)\\?\\?\"shell\"\\}`","label:`使用$${$1??\"shell\"}打开(&P)`"],
+		["Show in E&xplorer","在文件管理器中显示(&X)"],
+		["`&Open in \\$\\{e\\?\\?\"external editor\"\\}`","`用 $${e??\"默认编辑器\"} 打开(&O)`"],
+		["\"Create &issue on GitHub\"","\"在GitHub中新建议题(&I)\""],
+		["\"Repository &settings…\"","\"存储库设置…(&S)\""],
+		["\"New &branch…\"","\"新建分支…(&B)\""],
+		["\"&Rename…\"","\"重命名…(&R)\""],
+		["\"&Delete…\"","\"删除…(&D)\""],
+		["\"Discard all changes…\"","\"放弃所有更改…\""],
+		["\"&Stash all changes…\":\"&Stash all changes\"","\"暂存所有更改…(&S)\":\"暂存所有更改(&S)\""],
+		["`&Update from \\$\\{a\\}`","`从 $${a} 中更新(&U)`"],
+		["\"&Compare to branch\"","\"在分支中比较(&C)\""],
+		["\"&Merge into current branch…\"","\"合并到当前分支…(&M)\""],
+		["\"Squas&h and merge into current branch…\"","\"压缩合并到当前分支…(&H)\""],
+		["\"R&ebase current branch…\"","\"对当前分支进行变基…(&E)\""],
+		["\"Compare on &GitHub\"","\"在GitHub上比较(&G)\""],
+		["\"View branch on GitHub\"","\"在GitHub上显示分支\""],
+		["\"Preview pull request\"","\"预览拉取请求\""],
+		["\"&Branch\"","\"分支(&B)\""],
+		["\"&Help\"","\"帮助(&H)\""],
+		["\"Report issue…\"","\"报告问题…\""],
+		["\"Failed opening issue creation page\"","\"打开议题页面出错\""],
+		["\"&Contact GitHub support…\"","\"联系GitHub支持…(&C)\""],
+		["\"Failed opening contact support page\"","\"打开Github支持页出错\""],
+		["\"Show User Guides\"","\"显示用户指南\""],
+		["\"Failed opening user guides page\"","\"打开用户指南页出错\""],
+		["\"Show keyboard shortcuts\"","\"显示快捷键\""],
+		["\"Failed opening keyboard shortcuts page\"","\"打开键盘快捷键页面失败\""],
+		["\"S&how logs in Explorer\"","\"在文件管理器中显示日志(&H)\""],
+		["\"Failed opening logs directory\"","\"打开日志文件夹错误\""],
+		["\"&About GitHub Desktop\"","\"关于GitHub Desktop(&A)\""],
+		["e\\?\"H&ide stashed changes\":\"Sho&w stashed changes\"","e?\"隐藏暂存的更改(&I)\":\"显示暂存的更改(&W)\""],
+		["\"&Remove…\":\"&Remove\"","\"删除…(&R)\":\"删除(&R)\""],
+		["\"View &pull request on GitHub\":\"Create &pull request\"","\"在GitHub上查看拉取请求(&P)\":\"创建拉取请求(&P)\""],
+		["\"Expand active resizable\"","\"展开可调大小的活动项\""],
+		["\"Contract active resizable\"","\"折叠可调大小的活动项\""],
+		["id:\"about\"\\}\\]","id:\"about\"},{label:\"关于汉化插件(&Z)\",click(){#{1}.shell.openExternal(\"https://github.com/cngege/GitHubDesktop2Chinese\").catch((e=>log.error(\"打开汉化GitHub页面失败\",e)))}}]","click\\(\\)\\{([a-zA-z\\$_]{1,3})\\.shell\\.openExternal"],
+		["\\)(.).append\\((.)\\);else",
+		"){$2.label=$2.label.replace(/Undo/,'撤销').replace(/Redo/,'恢复').replace(/Cut/,'剪切').replace(/Copy/,'复制').replace(/Paste/,'粘贴').replace(/Delete/,'删除').replace(/Select All/,'全选');$1.append($2);}else"],
+		["label:\"Command Line Tool\"","label:\"命令行工具\""],
+		["label:\"Install\"","label:\"安装\""],
+		["label:\"Uninstall\"","label:\"卸载\""],
+		["label:\"Crash main process…\"","label:\"崩掉主进程…\""],
+		["label:\"Crash renderer process…\"","label:\"崩掉渲染进程…\""],
+		["label:\"Prune branches\"","label:\"修剪分支\""],
+		["label:\"Show notification\"","label:\"显示通知\""],
+		["label:\"Show popup\"","label:\"显示弹出窗口\""],
+		["label:\"Release notes\"","label:\"发布说明\""],
+		["label:\"Thank you\"","label:\"谢谢你\""],
+		["label:\"Show App Error\"","label:\"显示程序错误\""],
+		["label:\"Octicons\"","label:\"图标\""],
+		["label:\"Show banner\"","label:\"显示横幅\""],
+		["label:\"Update banner\"","label:\"更新横幅\""],
+		["label:\"Showcase Update banner\"","label:\"展示更新横幅\""],
+		["label:\"Arm64 banner\"","label:\"适用ARM64的横幅\""],
+		["label:\"Reorder Successful\"","label:\"重新排序成功\""],
+		["label:\"Reorder Undone\"","label:\"重新排序已撤销\""],
+		["label:\"Cherry Pick Conflicts\"","label:\"挑拣时出现冲突\""],
+		["label:\"Merge Successful\"","label:\"合并成功\""],
+		["label:\"OS Version No Longer Supported\"","label:\"操作系统版本不再受支持\""],
+		["label:\"Show Error Dialogs\"","label:\"显示错误对话框\""],
+		["label:\"About dialog \\(test mode\\)\"","label:\"关于对话框（测试模式）\""],
+		["label:\"Update banner \\(priority\\)\"","label:\"更新横幅（优先）\""],
+		["label:\"Confirm Committing Conflicted Files\"","label:\"确认提交存在冲突的文件\""],
+		["label:\"Discarded Changes Will Be Unrecoverable\"","label:\"已丢弃的更改将无法恢复\""],
+		["label:\"Do you want to fork this repository\\?\"","label:\"你想要复刻这个代码仓库吗？ \""],
+		["label:\"Newer Commits On Remote\"","label:\"远程仓库上有更新的提交记录\""],
+		["label:\"Files Too Large\"","label:\"文件太大\""],
+		["label:\"Generic Git Authentication\"","label:\"通用的Git身份验证\""],
+		["label:\"Invalidated Account Token\"","label:\"账户令牌已失效\""],
+		["label:\"Push Rejected\"","label:\"推送被拒绝\""],
+		["label:\"Re-Authorization Required\"","label:\"需要重新进行授权\""],
+		["label:\"Unable to Locate Git\"","label:\"无法找到本地Git程序\""],
+		["label:\"Unable to Open External Editor\"","label:\"无法打开外部编辑器\""],
+		["label:\"Unable to Open Shell\"","label:\"无法打开 shell（命令行界面） \""],
+		["label:\"Untrusted Server\"","label:\"不可信的服务器\""],
+		["label:\"Update Existing Git LFS Filters\\?\"","label:\"是否更新现有的Git LFS过滤器？ \""],
+		["label:\"Upstream Already Exists\"","label:\"上游（仓库）已存在\""],
+		["label:\"Add to dictionary\"","label:\"添加到字典\""],
+		["label:\\((.)\\?\"Hide\":\"Show\"\\)\\+\" Toggle Chan&ges Filter\"","label:($1?\"隐藏\":\"显示\")+\"更改内容过滤器(&G)\""],
+		["\"Open &with…\"","\"使用...打开(&W)\""],
+		["\"\"","\"\""]
+	],
 	"main_dev":[
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]
-	]，
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""]
+	],
     "renderer": [
-		["\"Let's get started!\""，"\"让我们开始吧！🍥🍥🍥\""]，
-		["\"Add a repository to GitHub Desktop to start collaborating\""，"\"添加一个存储以立即开始工作！🎀🎀🎀\""]，
-		["\"Create a New Repository on your local drive…\""，"\"创建一个新存储库到本地…\""]，
-		["\"Clone a repository from the Internet…\""，"\"从网络上克隆一个新存储库…\""]，
-		["\"Add an Existing Repository from your local drive…\""，"\"从本地添加一个已存在的存储库…\""]，
-		["\"ProTip!\"\\),\" You can drag & drop an existing repository folder here to add it to Desktop\""，"\"专业提示!\"),\" 您可以将现有版本库文件夹拖放至此，将其添加到程序\""]，
-		["`Fetch the latest changes from \\$\\{(.)\\}`"，"`从远程仓库($${$1})获取最新的变化`"]，
-		["`Pull \\$\\{(.)\\} with rebase`:`Pull \\$\\{(.)\\}`"，"`从远程仓库($${$1})拉取并合并`:`从远程仓库($${$2})拉取`"]，
-		["n=\"local commit\""，"n=\"本地提交\""]，
-		["\\$\\{t\\} \\$\\{n\\}`:`\\$\\{t\\} \\$\\{n\\}s"，"$${t} $${n}`:`$${t} $${n}"]，
-		["`Pull \\$\\{(.)\\.behind\\} \\$\\{1===(.)\\.behind\\?\"commit\":\"commits\"\\} from the \\$\\{(.)\\.name\\} remote`,(.)=`Pull \\$\\{(.)\\.name\\}`"，"`从远程仓库($${$3.name})中拉取$${$1.behind}个更改`,$4=`从远程仓库($${$5.name})中拉取`"]，
-		["\"The current branch \\(\",(..).createElement\\((..),null,e.branch.name\\),\"\\) has\",\" \",1===n.behind\\?\"a commit\":\"commits\",\" on\",\" \",(.)\\?\"GitHub\":\"the remote\",\" that\",\" \",1===n.behind\\?\"does not\":\"do not\",\" exist on your machine.\""，
-		"\"当前分支(\",$1.createElement($2,null,e.branch.name),$3?\")在GitHub上\":\")在远程\",1===n.behind?\"有一个提交记录\":\"有多个提交记录\",\"在你的设备上不存在.\""]，
-		["\"Always available in the toolbar when there are remote changes or\""，"\"当存在远程更改时,它始终显示在你的工具栏中 或者 \""]，
-		["`Pulling \\$\\{(.).name\\}`"，"`从远程仓库($${$1.name})拉取中...`"]，
-		["\"Current repository\""，"\"当前存储库\""]，
-		["\"Recent\""，"\"最近\""]，
-		[",\"Add\""，",\"添加\""]，
-		["\"Filter\""，"\"过滤\""]，
-		["\"Clone repository…\""，"\"克隆存储库…\""]，
-		["\"Create new repository…\""，"\"新建存储库…\""]，
-		["\"Add existing repository…\""，"\"添加已有存储库…\""]，
-		["\"Your Account Emails\""，"\"你的邮箱\""]，
-		["label:\"Name\""，"label:\"名称\""]，
-		["label:\"Email\""，"label:\"邮箱\""]，
-		["\"Show status icons in the repository list\""，"\"在存储库列表中显示状态图标\""]，
-		["\"Use system OpenSSH \\(recommended\\)\""，"\"使用系统中的OpenSSH (建议)\""]，
-		["\"Removing repositories\""，"\"删除存储库...\""]，
-		["\"Discarding changes\""，"\"放弃更改\""]，
-		["\"Discarding changes permanently\""，"\"永久放弃更改\""]，
-		["\"Discarding stash\""，"\"放弃暂存\""]，
-		["\"Checking out a commit\""，"\"检查提交\""]，
-		["\"Force pushing\""，"\"强制推送\""]，
-		["\"Undo commit\""，"\"撤回提交\""]，
-		["label:\"Committing changes hidden by filter\""，"label:\"提交因筛选器隐藏的更改\""]，
-		["\"Show commit length warning\""，"\"显示提交的更改量警告\""]，
-		["\"Enable notifications\""，"\"启用通知\""]，
-		["\"Underline links\""，"\"下划线链接\""]，
-		["\"Show check marks in the diff\""，"\"在差异中显示选中标记\""]，
-		["\"Local path\""，"\"本地路径\""]，
-		["\"Git ignore\""，"\"Git 忽略\""]，
-		["\"License\""，"\"开源协议\""]，
-		["\"Description\""，"\"描述\""]，
-		["\"Initialize this repository with a README\""，"\"用README初始化此仓库\""]，
-		["\"Create branch based on…\""，"\"基于…创建分支\""]，
-		["\"Enterprise address\""，"\"企业地址\""]，
-		["\\?\"\":\" Enterprise\""，"?\"\":\" 企业版\""]，
-		["label:`Use my GitHub\\$\\{(.)\\} account name and email address`"，"label:`使用我的GitHub$${$1}账户名和邮箱地址`"]，
-		["\"Also move this repository to \""，"\"也将此存储库移至\""]，
-		["\"You have changes on this branch. What would you like to do with them\\?\""，"\"您对该分支进行了更改。您想如何处理它们？\""]，
-		["\"Do not show this message again\""，"\"不再显示此信息\""]，
-		["\"Do not show this message again\""，"\"\""]，
-		["\"Create a merge commit\""，"\"创建一个合并提交\""]，
-		["\"Squash and merge\""，"\"压缩且合并\""]，
-		["\"Yes, delete this branch on the remote\""，"\"是的，删除此分支的远程分支\""]，
-		["\"Remote URL\""，"\"远程 URL\""]，
-		["\"Search…\""，"\"搜索…\""]，
-		["\"Your Name\""，"\"你的名称\""]，
-		["\"repository path\""，"\"仓库路径\""]，
-		["\"repository name\""，"\"仓库名字\""]，
-		["\"URL or username/repository\""，"\"链接或者 username/repository\""]，
-		["\"Summary \\(required\\)\""，"\"摘要(必填)\""]，
-		["\"Commit\""，"\"提交\""]，
-		["\"A commit summary is required to commit\""，"\"提交时需要提供提交摘要\""]，
-		["`\\$\\{(.)\\} \\$\\{(.)>1\\?\"files\":\"file\"\\} `"，"`$${$1}个文件`"]，
-		["\\$\\{(.)\\} \\$\\{this\\.getFilesToBeCommittedButtonText\\(\\)\\}to `"，"$${$1}$${this.getFilesToBeCommittedButtonText()}到`"]，
-		["\\((..)\\.Fragment,null,(.),(..)\\.createElement\\(\"strong\",null,(.)\\)\\)"，"($1.Fragment,null,$2,$3.createElement(\"strong\",null,$4),\"分支\")"]，
-		["\"Select one or more files to commit\""，"\"选择一个或多个文件进行提交\""]，
-		["\"Committing changes…\""，"\"正在提交更改...\""]，
-		["\"Committing\""，"\"提交\""]，
-		["\"Amending\""，"\"修正\""]，
-		["\"Amend\""，"\"修正\""]，
-		["`\\$\\{(.)\\} to \\$\\{(.)\\}`"，"`$${$1}到$${$2}分支`"]，
-		["\"No local changes\""，"\"本地没有发生变化\""]，
-		["\"There are no uncommitted changes in this repository. Here are some friendly suggestions for what to do next.\""，"\"该仓库中没有未提交的更改。以下是一些很好的建议，供您参考。\""]，
-		["\"Open the repository page on GitHub in your browser\""，"\"在浏览器中的GitHub上打开仓库页面\""]，
-		["\"Open the repository in your external editor\""，"\"在外部编辑器中打开仓库\""]，
-		["\"Select your editor in\",\" \",(..).createElement\\((..),\\{onClick:this.openIntegrationPreferences\\},\"Options\"\\)"，"\"在\",$1.createElement($2,{onClick:this.openIntegrationPreferences},\"选项\"), \"中选择你的编辑器\""]，
-		["\" menu or\""，"\" 菜单 或者\""]，
-		["View the files of your repository in \\$\\{(.)\\}"，"在$${$1}中显示你的仓库文件"]，
-		["\"span\",null,\"History\""，"\"span\",null,\"历史\""]，
-		["\"span\",null,\"Changes\""，"\"span\",null,\"更改\""]，
-		["\"file\":\"files\""，"\"文件\":\"文件\""]，
-		["\" changed \""，"\"个已更改的\""]，
-		["\"Current branch\""，"\"当前分支\""]，
-		["`Fetch \\$\\{(.)\\}`"，"`获取远程仓库($${$1})的更新`"]，
-		["`Force push \\$\\{(.)\\}`"，"`强制推送到远程仓库($${$1})`"]，
-		["`Push \\$\\{(.)\\}`"，"`推送修改到远程仓库($${$1})`"]，
-		["`Force push \\$\\{(.)\\}`"，"`强制推送到远程仓库($${$1})`"]，
-		["\"Last fetched \""，"\"最近一次同步在 \""]，
-		["\"Never fetched\""，"\"从未拉取过\""]，
-		["ago`:\"never\","，"前`:\"从未\","]，
-		["`Create \\$\\{(.)\\}`"，"`创建 $${$1}`"]，
-		["`Delete \\$\\{(.)\\}`"，"`删除 $${$1}`"]，
-		["`Update \\$\\{(.)\\}`"，"`更新 $${$1}`"]，
-		["\"Remove co-authors\":\"Add co-authors\""，"\"移除协作者\":\"添加协作者\""]，
-		["\"Always available in the toolbar when there are local commits waiting to be pushed or \""，"\"当有待推送的本地提交时，该选项始终显示在工具栏中，或者使用\""]，
-		["\"Co-Authors \""，"\"合作伙伴 \""]，
-		["\"@username\""，"\"@用户名\""]，
-		["\"Select branch to compare…\""，"\"选择比较的分支…\""]，
-		["\"No branches to compare\""，"\"无可比较的分支\""]，
-		["`Fetching \\$\\{(.).name\\}`"，"`获取$${$1.name.replace(/origin/,\"原始\").replace(/upstream/,\"上游\")}仓库的更改`"]，
-		["\"Hang on…\""，"\"稍等…\""]，
-		["\"just now\""，"\"刚刚\""]，
-		["label:\"Amend commit…\""，"label:\"修改提交…\""]，
-		["label:\"Undo commit…\""，"label:\"撤回提交…\""]，
-		["label:\"Reset to commit…\""，"label:\"回退到此提交…\""]，
-		["label:\"Checkout commit\""，"label:\"签出提交\""]，
-		["label:\"Reorder commit\""，"label:\"重新排序提交…\""]，
-		["label:\"Revert changes in commit\""，"label:\"还原提交中的更改\""]，
-		["label:\"Create branch from commit\""，"label:\"根据提交创建分支\""]，
-		["label:\"Create Tag…\""，"label:\"创建标签…\""]，
-		["label:\"Cherry-pick commit…\""，"label:\"选择性地应用提交…\""]，
-		["label:\"Copy SHA\""，"label:\"复制 SHA…\""]，
-		["label:`Delete tag \\$\\{r\\}`"，"label:`删除标签 $${r}`"]，
-		["label:\"Delete tag…\""，"label:\"删除标签…\""]，
-		["label:`Cherry-pick \\$\\{t\\} commits…`"，"label:`挑选 $${t} 个提交…`"]，
-		["label:`Squash \\$\\{t\\} commits…`"，"label:`压缩 $${t} 个提交…`"]，
-		["label:`Reorder \\$\\{t\\} commits…`"，"label:`重新排序 $${t} 个提交…`"]，
-		["label:\"File does not exist on disk\""，"label:\"文件不存在于磁盘中\""]，
-		["\"View on GitHub Enterprise\""，"\"在企业GitHub上查看\""]，
-		["\"Copy tags\":\"Copy tag\""，"\"复制标签\":\"复制标签\""]，
-		["\"The commits from the selected branch will be added to the current branch via a merge commit.\""，"\"所选分支的提交将通过合并提交添加到当前分支.\""]，
-		["label:\"Remember password\""，"label:\"记住密码\""]，
-		["label:`Enter password for '\\$\\{this.props.username\\}':`"，"label:`为 '$${this.props.username}' 输入密码:`"]，
-		["label:\"Remember passphrase\""，"label:\"记住密码短语\""]，
-		["label:`Enter passphrase for key '\\$\\{this.props.keyPath\\}':`"，"label:`输入密钥 '$${this.props.keyPath} 的密码短语':`"]，
-		["label:\"Password\""，"label:\"密码\""]，
-		["label:\"Username\""，"label:\"用户名\""]，
-		["label:\"Organization\""，"label:\"组织\""]，
-		["label:\"Configure manually\""，"label:\"手动配置\""]，
-		["label:\"Enterprise or AE address\""，"label:\"企业地址或代理地址\""]，
-		["label:\"Checkout commit\""，"label:\"签出提交\""]，
-		["\"Discard all changes\":\"Discard changes\""，"\"放弃所有更改\":\"放弃更改\""]，
-		["\"Confirm discard all changes\":\"Confirm discard changes\""，"\"确认放弃所有更改\":\"确认放弃更改\""]，
-		["\"Copy file path\""，"\"复制文件路径\""]，
-		["\"Copy relative file path\""，"\"复制文件相对路径\""]，
-		["\"Open in external editor\""，"\"使用外部编辑器打开\""]，
-		["\"Show in Explorer\""，"\"在文件管理器中显示\""]，
-		["\"Recycle Bin\""，"\"回收站\""]，
-		["\"Open with default program\""，"\"使用默认程序打开\""]，
-		["`Open in \\$\\{(.).externalEditorLabel\\}`"，"`使用 $${$1.externalEditorLabel} 打开`"]，
-		["`Open in \\$\\{(.)\\}`"，"`使用 $${$1} 打开`"]，
-		["`Open in \\$\\{(.).resolvedExternalEditor\\|\\|\"editor\"\\}`"，"`使用 $${$1.resolvedExternalEditor||\"编辑器\"} 打开`"]，
-		["`Open in \\$\\{(.).shellLabel\\}`"，"`使用 $${$1.shellLabel} 打开`"]，
-		["`Pushing to \\$\\{(.)\\}`"，"`推送到远程仓库($${$1})`"]，
-		["label:\"Copy repo name\""，"label:\"复制存储库名字\""]，
-		["label:\"Copy repo path\""，"label:\"复制存储库路径\""]，
-		["label:\"View on GitHub\""，"label:\"在GitHub中显示\""]，
-		["\"Create\":\"Change\"\\)\\+\" alias\""，"\"创建\":\"更改\")+\" 别名\""]，
-		["\"Remove…\":\"Remove\""，"\"移除…\":\"移除\""]，
-		["label:\"Rename…\""，"label:\"重命名…\""]，
-		["label:\"Copy branch name\""，"label:\"复制分支名字\""]，
-		["label:\"Delete…\""，"label:\"删除…\""]，
-		["label:\"Ignore file \\(add to .gitignore\\)\""，"label:\"忽略文件 (添加到 .gitignore)\""]，
-		["label:\"Ignore folder \\(add to .gitignore\\)\""，"label:\"忽略文件夹 (添加到 .gitignore)\""]，
-		["label:`Ignore \\$\\{c.length\\} selected files \\(add to .gitignore\\)`"，"label:`忽略 $${c.length} 个选择的文件 (添加到 .gitignore)`"]，
-		["label:`Ignore all \\$\\{e\\} files \\(add to .gitignore\\)`"，"label:`忽略所有 $${e} 文件 (添加到 .gitignore)`"]，
-		["\"Discard changes\":`Discard \\$\\{e.length\\} selected changes`"，"\"放弃更改\":`放弃 $${e.length} 个选择的更改`"]，
-		["\"Branches\"\\)"，"\"分支\")"]，
-		["\"Pull requests\""，"\"拉取请求\""]，
-		["\"Default branch\""，"\"默认分支\""]，
-		["\"Recent branches\""，"\"近期分支\""]，
-		["\"Other branches\""，"\"其他分支\""]，
-		["\"New branch\"\\):null"，"\"新建分支\"):null"]，
-		["\"You're all set!\""，"\"一切就绪!\""]，
-		["\"No open pull requests in \",(..).createElement\\((..),null,this.props.repositoryName\\)"，"\"在\",$1.createElement($2,null,this.props.repositoryName),\"中没有尚未合并的拉取请求\""]，
-		["\"Would you like to\""，"\"你是否是想要\""]，
-		["\"create a new branch\""，"\"创建一个新分支\""]，
-		["\"and get going on your next project\\?\""，"\"并且开始下一个项目吗?\""]，
-		["\"create a pull request\""，"\"创建一个拉取请求\""]，
-		["\"from the current branch\\?\""，"\"从当前分支中?\""]，
-		["`Choose a branch to merge into \\$\\{e.name\\}`"，"`选择一个分支合并到 $${e.name}`"]，
-		["\"Choose a branch to merge into \""，"\"选择一个分支合并到\""]，
-		["\"1 local commit\":`\\$\\{n.ahead\\} local commits`"，"\"1 个本地提交\":`$${n.ahead} 个本地提交`"]，
-		["a.push\\(\"commits\"\\)"，"a.push(\"更改\")"]，
-		["Push \\$\\{(.).join\\(\" and \"\\)\\} to the \\$\\{(.).name\\} remote"，"推送$${$1.join(\"和\")}到远程仓库($${$2.name})"]，
-		["=`Push \\$\\{(.).name\\}`"，"=`推送到远程仓库($${$1.name})`"]，
-		["label:\"Discard all changes…\""，"label:\"放弃所有更改…\""]，
-		["label:n\\?\"Stash all changes…\":\"Stash all changes\""，"label:n?\"暂存所有更改…\":\"暂存所有更改\""]，
-		["`Version \\$\\{t\\}`"，"`版本: $${t}`"]，
-		["\"release notes\""，"\"发行日志\""]，
-		["\"Beta Channel\""，"\"测试频道\""]，
-		["\"Check out the\""，"\"了解\""]，
-		["\"Looking for the latest features\\?\""，"\"想要了解最新的功能?\""]，
-		["\"Couldn't determine the last time an update check was performed. You may be running an old version. Please try manually checking for updates and contact GitHub Support if the problem persists\""，"\"无法确定上次执行更新检查的时间。您可能正在运行旧版本。请尝试手动检查更新，如果问题仍然存在，请联系 GitHub 支持团队\""]，
-		["`Unknown update status \\$\\{(.)\\}`"，"\"`未识别的更新状态: $${$1}`\""]，
-		["\"Terms and Conditions\""，"\"条款和条件\""]，
-		["\"License and Open Source Notices\""，"\"许可证和开源通知\""]，
-		["\"You have the latest version \\(last checked\""，"\"您当前是最新版本 (上次检查在 \""]，
-		["\"An update has been downloaded and is ready to be installed.\""，"\"已下载更新并准备安装.\""]，
-		["\"Check for Updates\""，"\"检查更新\""]，
-		["\"Quit and Install Update\""，"\"退出并安装更新\""]，
-		["\"Checking for updates…\""，"\"正在检查更新…\""]，
-		["Text:\"Close\""，"Text:\"关闭\""]，
-		["\"Accounts\"\\)"，"\"账户\")"]，
-		["\"Integrations\"\\)"，"\"集成\")"]，
-		["\"Appearance\"\\)"，"\"外观\")"]，
-		["\"Notifications\"\\)"，"\"通知\")"]，
-		["\"Prompts\"\\)"，"\"提示\")"]，
-		["\"Advanced\"\\)"，"\"高级\")"]，
-		["\"Sign out\""，"\"退出登录\""]，
-		["\"Sign into\""，"\"登录到\""]，
-		["\" GitHub Enterprise\""，"\"GitHub企业版\""]，
-		["\"If you are using GitHub Enterprise at work, sign in to it to get access to your repositories.\""，"\"如果你在工作中使用GitHub企业版，请登录它以访问你的存储库。\""]，
-		["`Unknown sign in type: \\$\\{e\\}`"，"`未知的登录类型: $${e}`"]，
-		["\"External editor\""，"\"外部编辑器\""]，
-		["\"No other editors found.\""，"\"未找到其他编辑器.\""]，
-		["\"Install \",(..),\"\\?\""，"\"是否安装 \",$1,\"?\""]，
-		["\"Default branch name for new repositories\""，"\"新存储库的默认分支名称\""]，
-		["\"GitHub's default branch name is \""，"\"Github的默认分支名称为\""]，
-		["\". You may want to change it due to different workflows, or because your integrations still require the historical default branch name of \""，"\".您可能因为不同的工作流程而想要更改它，或者是因为您的项目仍然需要历史默认的分支名称 \""]，
-		["\"These preferences will\""，"\"这些偏好会\""]，
-		["\"edit your global Git config file\""，"\"更改您的Git公共配置文件\""]，
-		["\"Theme\""，"\"主题\""]，
-		["\"Light\""，"\"亮色\""]，
-		["\"Dark\""，"\"暗色\""]，
-		["\"System\""，"\"系统\""]，
-		["\"Allows the display of notifications when high-signal events take place in the current repository.\""，"\"允许在当前仓库中发生高信号事件时显示通知.\""]，
-		["\" GitHub Desktop has no permission to display notifications. Please, enable them in the\""，"\"GitHub Desktop 没有权限显示通知。请在 [相应位置] 中启用它们.\""]，
-		["\"Make sure notifications are \",(.),\" for GitHub Desktop in the\",\" \",(..).createElement\\((..),\\{uri:(.)\\},\"Notifications Settings\"\\),\".\""，
-		"\"确保在系统里的 \",$2.createElement($3,{uri:$4},\"通知设置\"),\"里的GitHub Desktop通知状态是\",$1,\"的\""]，
-		["\"properly configured\":\"enabled\""，"\"正确配置\":\"开启\""]，
-		["\"Show a confirmation dialog before...\""，"\"在这些操作之前显示确认对话框\""]，
-		["\"If I have changes and I switch branches...\""，"\"如果我做了更改并切换了分支,那么\""]，
-		["\"Ask me where I want the changes to go\""，"\"询问我将更改保存到哪里.\""]，
-		["\"Always bring my changes to my new branch\""，"\"总是将我的更改带到新的分支上\""]，
-		["\"Always stash and leave my changes on the current branch\""，"\"总是暂存并保留我的更改在当前分支上\""]，
-		["`Unknown uncommitted changes strategy: \\$\\{(.)\\}`"，"`未知的更改提交策略:$${$1}.`"]，
-		["\"Commit Length\""，"\"提交的变化量\""]，
-		["\"Background updates\""，"\"后台更新\""]，
-		["\"These icons indicate which repositories have local or remote changes, 和 require the periodic fetching of repositories that are not currently selected.\""，"\"这些图标表示哪些仓库有本地或远程的更改，并且需要定期获取当前未选中的仓库。\""]，
-		["\"Turning this off will not stop the periodic fetching of your currently selected repository, but may improve overall app performance for users with many repositories.\""，"\"关闭此功能不会影响您当前所选仓库的定期获取，但可能会提高拥有多个仓库的用户的应用程序整体性能\""]，
-		["\"Help GitHub Desktop improve by submitting\",\" \",(..).createElement\\((..),\\{uri:(..)\\},\"usage stats\"\\)"，"\"通过提交\",$1.createElement($2,{uri:$3},\"统计数据\"),\"来帮助 GitHub Desktop 改进\""]，
-		["\"Usage\""，"\"统计\""]，
-		["\"Cancel\""，"\"取消\""]，
-		["\"Save\""，"\"保存\""]，
-		["\"Sign in to your GitHub.com account to access your repositories.\""，"\"登录到你的GitHub账户以访问你的存储库.\""]，
-		["\"h2\",null,\"GitHub Enterprise\""，"\"h2\",null,\"GitHub 企业版\""]，
-		["title:\"Options\""，"title:\"选项\""]，
-		["\"Create a new repository\""，"\"创建一个新的存储库\""]，
-		["\"Choose…\""，"\"选择…\""]，
-		["\"Create repository\""，"\"创建存储库\""]，
-		["\"Add local repository\""，"\"添加本地仓库\""]，
-		["\"Add repository\""，"\"添加仓库\""]，
-		["\"Clone a repository\""，"\"克隆一个仓库\""]，
-		["\"Filter your repositories\""，"\"过滤你的仓库\""]，
-		["\"Your repositories\""，"\"你的仓库\""]，
-		["\"Refresh the list of repositories\""，"\"刷新存储库列表\""]，
-		["\"Sorry, I can't find any repository matching\""，"\"对不起,我找不到任何匹配的仓库\""]，
-		["\"Repository URL or GitHub username and repository\""，"\"输入存储库URL或GITHUB 用户名/存储库\""]，
-		[":\"Clone\""，":\"克隆\""]，
-		[",\"Clone\""，",\"克隆\""]，
-		["\"Sign in\""，"\"登录\""]，
-		["\"en-US\""，"\"zh-CN\""]，
-		["\"Remote\"\\)"，"\"远程\")"]，
-		["\"Ignored files\""，"\"Ignored文件\""]，
-		["\"Git config\"\\)"，"\"Git配置\")"]，
-		["\"Repository settings\""，"\"仓库设置\""]，
-		["`Primary remote repository \\("，"`主要的远程仓库 ("]，
-		["\"Editing \""，"\"编辑\""]，
-		["\". This file specifies intentionally untracked files that Git should ignore. Files already tracked by Git are not affected.\""，"\".该文件指定了Git应该忽略的有意的未跟踪文件。 Git已经跟踪的文件不受影响.\""]，
-		["\"Learn more about gitignore files\""，"\"了解更多关于gitignore文件\""]，
-		["\"For this repository I wish to\""，"\"对于这个存储库，我希望\""]，
-		["\"Use my global Git config\""，"\"使用我的公共Git配置\""]，
-		["\"Use a local Git config\""，"\"使用一个本地Git配置\""]，
-		["`Unknown git config location: \\$\\{(.)\\}`"，"`未知的git配置位置: $${$1}`"]，
-		["headerText:\"Create a branch\""，"headerText:\"新建一个分支\""]，
-		["\"Create branch\""，"\"创建分支\""]，
-		["\"Your new branch will be based on your currently checked out branch \\(\""，"\"您的新分支将基于您当前检查的分支 (\""]，
-		["\" is the \",(..),\" for your repository.\""，"\" 是你仓库的\",$1,\".\""]，
+		["\"Let's get started!\"","\"让我们开始吧！🍥🍥🍥\""],
+		["\"Add a repository to GitHub Desktop to start collaborating\"","\"添加一个存储以立即开始工作！🎀🎀🎀\""],
+		["\"Create a New Repository on your local drive…\"","\"创建一个新存储库到本地…\""],
+		["\"Clone a repository from the Internet…\"","\"从网络上克隆一个新存储库…\""],
+		["\"Add an Existing Repository from your local drive…\"","\"从本地添加一个已存在的存储库…\""],
+		["\"ProTip!\"\\),\" You can drag & drop an existing repository folder here to add it to Desktop\"","\"专业提示!\"),\" 您可以将现有版本库文件夹拖放至此，将其添加到程序\""],
+		["`Fetch the latest changes from \\$\\{(.)\\}`","`从远程仓库($${$1})获取最新的变化`"],
+		["`Pull \\$\\{(.)\\} with rebase`:`Pull \\$\\{(.)\\}`","`从远程仓库($${$1})拉取并合并`:`从远程仓库($${$2})拉取`"],
+		["n=\"local commit\"","n=\"本地提交\""],
+		["\\$\\{t\\} \\$\\{n\\}`:`\\$\\{t\\} \\$\\{n\\}s","$${t} $${n}`:`$${t} $${n}"],
+		["`Pull \\$\\{(.)\\.behind\\} \\$\\{1===(.)\\.behind\\?\"commit\":\"commits\"\\} from the \\$\\{(.)\\.name\\} remote`,(.)=`Pull \\$\\{(.)\\.name\\}`","`从远程仓库($${$3.name})中拉取$${$1.behind}个更改`,$4=`从远程仓库($${$5.name})中拉取`"],
+		["\"The current branch \\(\",(..).createElement\\((..),null,e.branch.name\\),\"\\) has\",\" \",1===n.behind\\?\"a commit\":\"commits\",\" on\",\" \",(.)\\?\"GitHub\":\"the remote\",\" that\",\" \",1===n.behind\\?\"does not\":\"do not\",\" exist on your machine.\"",
+		"\"当前分支(\",$1.createElement($2,null,e.branch.name),$3?\")在GitHub上\":\")在远程\",1===n.behind?\"有一个提交记录\":\"有多个提交记录\",\"在你的设备上不存在.\""],
+		["\"Always available in the toolbar when there are remote changes or\"","\"当存在远程更改时,它始终显示在你的工具栏中 或者 \""],
+		["`Pulling \\$\\{(.).name\\}`","`从远程仓库($${$1.name})拉取中...`"],
+		["\"Current repository\"","\"当前存储库\""],
+		["\"Recent\"","\"最近\""],
+		[",\"Add\"",",\"添加\""],
+		["\"Filter\"","\"过滤\""],
+		["\"Clone repository…\"","\"克隆存储库…\""],
+		["\"Create new repository…\"","\"新建存储库…\""],
+		["\"Add existing repository…\"","\"添加已有存储库…\""],
+		["\"Your Account Emails\"","\"你的邮箱\""],
+		["label:\"Name\"","label:\"名称\""],
+		["label:\"Email\"","label:\"邮箱\""],
+		["\"Show status icons in the repository list\"","\"在存储库列表中显示状态图标\""],
+		["\"Use system OpenSSH \\(recommended\\)\"","\"使用系统中的OpenSSH (建议)\""],
+		["\"Removing repositories\"","\"删除存储库...\""],
+		["\"Discarding changes\"","\"放弃更改\""],
+		["\"Discarding changes permanently\"","\"永久放弃更改\""],
+		["\"Discarding stash\"","\"放弃暂存\""],
+		["\"Checking out a commit\"","\"检查提交\""],
+		["\"Force pushing\"","\"强制推送\""],
+		["\"Undo commit\"","\"撤回提交\""],
+		["label:\"Committing changes hidden by filter\"","label:\"提交因筛选器隐藏的更改\""],
+		["\"Show commit length warning\"","\"显示提交的更改量警告\""],
+		["\"Enable notifications\"","\"启用通知\""],
+		["\"Underline links\"","\"下划线链接\""],
+		["\"Show check marks in the diff\"","\"在差异中显示选中标记\""],
+		["\"Local path\"","\"本地路径\""],
+		["\"Git ignore\"","\"Git 忽略\""],
+		["\"License\"","\"开源协议\""],
+		["\"Description\"","\"描述\""],
+		["\"Initialize this repository with a README\"","\"用README初始化此仓库\""],
+		["\"Create branch based on…\"","\"基于…创建分支\""],
+		["\"Enterprise address\"","\"企业地址\""],
+		["\\?\"\":\" Enterprise\"","?\"\":\" 企业版\""],
+		["label:`Use my GitHub\\$\\{(.)\\} account name and email address`","label:`使用我的GitHub$${$1}账户名和邮箱地址`"],
+		["\"Also move this repository to \"","\"也将此存储库移至\""],
+		["\"You have changes on this branch. What would you like to do with them\\?\"","\"您对该分支进行了更改。您想如何处理它们？\""],
+		["\"Do not show this message again\"","\"不再显示此信息\""],
+		["\"Do not show this message again\"","\"\""],
+		["\"Create a merge commit\"","\"创建一个合并提交\""],
+		["\"Squash and merge\"","\"压缩且合并\""],
+		["\"Yes, delete this branch on the remote\"","\"是的，删除此分支的远程分支\""],
+		["\"Remote URL\"","\"远程 URL\""],
+		["\"Search…\"","\"搜索…\""],
+		["\"Your Name\"","\"你的名称\""],
+		["\"repository path\"","\"仓库路径\""],
+		["\"repository name\"","\"仓库名字\""],
+		["\"URL or username/repository\"","\"链接或者 username/repository\""],
+		["\"Summary \\(required\\)\"","\"摘要(必填)\""],
+		["\"Commit\"","\"提交\""],
+		["\"A commit summary is required to commit\"","\"提交时需要提供提交摘要\""],
+		["`\\$\\{(.)\\} \\$\\{(.)>1\\?\"files\":\"file\"\\} `","`$${$1}个文件`"],
+		["\\$\\{(.)\\} \\$\\{this\\.getFilesToBeCommittedButtonText\\(\\)\\}to `","$${$1}$${this.getFilesToBeCommittedButtonText()}到`"],
+		["\\((..)\\.Fragment,null,(.),(..)\\.createElement\\(\"strong\",null,(.)\\)\\)","($1.Fragment,null,$2,$3.createElement(\"strong\",null,$4),\"分支\")"],
+		["\"Select one or more files to commit\"","\"选择一个或多个文件进行提交\""],
+		["\"Committing changes…\"","\"正在提交更改...\""],
+		["\"Committing\"","\"提交\""],
+		["\"Amending\"","\"修正\""],
+		["\"Amend\"","\"修正\""],
+		["`\\$\\{(.)\\} to \\$\\{(.)\\}`","`$${$1}到$${$2}分支`"],
+		["\"No local changes\"","\"本地没有发生变化\""],
+		["\"There are no uncommitted changes in this repository. Here are some friendly suggestions for what to do next.\"","\"该仓库中没有未提交的更改。以下是一些很好的建议，供您参考。\""],
+		["\"Open the repository page on GitHub in your browser\"","\"在浏览器中的GitHub上打开仓库页面\""],
+		["\"Open the repository in your external editor\"","\"在外部编辑器中打开仓库\""],
+		["\"Select your editor in\",\" \",(..).createElement\\((..),\\{onClick:this.openIntegrationPreferences\\},\"Options\"\\)","\"在\",$1.createElement($2,{onClick:this.openIntegrationPreferences},\"选项\"), \"中选择你的编辑器\""],
+		["\" menu or\"","\" 菜单 或者\""],
+		["View the files of your repository in \\$\\{(.)\\}","在$${$1}中显示你的仓库文件"],
+		["\"span\",null,\"History\"","\"span\",null,\"历史\""],
+		["\"span\",null,\"Changes\"","\"span\",null,\"更改\""],
+		["\"file\":\"files\"","\"文件\":\"文件\""],
+		["\" changed \"","\"个已更改的\""],
+		["\"Current branch\"","\"当前分支\""],
+		["`Fetch \\$\\{(.)\\}`","`获取远程仓库($${$1})的更新`"],
+		["`Force push \\$\\{(.)\\}`","`强制推送到远程仓库($${$1})`"],
+		["`Push \\$\\{(.)\\}`","`推送修改到远程仓库($${$1})`"],
+		["`Force push \\$\\{(.)\\}`","`强制推送到远程仓库($${$1})`"],
+		["\"Last fetched \"","\"最近一次同步在 \""],
+		["\"Never fetched\"","\"从未拉取过\""],
+		["ago`:\"never\",","前`:\"从未\","],
+		["`Create \\$\\{(.)\\}`","`创建 $${$1}`"],
+		["`Delete \\$\\{(.)\\}`","`删除 $${$1}`"],
+		["`Update \\$\\{(.)\\}`","`更新 $${$1}`"],
+		["\"Remove co-authors\":\"Add co-authors\"","\"移除协作者\":\"添加协作者\""],
+		["\"Always available in the toolbar when there are local commits waiting to be pushed or \"","\"当有待推送的本地提交时，该选项始终显示在工具栏中，或者使用\""],
+		["\"Co-Authors \"","\"合作伙伴 \""],
+		["\"@username\"","\"@用户名\""],
+		["\"Select branch to compare…\"","\"选择比较的分支…\""],
+		["\"No branches to compare\"","\"无可比较的分支\""],
+		["`Fetching \\$\\{(.).name\\}`","`获取$${$1.name.replace(/origin/,\"原始\").replace(/upstream/,\"上游\")}仓库的更改`"],
+		["\"Hang on…\"","\"稍等…\""],
+		["\"just now\"","\"刚刚\""],
+		["label:\"Amend commit…\"","label:\"修改提交…\""],
+		["label:\"Undo commit…\"","label:\"撤回提交…\""],
+		["label:\"Reset to commit…\"","label:\"回退到此提交…\""],
+		["label:\"Checkout commit\"","label:\"签出提交\""],
+		["label:\"Reorder commit\"","label:\"重新排序提交…\""],
+		["label:\"Revert changes in commit\"","label:\"还原提交中的更改\""],
+		["label:\"Create branch from commit\"","label:\"根据提交创建分支\""],
+		["label:\"Create Tag…\"","label:\"创建标签…\""],
+		["label:\"Cherry-pick commit…\"","label:\"选择性地应用提交…\""],
+		["label:\"Copy SHA\"","label:\"复制 SHA…\""],
+		["label:`Delete tag \\$\\{r\\}`","label:`删除标签 $${r}`"],
+		["label:\"Delete tag…\"","label:\"删除标签…\""],
+		["label:`Cherry-pick \\$\\{t\\} commits…`","label:`挑选 $${t} 个提交…`"],
+		["label:`Squash \\$\\{t\\} commits…`","label:`压缩 $${t} 个提交…`"],
+		["label:`Reorder \\$\\{t\\} commits…`","label:`重新排序 $${t} 个提交…`"],
+		["label:\"File does not exist on disk\"","label:\"文件不存在于磁盘中\""],
+		["\"View on GitHub Enterprise\"","\"在企业GitHub上查看\""],
+		["\"Copy tags\":\"Copy tag\"","\"复制标签\":\"复制标签\""],
+		["\"The commits from the selected branch will be added to the current branch via a merge commit.\"","\"所选分支的提交将通过合并提交添加到当前分支.\""],
+		["label:\"Remember password\"","label:\"记住密码\""],
+		["label:`Enter password for '\\$\\{this.props.username\\}':`","label:`为 '$${this.props.username}' 输入密码:`"],
+		["label:\"Remember passphrase\"","label:\"记住密码短语\""],
+		["label:`Enter passphrase for key '\\$\\{this.props.keyPath\\}':`","label:`输入密钥 '$${this.props.keyPath} 的密码短语':`"],
+		["label:\"Password\"","label:\"密码\""],
+		["label:\"Username\"","label:\"用户名\""],
+		["label:\"Organization\"","label:\"组织\""],
+		["label:\"Configure manually\"","label:\"手动配置\""],
+		["label:\"Enterprise or AE address\"","label:\"企业地址或代理地址\""],
+		["label:\"Checkout commit\"","label:\"签出提交\""],
+		["\"Discard all changes\":\"Discard changes\"","\"放弃所有更改\":\"放弃更改\""],
+		["\"Confirm discard all changes\":\"Confirm discard changes\"","\"确认放弃所有更改\":\"确认放弃更改\""],
+		["\"Copy file path\"","\"复制文件路径\""],
+		["\"Copy relative file path\"","\"复制文件相对路径\""],
+		["\"Open in external editor\"","\"使用外部编辑器打开\""],
+		["\"Show in Explorer\"","\"在文件管理器中显示\""],
+		["\"Recycle Bin\"","\"回收站\""],
+		["\"Open with default program\"","\"使用默认程序打开\""],
+		["`Open in \\$\\{(.).externalEditorLabel\\}`","`使用 $${$1.externalEditorLabel} 打开`"],
+		["`Open in \\$\\{(.)\\}`","`使用 $${$1} 打开`"],
+		["`Open in \\$\\{(.).resolvedExternalEditor\\|\\|\"editor\"\\}`","`使用 $${$1.resolvedExternalEditor||\"编辑器\"} 打开`"],
+		["`Open in \\$\\{(.).shellLabel\\}`","`使用 $${$1.shellLabel} 打开`"],
+		["`Pushing to \\$\\{(.)\\}`","`推送到远程仓库($${$1})`"],
+		["label:\"Copy repo name\"","label:\"复制存储库名字\""],
+		["label:\"Copy repo path\"","label:\"复制存储库路径\""],
+		["label:\"View on GitHub\"","label:\"在GitHub中显示\""],
+		["\"Create\":\"Change\"\\)\\+\" alias\"","\"创建\":\"更改\")+\" 别名\""],
+		["\"Remove…\":\"Remove\"","\"移除…\":\"移除\""],
+		["label:\"Rename…\"","label:\"重命名…\""],
+		["label:\"Copy branch name\"","label:\"复制分支名字\""],
+		["label:\"Delete…\"","label:\"删除…\""],
+		["label:\"Ignore file \\(add to .gitignore\\)\"","label:\"忽略文件 (添加到 .gitignore)\""],
+		["label:\"Ignore folder \\(add to .gitignore\\)\"","label:\"忽略文件夹 (添加到 .gitignore)\""],
+		["label:`Ignore \\$\\{c.length\\} selected files \\(add to .gitignore\\)`","label:`忽略 $${c.length} 个选择的文件 (添加到 .gitignore)`"],
+		["label:`Ignore all \\$\\{e\\} files \\(add to .gitignore\\)`","label:`忽略所有 $${e} 文件 (添加到 .gitignore)`"],
+		["\"Discard changes\":`Discard \\$\\{e.length\\} selected changes`","\"放弃更改\":`放弃 $${e.length} 个选择的更改`"],
+		["\"Branches\"\\)","\"分支\")"],
+		["\"Pull requests\"","\"拉取请求\""],
+		["\"Default branch\"","\"默认分支\""],
+		["\"Recent branches\"","\"近期分支\""],
+		["\"Other branches\"","\"其他分支\""],
+		["\"New branch\"\\):null","\"新建分支\"):null"],
+		["\"You're all set!\"","\"一切就绪!\""],
+		["\"No open pull requests in \",(..).createElement\\((..),null,this.props.repositoryName\\)","\"在\",$1.createElement($2,null,this.props.repositoryName),\"中没有尚未合并的拉取请求\""],
+		["\"Would you like to\"","\"你是否是想要\""],
+		["\"create a new branch\"","\"创建一个新分支\""],
+		["\"and get going on your next project\\?\"","\"并且开始下一个项目吗?\""],
+		["\"create a pull request\"","\"创建一个拉取请求\""],
+		["\"from the current branch\\?\"","\"从当前分支中?\""],
+		["`Choose a branch to merge into \\$\\{e.name\\}`","`选择一个分支合并到 $${e.name}`"],
+		["\"Choose a branch to merge into \"","\"选择一个分支合并到\""],
+		["\"1 local commit\":`\\$\\{n.ahead\\} local commits`","\"1 个本地提交\":`$${n.ahead} 个本地提交`"],
+		["a.push\\(\"commits\"\\)","a.push(\"更改\")"],
+		["Push \\$\\{(.).join\\(\" and \"\\)\\} to the \\$\\{(.).name\\} remote","推送$${$1.join(\"和\")}到远程仓库($${$2.name})"],
+		["=`Push \\$\\{(.).name\\}`","=`推送到远程仓库($${$1.name})`"],
+		["label:\"Discard all changes…\"","label:\"放弃所有更改…\""],
+		["label:n\\?\"Stash all changes…\":\"Stash all changes\"","label:n?\"暂存所有更改…\":\"暂存所有更改\""],
+		["`Version \\$\\{t\\}`","`版本: $${t}`"],
+		["\"release notes\"","\"发行日志\""],
+		["\"Beta Channel\"","\"测试频道\""],
+		["\"Check out the\"","\"了解\""],
+		["\"Looking for the latest features\\?\"","\"想要了解最新的功能?\""],
+		["\"Couldn't determine the last time an update check was performed. You may be running an old version. Please try manually checking for updates and contact GitHub Support if the problem persists\"","\"无法确定上次执行更新检查的时间。您可能正在运行旧版本。请尝试手动检查更新，如果问题仍然存在，请联系 GitHub 支持团队\""],
+		["`Unknown update status \\$\\{(.)\\}`","\"`未识别的更新状态: $${$1}`\""],
+		["\"Terms and Conditions\"","\"条款和条件\""],
+		["\"License and Open Source Notices\"","\"许可证和开源通知\""],
+		["\"You have the latest version \\(last checked\"","\"您当前是最新版本 (上次检查在 \""],
+		["\"An update has been downloaded and is ready to be installed.\"","\"已下载更新并准备安装.\""],
+		["\"Check for Updates\"","\"检查更新\""],
+		["\"Quit and Install Update\"","\"退出并安装更新\""],
+		["\"Checking for updates…\"","\"正在检查更新…\""],
+		["Text:\"Close\"","Text:\"关闭\""],
+		["\"Accounts\"\\)","\"账户\")"],
+		["\"Integrations\"\\)","\"集成\")"],
+		["\"Appearance\"\\)","\"外观\")"],
+		["\"Notifications\"\\)","\"通知\")"],
+		["\"Prompts\"\\)","\"提示\")"],
+		["\"Advanced\"\\)","\"高级\")"],
+		["\"Sign out\"","\"退出登录\""],
+		["\"Sign into\"","\"登录到\""],
+		["\" GitHub Enterprise\"","\"GitHub企业版\""],
+		["\"If you are using GitHub Enterprise at work, sign in to it to get access to your repositories.\"","\"如果你在工作中使用GitHub企业版，请登录它以访问你的存储库。\""],
+		["`Unknown sign in type: \\$\\{e\\}`","`未知的登录类型: $${e}`"],
+		["\"External editor\"","\"外部编辑器\""],
+		["\"No other editors found.\"","\"未找到其他编辑器.\""],
+		["\"Install \",(..),\"\\?\"","\"是否安装 \",$1,\"?\""],
+		["\"Default branch name for new repositories\"","\"新存储库的默认分支名称\""],
+		["\"GitHub's default branch name is \"","\"Github的默认分支名称为\""],
+		["\". You may want to change it due to different workflows, or because your integrations still require the historical default branch name of \"","\".您可能因为不同的工作流程而想要更改它，或者是因为您的项目仍然需要历史默认的分支名称 \""],
+		["\"These preferences will\"","\"这些偏好会\""],
+		["\"edit your global Git config file\"","\"更改您的Git公共配置文件\""],
+		["\"Theme\"","\"主题\""],
+		["\"Light\"","\"亮色\""],
+		["\"Dark\"","\"暗色\""],
+		["\"System\"","\"系统\""],
+		["\"Allows the display of notifications when high-signal events take place in the current repository.\"","\"允许在当前仓库中发生高信号事件时显示通知.\""],
+		["\" GitHub Desktop has no permission to display notifications. Please, enable them in the\"","\"GitHub Desktop 没有权限显示通知。请在 [相应位置] 中启用它们.\""],
+		["\"Make sure notifications are \",(.),\" for GitHub Desktop in the\",\" \",(..).createElement\\((..),\\{uri:(.)\\},\"Notifications Settings\"\\),\".\"",
+		"\"确保在系统里的 \",$2.createElement($3,{uri:$4},\"通知设置\"),\"里的GitHub Desktop通知状态是\",$1,\"的\""],
+		["\"properly configured\":\"enabled\"","\"正确配置\":\"开启\""],
+		["\"Show a confirmation dialog before...\"","\"在这些操作之前显示确认对话框\""],
+		["\"If I have changes and I switch branches...\"","\"如果我做了更改并切换了分支,那么\""],
+		["\"Ask me where I want the changes to go\"","\"询问我将更改保存到哪里.\""],
+		["\"Always bring my changes to my new branch\"","\"总是将我的更改带到新的分支上\""],
+		["\"Always stash and leave my changes on the current branch\"","\"总是暂存并保留我的更改在当前分支上\""],
+		["`Unknown uncommitted changes strategy: \\$\\{(.)\\}`","`未知的更改提交策略:$${$1}.`"],
+		["\"Commit Length\"","\"提交的变化量\""],
+		["\"Background updates\"","\"后台更新\""],
+		["\"These icons indicate which repositories have local or remote changes, and require the periodic fetching of repositories that are not currently selected.\"","\"这些图标表示哪些仓库有本地或远程的更改，并且需要定期获取当前未选中的仓库。\""],
+		["\"Turning this off will not stop the periodic fetching of your currently selected repository, but may improve overall app performance for users with many repositories.\"","\"关闭此功能不会影响您当前所选仓库的定期获取，但可能会提高拥有多个仓库的用户的应用程序整体性能\""],
+		["\"Help GitHub Desktop improve by submitting\",\" \",(..).createElement\\((..),\\{uri:(..)\\},\"usage stats\"\\)","\"通过提交\",$1.createElement($2,{uri:$3},\"统计数据\"),\"来帮助 GitHub Desktop 改进\""],
+		["\"Usage\"","\"统计\""],
+		["\"Cancel\"","\"取消\""],
+		["\"Save\"","\"保存\""],
+		["\"Sign in to your GitHub.com account to access your repositories.\"","\"登录到你的GitHub账户以访问你的存储库.\""],
+		["\"h2\",null,\"GitHub Enterprise\"","\"h2\",null,\"GitHub 企业版\""],
+		["title:\"Options\"","title:\"选项\""],
+		["\"Create a new repository\"","\"创建一个新的存储库\""],
+		["\"Choose…\"","\"选择…\""],
+		["\"Create repository\"","\"创建存储库\""],
+		["\"Add local repository\"","\"添加本地仓库\""],
+		["\"Add repository\"","\"添加仓库\""],
+		["\"Clone a repository\"","\"克隆一个仓库\""],
+		["\"Filter your repositories\"","\"过滤你的仓库\""],
+		["\"Your repositories\"","\"你的仓库\""],
+		["\"Refresh the list of repositories\"","\"刷新存储库列表\""],
+		["\"Sorry, I can't find any repository matching\"","\"对不起,我找不到任何匹配的仓库\""],
+		["\"Repository URL or GitHub username and repository\"","\"输入存储库URL或GITHUB 用户名/存储库\""],
+		[":\"Clone\"",":\"克隆\""],
+		[",\"Clone\"",",\"克隆\""],
+		["\"Sign in\"","\"登录\""],
+		["\"en-US\"","\"zh-CN\""],
+		["\"Remote\"\\)","\"远程\")"],
+		["\"Ignored files\"","\"Ignored文件\""],
+		["\"Git config\"\\)","\"Git配置\")"],
+		["\"Repository settings\"","\"仓库设置\""],
+		["`Primary remote repository \\(","`主要的远程仓库 ("],
+		["\"Editing \"","\"编辑\""],
+		["\". This file specifies intentionally untracked files that Git should ignore. Files already tracked by Git are not affected.\"","\".该文件指定了Git应该忽略的有意的未跟踪文件。 Git已经跟踪的文件不受影响.\""],
+		["\"Learn more about gitignore files\"","\"了解更多关于gitignore文件\""],
+		["\"For this repository I wish to\"","\"对于这个存储库，我希望\""],
+		["\"Use my global Git config\"","\"使用我的公共Git配置\""],
+		["\"Use a local Git config\"","\"使用一个本地Git配置\""],
+		["`Unknown git config location: \\$\\{(.)\\}`","`未知的git配置位置: $${$1}`"],
+		["headerText:\"Create a branch\"","headerText:\"新建一个分支\""],
+		["\"Create branch\"","\"创建分支\""],
+		["\"Your new branch will be based on your currently checked out branch \\(\"","\"您的新分支将基于您当前检查的分支 (\""],
+		["\" is the \",(..),\" for your repository.\"","\" 是你仓库的\",$1,\".\""],
 		["\"The default branch in your repository. Pick this to start on something new that's not dependent on your current branch.\"","\"你仓库中的默认分支。选择这个来开始新的工作，这与你当前的分支没有依赖关系。\""],
 		["\"The currently checked out branch. Pick this if you need to build on work done on this branch.\"","\"当前已签出的分支。如果你需要在这个分支上继续构建工作，请选择这个分支。\""],
 		["\"default branch\"","\"默认分支\""],
@@ -455,98 +455,98 @@
 		["`Resolve conflicts before \\$\\{(.).kind\\}`","`在$${$1.kind}之前解决冲突`"],
 		["\"All conflicted files have been resolved. \"","\"所有冲突文件均已解决。\""],
 		["\"Open in command line,\"","\"在命令行中打开,\""],
-		["\"your tool of choice, or close to resolve manually.\""，"\"使用您选择的工具，或手动解决。\""]，
-		["\"1 conflicted file\":`\\$\\{(.)\\} conflicted files`"，"\"1 个冲突文件\":`$${$1} 个冲突文件`"]，
-		["\"No conflicts remaining\""，"\"没有剩余的冲突\""]，
-		["\"Resolve conflicts to continue rebasing\""，"\"解决冲突以继续对此分支进行变基:\""]，
-		["\"View conflicts\""，"\"查看冲突\""]，
-		["\"Rebasing branch\""，"\"变基分支\""]，
-		["title:\"Publish branch\","，"title:\"发布分支\","]，
-		["\"Rebase in progress\":\"Cannot publish detached HEAD\""，"\"正在进行变基操作\":\"无法发布游离的HEAD\""]，
-		["\"Installing update…\""，"\"安装更新中…\""]，
-		["\"Do not close GitHub Desktop while the update is in progress. Closing now may break your installation.\""，"\"在进行更新时，请勿关闭GitHub桌面程序。现在关闭可能使您的新版程序无法打开。\""]，
-		["\"Quit anyway\""，"\"无论如何都要退出\""]，
-		["\"Refreshing repository\""，"\"更新存储库\""]，
-		["\"Preview the Pull Request from your current branch\""，"\"预览当前分支中的拉取请求\""]，
-		["\"Preview Pull Request\""，"\"预览拉取请求\""]，
-		["\"The current branch \\(\",(..).createElement\\((..),null,(.).branch.name\\),\"\\) is already published to GitHub. Preview the changes this pull request will have before proposing your changes.\""，
-		"\"当前分支(\",$1.createElement($2,null,$3.branch.name),\")已发布到 GitHub。在提出您的更改之前，请先预览此拉取请求将带来的更改。\""]，
-		["\"Create a tag\""，"\"创建一个标签\""]，
-		["\"Create tag\""，"\"创建标签\""]，
-		["\"Downloading update…\""，"\"下载更新中…\""]，
-		["\"Accessibility\"\\)"，"\"辅助功能\")"]，
-		["\"When enabled, GitHub Desktop will underline links in commit messages, comments, 和 other text fields. This can help make links easier to distinguish. \""，"\"启用后，GitHub Desktop 将在提交信息、评论和其他文本字段中为链接添加下划线。这有助于更容易地识别链接。\""]，
-		["\"This is an example link\""，"\"这是一个示例链接\""]，
-		["\"When enabled, check marks will be displayed along side the line numbers and groups of line numbers in the diff when committing. When disabled, the line number controls will be less prominent.\""，"\"启用后，在提交内容变化的部分，会在行号及行号组旁边显示勾选标记。禁用时，行号控件将不太显眼。\""]，
-		["\"Stashed Changes\""，"\"暂存的更改\""]，
-		["\"View your stashed changes\""，"\"查看你的已暂存更改\""]，
-		["\"You have \",(.),\" \",1===(.)\\?\"change\":\"changes\",\" in progress that you have not yet committed.\""，"\"您有\",$1,\"个正在进行的更改尚未提交.\""]，
-		["\"When a stash exists, access it at the bottom of the Changes tab to the left.\""，"\"当存在暂存时，请在左侧的“更改”选项卡底部访问它。\""]，
-		["\"View stash\""，"\"查看暂存\""]，
-		["\"Stashed changes\""，"\"暂存的更改\""]，
-		["ButtonText:\"Restore\""，"ButtonText:\"恢复\""]，
-		["ButtonText:\"Discard\""，"ButtonText:\"忽略\""]，
-		["\"Restore\"\\),\" will move your stashed files to the Changes list.\""，"\"恢复\"),\" 会将您的暂存文件移至更改列表.\""]，
-		["\"Discard stash\\?\""，"\"丢弃暂存的内容吗？\""]，
-		["\"Are you sure you want to discard these stashed changes\\?\""，"\"您确定要丢弃这些暂存的更改吗？\""]，
-		["\"Use Git Credential Manager\""，"\"使用Git凭据管理器\""]，
-		["\"Use\",\" \",(..).createElement\\((..),\\{uri:\"https://gh.io/gcm\"\\},\"Git Credential Manager\",\" \"\\),\" \",\"for private repositories outside of GitHub.com. This feature is experimental and subject to change.\""，"\"使用\",\" \",$1.createElement($2,{uri:\"https://gh.io/gcm\"},\"Git凭据管理器\",\" \"),\" \",\"（或其他服务）来管理GitHub.com之外的私有仓库。此功能是实验性的，可能会发生变化。\""]，
-		["\"Network and credentials\""，"\"网络和凭据\""]，
-		["\"Diff\""，"\"差异\""]，
-		["\"Tab size\""，"\"替换制表符的空格数\""]，
-		["===(.)\\?`\\$\\{(.)\\} \\(default\\)`"，"===$1?`$${$2} (默认)`"]，
-		["\"Publish this branch to GitHub\""，"\"将这个分支发布到GitHub\""]，
-		["\"Publish this branch to the remote\""，"\"将这个分支发布到远程仓库\""]，
-		["\"Publish repository\""，"\"公开存储库\""]，
-		["\"Publish this repository to GitHub\""，"\"将这个仓库发布到 GitHub\""]，
-		["\"Submodule changes\""，"\"子模块存在更改\""]，
-		["\"This is a submodule based on the repository\""，"\"这个子模块基于仓库\""]，
-		["\"This submodule has \",(.),\" changes. Those changes must be committed inside of the submodule before they can be part of the parent repository.\""，"\"这个子模块存在\",$1,\"的更改。这些更改必须在子模块内部提交之后，才能成为父仓库的一部分。\""]，
-		["\"modified and untracked\":(.).status.untrackedChanges\\?\"untracked\":\"modified\""，"\"已修改且未追踪\":$1.status.untrackedChanges?\"未追踪\":\"已修改\""]，
-		["\"Open this submodule on GitHub Desktop\""，"\"在 GitHub Desktop 中打开这个子模块\""]，
-		["\"You can open this submodule on GitHub Desktop as a normal repository to manage and commit any changes in it.\""，"\"您可以在 GitHub Desktop 中像普通仓库一样打开这个子模块，以管理和提交其中的任何更改。\""]，
-		["\"Open repository\""，"\"打开仓库\""]，
-		["\"Squash and \""，"\"压缩并\""]，
-		["\"Merge into \""，"\"合并分支到\""]，
-		["\"The commits in the selected branch will be combined into one commit in the current branch.\""，"\"所选分支的提交将合并到当前分支的一个提交中。\""]，
-		["label:\"Rebase\""，"label:\"变基\""]，
-		["\"The commits from the selected branch will be rebased and added to the current branch.\""，"\"来自选定分支的提交将被重新定位并添加到当前分支中。\""]，
-		["\"Rebase \""，"\"变基分支\""]，
-		["`You have \\$\\{(.).join\\(\" and \"\\)\\} waiting to be pushed to \\$\\{(.)\\?\"GitHub\":\"the remote\"\\}.`"，"`你有$${$1.join(\" and \")}正等待推送到$${$2?\"GitHub\":\"远程仓库\"}.`"]，
-		["\"Can't find \\\\\"\""，"\"无法找到仓库\\\"\""]，
-		["\"It was last seen at\""，"\"最后一次出现的位置在\""]，
-		["\"Check again.\""，"\"再次检查.\""]，
-		["\"Locate…\""，"\"选择文件夹…\""]，
-		["\"Clone Again\""，"\"再次克隆\""]，
-		["this.remove\\},\"Remove\""，"this.remove},\"移除仓库\""]，
-		["Cmd=\"Command Prompt\""，"Cmd=\"命令提示符\""]，
-		["\"Unable to publish repository. Please check if you have an internet connection and try again.\""，"\"无法发布存储库。请检查您是否具有互联网连接，然后重试。\""]，
-		["\"Authentication failed. Some common reasons include:\\\\n\\\\n- You are not logged in to your account: see File > Options.\\\\n- You may need to log out and log back in to refresh your token.\\\\n- You do not have permission to access this repository.\\\\n- The repository is archived on GitHub. Check the repository settings to confirm you are still permitted to push commits.\\\\n- If you use SSH authentication, check that your key is added to the ssh-agent and associated with your account.\\\\n- If you use SSH authentication, ensure the host key verification passes for your repository hosting service.\\\\n- If you used username / password authentication, you might need to use a Personal Access Token instead of your account password. Check the documentation of your repository hosting service.\""，
-		"\"认证失败。一些常见原因包括:\\n\\n- 您尚未登录到您的账户：请查看“文件”>“选项”。\\n- 您可能需要重新登录以刷新您的令牌。\\n- 您没有权限访问此仓库。\\n- 该仓库已在GitHub上存档。请检查仓库设置以确认您是否仍被允许推送提交。\\n- 如果您使用SSH认证，请检查您的密钥是否已添加到ssh-agent中并与您的账户关联。\\n- 如果您使用SSH认证，请确保您的仓库托管服务的主机密钥验证通过。\\n- 如果您使用用户名/密码认证，您可能需要使用个人访问令牌（Personal Access Token）而不是您的账户密码。请查阅您的仓库托管服务的文档。\""]，
-		["ButtonText:\"Continue\""，"ButtonText:\"继续\""]，
-		["\"Continue\""，"\"继续\""]，
-		["\"Create a Pull Request from your current branch\""，"\"从你的当前分支创建一个拉取请求\""]，
-		["\"Create Pull Request\""，"\"创建一个拉取请求\""]，
-		["\"The current branch \\(\""，"\"当前分支(\""]，
-		["\"\\) is already published to GitHub. Create a pull request to propose and collaborate on your changes.\""，"\")已发布到GitHub。创建一个拉取请求来同步你的更改并进行协作。\""]，
-		["\"Fork behavior\""，"\"复刻行为\""]，
-		["\"I'll be using this fork…\""，"\"我将这个复刻副本用于...\""]，
-		["\"To contribute to the parent repository\""，"\"为上游仓库做贡献\""]，
-		["\"For my own purposes\""，"\"出于我个人需要\""]，
-		["\"Pull requests targeting \",(..).createElement\\(\"strong\",null,(.).fullName\\),\" \",\"will be shown in the pull request list.\""，"\"针对\",$1.createElement(\"strong\",null,$2.fullName),\" \",\"的拉取请求将显示在拉取请求列表中.\""]，
-		["\"Issues will be created in \",(..).createElement\\(\"strong\",null,(.).fullName\\),\".\""，"\"议题将在\",$1.createElement(\"strong\",null,$2.fullName),\"中创建.\""]，
-		["'\"View on GitHub\" will open ',(..).createElement\\(\"strong\",null,(.).fullName\\),\" \",\"in the browser.\""，"'\"在GitHub中显示\" 按钮将会在浏览器中打开',$1.createElement(\"strong\",null,$2.fullName),\".\""]，
-		["\"New branches will be based on\",\" \",(..).createElement\\(\"strong\",null,(.).fullName\\),\"'s default branch.\""，"\"新分支将会基于\",\" \",$1.createElement(\"strong\",null,$2.fullName),\"的默认分支.\""]，
-		["\"Autocompletion of user and issues will be based on\""，"\"用户和问题的自动补全将基于\""]，
-		["\"Do you want to create a new branch instead\\?\""，"\"您想要创建一个新的分支吗？‌\""]，
-		["\"Create new branch\""，"\"新建分支\""]，
-		["\"ProTip! Press\""，"\"小技巧! 请按下\""]，
-		["\"to quickly create a new branch from anywhere within the app\""，"\"以在应用程序内的任何地方快速创建一个新的分支\""]，
-		["\" as determined by your\",\" \",(..).createElement\\((..),\\{onClick:this.onForkSettingsClick\\},\"fork behavior settings\"\\)"，
-		"\",行为由\",$1.createElement($2,{onClick:this.onForkSettingsClick},\"复刻行为设置\"),\"所决定\""]，
-		["\"Publish your branch\""，"\"发布你的分支\""]，
-		["\"Publish branch\""，"\"发布分支\""]，
-		["\"\\) hasn't been published to the remote yet. By publishing it \",(.)\\?\"to GitHub\":\"\",\" you can share it, \",(.)\\?\"open a pull request, \":\"\",\"and collaborate with others.\""，
+		["\"your tool of choice, or close to resolve manually.\"","\"使用您选择的工具，或手动解决。\""],
+		["\"1 conflicted file\":`\\$\\{(.)\\} conflicted files`","\"1 个冲突文件\":`$${$1} 个冲突文件`"],
+		["\"No conflicts remaining\"","\"没有剩余的冲突\""],
+		["\"Resolve conflicts to continue rebasing\"","\"解决冲突以继续对此分支进行变基:\""],
+		["\"View conflicts\"","\"查看冲突\""],
+		["\"Rebasing branch\"","\"变基分支\""],
+		["title:\"Publish branch\",","title:\"发布分支\","],
+		["\"Rebase in progress\":\"Cannot publish detached HEAD\"","\"正在进行变基操作\":\"无法发布游离的HEAD\""],
+		["\"Installing update…\"","\"安装更新中…\""],
+		["\"Do not close GitHub Desktop while the update is in progress. Closing now may break your installation.\"","\"在进行更新时，请勿关闭GitHub桌面程序。现在关闭可能使您的新版程序无法打开。\""],
+		["\"Quit anyway\"","\"无论如何都要退出\""],
+		["\"Refreshing repository\"","\"更新存储库\""],
+		["\"Preview the Pull Request from your current branch\"","\"预览当前分支中的拉取请求\""],
+		["\"Preview Pull Request\"","\"预览拉取请求\""],
+		["\"The current branch \\(\",(..).createElement\\((..),null,(.).branch.name\\),\"\\) is already published to GitHub. Preview the changes this pull request will have before proposing your changes.\"",
+		"\"当前分支(\",$1.createElement($2,null,$3.branch.name),\")已发布到 GitHub。在提出您的更改之前，请先预览此拉取请求将带来的更改。\""],
+		["\"Create a tag\"","\"创建一个标签\""],
+		["\"Create tag\"","\"创建标签\""],
+		["\"Downloading update…\"","\"下载更新中…\""],
+		["\"Accessibility\"\\)","\"辅助功能\")"],
+		["\"When enabled, GitHub Desktop will underline links in commit messages, comments, and other text fields. This can help make links easier to distinguish. \"","\"启用后，GitHub Desktop 将在提交信息、评论和其他文本字段中为链接添加下划线。这有助于更容易地识别链接。\""],
+		["\"This is an example link\"","\"这是一个示例链接\""],
+		["\"When enabled, check marks will be displayed along side the line numbers and groups of line numbers in the diff when committing. When disabled, the line number controls will be less prominent.\"","\"启用后，在提交内容变化的部分，会在行号及行号组旁边显示勾选标记。禁用时，行号控件将不太显眼。\""],
+		["\"Stashed Changes\"","\"暂存的更改\""],
+		["\"View your stashed changes\"","\"查看你的已暂存更改\""],
+		["\"You have \",(.),\" \",1===(.)\\?\"change\":\"changes\",\" in progress that you have not yet committed.\"","\"您有\",$1,\"个正在进行的更改尚未提交.\""],
+		["\"When a stash exists, access it at the bottom of the Changes tab to the left.\"","\"当存在暂存时，请在左侧的“更改”选项卡底部访问它。\""],
+		["\"View stash\"","\"查看暂存\""],
+		["\"Stashed changes\"","\"暂存的更改\""],
+		["ButtonText:\"Restore\"","ButtonText:\"恢复\""],
+		["ButtonText:\"Discard\"","ButtonText:\"忽略\""],
+		["\"Restore\"\\),\" will move your stashed files to the Changes list.\"","\"恢复\"),\" 会将您的暂存文件移至更改列表.\""],
+		["\"Discard stash\\?\"","\"丢弃暂存的内容吗？\""],
+		["\"Are you sure you want to discard these stashed changes\\?\"","\"您确定要丢弃这些暂存的更改吗？\""],
+		["\"Use Git Credential Manager\"","\"使用Git凭据管理器\""],
+		["\"Use\",\" \",(..).createElement\\((..),\\{uri:\"https://gh.io/gcm\"\\},\"Git Credential Manager\",\" \"\\),\" \",\"for private repositories outside of GitHub.com. This feature is experimental and subject to change.\"","\"使用\",\" \",$1.createElement($2,{uri:\"https://gh.io/gcm\"},\"Git凭据管理器\",\" \"),\" \",\"（或其他服务）来管理GitHub.com之外的私有仓库。此功能是实验性的，可能会发生变化。\""],
+		["\"Network and credentials\"","\"网络和凭据\""],
+		["\"Diff\"","\"差异\""],
+		["\"Tab size\"","\"替换制表符的空格数\""],
+		["===(.)\\?`\\$\\{(.)\\} \\(default\\)`","===$1?`$${$2} (默认)`"],
+		["\"Publish this branch to GitHub\"","\"将这个分支发布到GitHub\""],
+		["\"Publish this branch to the remote\"","\"将这个分支发布到远程仓库\""],
+		["\"Publish repository\"","\"公开存储库\""],
+		["\"Publish this repository to GitHub\"","\"将这个仓库发布到 GitHub\""],
+		["\"Submodule changes\"","\"子模块存在更改\""],
+		["\"This is a submodule based on the repository\"","\"这个子模块基于仓库\""],
+		["\"This submodule has \",(.),\" changes. Those changes must be committed inside of the submodule before they can be part of the parent repository.\"","\"这个子模块存在\",$1,\"的更改。这些更改必须在子模块内部提交之后，才能成为父仓库的一部分。\""],
+		["\"modified and untracked\":(.).status.untrackedChanges\\?\"untracked\":\"modified\"","\"已修改且未追踪\":$1.status.untrackedChanges?\"未追踪\":\"已修改\""],
+		["\"Open this submodule on GitHub Desktop\"","\"在 GitHub Desktop 中打开这个子模块\""],
+		["\"You can open this submodule on GitHub Desktop as a normal repository to manage and commit any changes in it.\"","\"您可以在 GitHub Desktop 中像普通仓库一样打开这个子模块，以管理和提交其中的任何更改。\""],
+		["\"Open repository\"","\"打开仓库\""],
+		["\"Squash and \"","\"压缩并\""],
+		["\"Merge into \"","\"合并分支到\""],
+		["\"The commits in the selected branch will be combined into one commit in the current branch.\"","\"所选分支的提交将合并到当前分支的一个提交中。\""],
+		["label:\"Rebase\"","label:\"变基\""],
+		["\"The commits from the selected branch will be rebased and added to the current branch.\"","\"来自选定分支的提交将被重新定位并添加到当前分支中。\""],
+		["\"Rebase \"","\"变基分支\""],
+		["`You have \\$\\{(.).join\\(\" and \"\\)\\} waiting to be pushed to \\$\\{(.)\\?\"GitHub\":\"the remote\"\\}.`","`你有$${$1.join(\" and \")}正等待推送到$${$2?\"GitHub\":\"远程仓库\"}.`"],
+		["\"Can't find \\\\\"\"","\"无法找到仓库\\\"\""],
+		["\"It was last seen at\"","\"最后一次出现的位置在\""],
+		["\"Check again.\"","\"再次检查.\""],
+		["\"Locate…\"","\"选择文件夹…\""],
+		["\"Clone Again\"","\"再次克隆\""],
+		["this.remove\\},\"Remove\"","this.remove},\"移除仓库\""],
+		["Cmd=\"Command Prompt\"","Cmd=\"命令提示符\""],
+		["\"Unable to publish repository. Please check if you have an internet connection and try again.\"","\"无法发布存储库。请检查您是否具有互联网连接，然后重试。\""],
+		["\"Authentication failed. Some common reasons include:\\\\n\\\\n- You are not logged in to your account: see File > Options.\\\\n- You may need to log out and log back in to refresh your token.\\\\n- You do not have permission to access this repository.\\\\n- The repository is archived on GitHub. Check the repository settings to confirm you are still permitted to push commits.\\\\n- If you use SSH authentication, check that your key is added to the ssh-agent and associated with your account.\\\\n- If you use SSH authentication, ensure the host key verification passes for your repository hosting service.\\\\n- If you used username / password authentication, you might need to use a Personal Access Token instead of your account password. Check the documentation of your repository hosting service.\"",
+		"\"认证失败。一些常见原因包括:\\n\\n- 您尚未登录到您的账户：请查看“文件”>“选项”。\\n- 您可能需要重新登录以刷新您的令牌。\\n- 您没有权限访问此仓库。\\n- 该仓库已在GitHub上存档。请检查仓库设置以确认您是否仍被允许推送提交。\\n- 如果您使用SSH认证，请检查您的密钥是否已添加到ssh-agent中并与您的账户关联。\\n- 如果您使用SSH认证，请确保您的仓库托管服务的主机密钥验证通过。\\n- 如果您使用用户名/密码认证，您可能需要使用个人访问令牌（Personal Access Token）而不是您的账户密码。请查阅您的仓库托管服务的文档。\""],
+		["ButtonText:\"Continue\"","ButtonText:\"继续\""],
+		["\"Continue\"","\"继续\""],
+		["\"Create a Pull Request from your current branch\"","\"从你的当前分支创建一个拉取请求\""],
+		["\"Create Pull Request\"","\"创建一个拉取请求\""],
+		["\"The current branch \\(\"","\"当前分支(\""],
+		["\"\\) is already published to GitHub. Create a pull request to propose and collaborate on your changes.\"","\")已发布到GitHub。创建一个拉取请求来同步你的更改并进行协作。\""],
+		["\"Fork behavior\"","\"复刻行为\""],
+		["\"I'll be using this fork…\"","\"我将这个复刻副本用于...\""],
+		["\"To contribute to the parent repository\"","\"为上游仓库做贡献\""],
+		["\"For my own purposes\"","\"出于我个人需要\""],
+		["\"Pull requests targeting \",(..).createElement\\(\"strong\",null,(.).fullName\\),\" \",\"will be shown in the pull request list.\"","\"针对\",$1.createElement(\"strong\",null,$2.fullName),\" \",\"的拉取请求将显示在拉取请求列表中.\""],
+		["\"Issues will be created in \",(..).createElement\\(\"strong\",null,(.).fullName\\),\".\"","\"议题将在\",$1.createElement(\"strong\",null,$2.fullName),\"中创建.\""],
+		["'\"View on GitHub\" will open ',(..).createElement\\(\"strong\",null,(.).fullName\\),\" \",\"in the browser.\"","'\"在GitHub中显示\" 按钮将会在浏览器中打开',$1.createElement(\"strong\",null,$2.fullName),\".\""],
+		["\"New branches will be based on\",\" \",(..).createElement\\(\"strong\",null,(.).fullName\\),\"'s default branch.\"","\"新分支将会基于\",\" \",$1.createElement(\"strong\",null,$2.fullName),\"的默认分支.\""],
+		["\"Autocompletion of user and issues will be based on\"","\"用户和问题的自动补全将基于\""],
+		["\"Do you want to create a new branch instead\\?\"","\"您想要创建一个新的分支吗？‌\""],
+		["\"Create new branch\"","\"新建分支\""],
+		["\"ProTip! Press\"","\"小技巧! 请按下\""],
+		["\"to quickly create a new branch from anywhere within the app\"","\"以在应用程序内的任何地方快速创建一个新的分支\""],
+		["\" as determined by your\",\" \",(..).createElement\\((..),\\{onClick:this.onForkSettingsClick\\},\"fork behavior settings\"\\)",
+		"\",行为由\",$1.createElement($2,{onClick:this.onForkSettingsClick},\"复刻行为设置\"),\"所决定\""],
+		["\"Publish your branch\"","\"发布你的分支\""],
+		["\"Publish branch\"","\"发布分支\""],
+		["\"\\) hasn't been published to the remote yet. By publishing it \",(.)\\?\"to GitHub\":\"\",\" you can share it, \",(.)\\?\"open a pull request, \":\"\",\"and collaborate with others.\"",
 		"\") 尚未发布到远程仓库. 现在发布它\",$1?\"到GitHub\":\"\",\"。你可以\",$2?\"开启一个拉取请求, \":\"\",\"发布它并进行多人协作。\""],
 		["\"Always available in the toolbar or\"","\"该选项位于菜单栏中 或者\""],
 		["\"Sorry, I can't find that pull request!\"","\"对不起，无法找到此拉取请求！\""],
@@ -560,405 +560,405 @@
 		["\"Remove repository\"","\"移除仓库\""],
 		["\"The repository will be removed from GitHub Desktop:\"","\"仓库也将从GitHub Desktop中移除:\""],
 		["'Are you sure you want to remove the repository \"',this.props.repository.name,'\" from GitHub Desktop\\?'","'你确定你想从GitHub Desktop中移除\"',this.props.repository.name,'\"仓库?'"],
-		["\"Switch branch\""，"\"切换分支\""]，
-		["`Leave my changes on \\$\\{this.state.currentBranchName\\}`"，"`将我的修改保留在$${this.state.currentBranchName}分支上`"]，
-		["\"Your in-progress work will be stashed on this branch for you to return to later\""，"\"将您的更改保留在这个分支上,以便您日后回来修改\""]，
-		["`Bring my changes to \\$\\{(.).name\\}`"，"`将我的修改带到$${$1.name}分支`"]，
-		["\"Your in-progress work will follow you to the new branch\""，"\"您正在进行的修改将跟随您到新的分支\""]，
-		["\"Diff Options\""，"\"差异选项\""]，
-		["\"Whitespace\""，"\"空白字符\""]，
-		["\"Hide whitespace changes\""，"\"隐藏空白字符的变化\""]，
-		["\"Interacting with individual lines or hunks will be disabled while hiding whitespace.\""，"\"当隐藏空白字符时，与单独的行或块的交互将被禁用。\""]，
-		["\"Diff display\""，"\"差异显示\""]，
-		["label:\"Unified\""，"label:\"统一\""]，
-		["null,\"Split\""，"null,\"分割\""]，
-		["\"No files in commit\""，"\"此提交中无文件\""]，
-		["\"Copy the full SHA\""，"\"复制完整的SHA\""]，
-		["\"to quickly add a local repository, and\""，"\"快速添加本地仓库，按下\""]，
-		["\"to clone from anywhere within the app\""，"\"从任意网络位置克隆一个仓库\""]，
-		["\"Committing as \",(..)\\(\\).createElement\\(\"strong\",null,(.)\\)"，"\"以\",$1().createElement(\"strong\",null,$2),\"的身份提交\""]，
-		["\"Committing with \",(.)\\)"，"\"与\",$1,\"一起进行提交\")"]，
-		["\"You can update your \",(.),\" git configuration \",(.),\" in your \",(.),\".\""，"\"你可以在你的\",$3,\"中更新你\",$2,\"的\",$1,\"git配置\",\".\""]，
-		["\"repository settings\":\"git options\""，"\"仓库设置\":\"git选项\""]，
-		["\"for your repository\""，"\"仓库中\""]，
-		["\"local\":\"global\""，"\"本地\":\"全局\""]，
-		["\"You can also set an email local to this repository from the\",\" \",(..)\\(\\).createElement\\((..),\\{onClick:this.onRepositorySettingsClick\\},\"repository settings\"\\),\".\""，"\"你也可以从\",$1().createElement($2,{onClick:this.onRepositorySettingsClick},\"仓库设置\"),\"中为这个仓库设置一个本地邮箱.\""]，
-		["\"Open git settings\""，"\"打开git设置\""]，
-		["\"Rename branch\""，"\"分支重命名\""]，
-		["\"This branch is tracking \",(..).createElement\\((..),null,(.).upstream\\),\" and renaming this branch will not change the branch name on the remote.\""，
-		"\"这个分支正在追踪\",$1.createElement($2,null,$3.upstream),\",重命名这个分支不会改变远程分支的名称.\""]，
-		["`Rename \\$\\{this.props.branch.name\\}`"，"`重命名$${this.props.branch.name}分支`"]，
-		["\"This commit has not been pushed to the remote repository\""，"\"这个提交还没有被推送到远程仓库\""]，
-		["`This commit has \\$\\{(.)\\} tag\\$\\{(.)>1\\?\"s\":\"\"\\} to push`"，"`这个提交有$${$1}个标签需要推送`"]，
-		["label:\"Expand whole file\""，"label:\"展开整个文件\""]，
-		["label:\"Collapse expanded lines\""，"label:\"展开折叠的行\""]，
-		["`Discard \\$\\{(.)\\} line\\$\\{(.)>1\\?\"s\":\"\"\\}\\$\\{(.)\\}`"，"`放弃$${$1}行$${$3}`"]，
-		["Additions\\?(.)=\"added\""，"Additions?$1=\"新增的\""]，
-		["Deletions\\?(.)=\"removed\""，"Deletions?$1=\"删除的\""]，
-		["Mixed\\?(.)=\"modified\""，"Mixed?$1=\"修改的\""]，
-		["label:\"Copy\""，"label:\"复制\""]，
-		["label:\"Select all\""，"label:\"全选\""]，
-		["tooltip:(.)\\},\"Undo\""，"tooltip:$1},\"撤销\""]，
-		["\"Committed \""，"\"提交于\""]，
-		["\"View on GitHub\""，"\"去GitHub上查看\""]，
-		["\"Disable commit spellcheck\":\"Enable commit spellcheck\""，"\"关闭提交时的拼写检查\":\"启用提交时的拼写检查\""]，
-		["\"Your changes will modify your \",(..).createElement\\(\"strong\",null,\"most recent commit\"\\),\".\",\" \",(..).createElement\\((..),\\{onClick:this.props.onStopAmending\\},\"Stop amending\"\\),\" \",\"to make these changes as a new commit.\""，
-		"\"你的更改将修改你\",$1.createElement(\"strong\",null,\"最近的一次提交\"),\".\",$2.createElement($3,{onClick:this.props.onStopAmending},\"停止修改\"),\"以将这些变化作为一个新的提交.\""]，
-		["\"Reset to commit\""，"\"重置提交\""]，
-		["\"You have changes in progress. Resetting to a previous commit might result in some of these changes being lost. Do you want to continue anyway\\?\""，"\"你当前有未完成的更改。‌重置到之前的提交可能会导致其中一些更改丢失。‌你是否无论如何都想继续？\""]，
-		["\"Great commit summaries contain fewer than 50 characters\""，"\"优秀的提交说明应少于50个字符\""]，
-		["\"Place extra information in the description field.\""，"\"‌额外信息请放在描述字段中。‌\""]，
-		["\"Great commit summaries contain fewer than 50 characters. Place extra information in the description field.\""，"\"好的提交说明应少于50个字符。‌额外信息请放在描述字段中。‌\""]，
-		["label:\"Remove alias\""，"label:\"删除别名\""]，
-		["alias\\?\"Create\":\"Change\""，"alias?\"创建\":\"更换\""]，
-		["`\\$\\{(.)\\} repository alias`"，"`$${$1}仓库别名`"]，
-		["'Choose a new alias for the repository \""，"'为这个仓库选择一个新的别名\""]，
-		["\"This will not affect the original repository name on GitHub.\""，"\"这不会影响GitHub上的原有的仓库名称。‌\""]，
-		["ButtonText:`\\$\\{(.)\\} alias`"，"ButtonText:`$${$1}别名`"]，
-		["\"Refresh the list of pull requests\""，"\"刷新拉取请求列表\""]，
-		["Modified:return\"Modified\""，"Modified:return\"修改的\""]，
-		["Untracked:return\"New\""，"Untracked:return\"新增的\""]，
-		["Deleted:return\"Deleted\""，"Deleted:return\"删除的\""]，
-		["Renamed:return\"Renamed\""，"Renamed:return\"重命名的\""]，
-		["\"Conflicted\":\"Resolved\":\"Conflicted\""，"\"有冲突的\":\"已解决的\":\"有冲突的\""]，
-		["Copied:return\"Copied\""，"Copied:return\"复制的\""]，
-		["`Unknown file status \\$\\{(.)\\}`"，"`未知的文件状态$${$1}`"]，
-		["\"Configure custom editor…\""，"\"配置自定义编辑器...\""]，
-		["\"Path to executable\""，"\"可执行文件路径\""]，
-		["label:\"Path\""，"label:\"路径\""]，
-		["label:\"Arguments\""，"label:\"参数\""]，
-		["\"Command line arguments\""，"\"命令行参数\""]，
-		["\"Configure custom shell…\""，"\"配置自定义shell...\""]，
-		["\"This commit will be misattributed\""，"\"该提交将被错误归属\""]，
-		["\"This email address is disallowed\""，"\"此邮箱地址不允许使用\""]，
-		["=\"Copy file path\""，"=\"复制文件路径\""]，
-		["=\"Copy relative file path\""，"=\"复制相对文件路径\""]，
-		["=\"Open in external editor\""，"=\"用外部编辑器打开\""]，
-		["=\"Show in Explorer\""，"=\"在文件管理器中显示\""]，
-		["=\"Recycle Bin\""，"=\"回收站\""]，
-		["=\"Open with default program\""，"=\"使用默认程序打开\""]，
-		["return\"Explorer\""，"return\"文件管理器\""]，
-		["\"Collapse\":\"Expand\""，"\"折叠\":\"展开\""]，
-		["\"Delete branch\""，"\"删除分支\""]，
-		["\"Delete branch \""，"\"删除分支\""]，
-		["\"This action cannot be undone.\""，"\"该操作无法撤销。\""]，
-		["\"The branch also exists on the remote, do you wish to delete it there as well\\?\""，"\"该分支也存在于远程分支中，您是否也想在远程分支中删除该分支？\""]，
-		["ButtonText:\"Delete\""，"ButtonText:\"删除\""]，
-		["\"Squash \",(.),\" commits\""，"\"压缩\",$1,\"条提交记录\""]，
-		["length\\?\"commit\":\"commits\""，"length?\"此提交记录\":\"这些提交记录\""]，
-		["`Move \\$\\{(.)\\} here`"，"`移动$${$1}到这里`"]，
-		["`Email: \\$\\{(.).email\\}`"，"`邮箱: $${$1.email}`"]，
-		["\" added lines\""，"\"行新增\""]，
-		["\" removed lines\""，"\"行移除\""]，
-		["\"Expand Up\""，"\"向上展开\""]，
-		["\"Expand Down\""，"\"向下展开\""]，
-		["\\},\"base:\"\\)"，"},\"基础分支:\")"]，
-		["\"The repository will be created at \""，"\"此仓库将被创建在\""]，
-		["\"Publish your repository to GitHub. Need help\\?\""，"\"将你的仓库发布到GitHub。需要帮助吗？\""]，
-		["\"Publish your repository to GitHub\""，"\"将你的仓库发布到GitHub\""]，
-		["\"This repository is currently only available on your local machine. By publishing it on GitHub you can share it, 和 collaborate with others.\""，
-		"\"当前仓库仅在本地可用，发布到GitHub后可共享与协作。\""]，
-		["\"Always available in the toolbar for local repositories or\""，"\"对于本地仓库，工具栏项目始终可用，或者\""]，
-		["\"Keep this code private\""，"\"保持此项目代码为私有\""]，
-		["\"Will be created as \""，"\"名称将被创建为\""]，
-		["\"Will be \",this.props.warningMessageVerb\\?\\?\"created\",\" as\",\" \""，"\"名称将被\",this.props.warningMessageVerb??\"创建\",\"为\""]，
-		["warningMessageVerb:\"saved\""，"warningMessageVerb:\"保存\""]，
-		["\"This folder contains files. Git can only clone to empty folders.\""，"\"此文件夹包含文件。Git 只能克隆到空文件夹中。\""]，
-		["\\{className:\"archived\"\\},\"Archived\""，"{className:\"archived\"},\"已归档\""]，
-		["\"How are you planning to use this fork\\?\""，"\"你打算如何使用这个克隆项目？\""]，
-		["\"To contribute to the parent project\""，"\"为父项目做出贡献\""]，
-		["\"We will help you contribute to the\""，"\"我们将帮助你为\""]，
-		["\" \",\"repository\""，"\"仓库做出贡献\""]，
-		["\"Pull requests in \",this.getRepositoryName\\(\\)"，"\"关于\",this.getRepositoryName(),\"项目的拉取请求\""]，
-		["`\\$\\{(.)\\} will require force push`"，"`$${$1}提交需要强制推送`"]，
-		["\"Are you sure you want to \""，"\"你确定想要\""]，
-		["\"At the end of the \",(.).toLowerCase\\(\\),\" flow, GitHub Desktop will enable you to force push the branch to update the upstream branch. Force pushing will alter the history on the remote and potentially cause problems for others collaborating on this branch.\""，
-		"\"在\",$1.toLowerCase(),\"流程结束时，GitHub Desktop 将允许您强制推送该分支以更新上游分支。强制推送会更改远程仓库的历史记录，并可能为在该分支上协作的其他人带来问题。\""]，
-		["ButtonText:`Begin \\$\\{(.)\\.toLowerCase\\(\\)\\}`"，"ButtonText:`开始$${$1.toLowerCase()}`"]，
-		["`\\$\\{this\\.getButtonVerb\\(\\)\\} last commit`"，"`$${this.getButtonVerb()}最新提交`"]，
-		["\"Are you sure you want to force push\\?\""，"\"你确定要强制推送吗？\""]，
-		["\"A force push will rewrite history on\",\" \",(..)\\.createElement\\((..),null,this\\.props\\.upstreamBranch\\),\"\\. Any collaborators working on this branch will need to reset their own local branch to match the history of the remote\\.\""，
-		"\"强制推送将重写\",\" \",$1.createElement($2,null,this.props.upstreamBranch),\"分支上的历史记录。在该分支上工作的任何协作者都需要将自己的本地分支重置为与远程仓库的历史记录相匹配。\""]，
-		["ButtonText:\"I'm sure\""，"ButtonText:\"我确定\""]，
-		["\"Your new branch will be based on\",\" \",(..)\\.createElement\\(\"strong\",null,(.)\\),\"'s \""，"\"您将创建的新分支将基于\",$1.createElement(\"strong\",null,$2),\"的\""]，
-		["\"Unable to squash\\. Squashing replays all commits up to the last one required for the squash\\. A merge commit cannot exist among those commits\\.\""，
-		"\"无法压缩。压缩操作会重新生成所有提交，直到达到需要进行压缩的最后一个提交为止。在这些提交中不能存在合并提交。\""]，
-		["\" is already up to date with \",(..)\\.createElement\\(\"strong\",null,(.)\\)"，"\"分支已经通过\",$1.createElement(\"strong\",null,$2),\"分支进行了更新\""]，
-		["\" is already up to date\""，"\"分支已经是最新的\""]，
-		["\"You are not able to rebase this branch onto itself\\.\""，"\"您无法将此分支变基到自身。\""]，
-		["=1===(.)\\?\"commit\":\"commits\""，"=1===$1?\"个提交\":\"个提交\""]，
-		["\"This will update \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" by applying its \",(..)\\(\\).createElement\\(\"strong\",null,` \\$\\{(.)\\} \\$\\{(.)\\}`\\),\" on top of \",(..)\\(\\).createElement\\(\"strong\",null,(.).name\\)\\)"，
-		"\"这将通过在\",$6().createElement(\"strong\",null,$7.name),\"分支上应用其\",$3().createElement(\"strong\",null,` $${$4} $${$5}`),\"来更新\",$1().createElement(\"strong\",null,$2.name),\"分支。\")"]，
-		["\"Checking for ability to rebase automatically…\""，"\"检查是否可以自动变基……\""]，
-		["`A branch named \\$\\{(.)\\} already exists\\.`"，"`名为$${$1}的分支已存在`"]，
-		["\"A branch named \",(..)\\.createElement\\((..),null,(.)\\),\" already exists on the remote.\""，
-		"\"远程仓库已存在名为\",$1.createElement($2,null,$3),\"的分支。\""]，
-		["`Behind \\("，"`落后("]，
-		["`Ahead \\("，"`领先("]，
-		["\"There will be\",(..)\\(\\)\\.createElement\\(\"strong\",null,` \\$\\{(.)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)"，
-		"\"将\",$4().createElement(\"strong\",null,$5.name),\"分支合并到\",$6().createElement(\"strong\",null,$7.name),\"分支时将出现\",$1().createElement(\"strong\",null,` $${$2}个冲突$${$3}`))"]，
-		["\"There will be\",(..)\\.createElement\\(\"strong\",null,` \\$\\{(.)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)"，
-		"\"将\",$4.createElement(\"strong\",null,$5.name),\"分支合并到\",$6.createElement(\"strong\",null,$7.name),\"分支时将出现\",$1.createElement(\"strong\",null,` $${$2}个冲突$${$3}`))"]，
-		["selectedOperation:\"Merge\""，"selectedOperation:\"合并\""]，
-		["\"Checking for ability to \",this.state.selectedOperation.toLowerCase\\(\\),\" \",\"automatically…\""，
-		"\"正在检查是否有条件自动\",this.state.selectedOperation.toLowerCase(),\"…\""]，
-		["\\?\"commit\":\"commits\""，"?\"个更改\":\"个更改\""]，
-		["\"This will merge\",(..)\\.createElement\\(\"strong\",null,` \\$\\{this\\.commitCount\\} \\$\\{(.)\\}`\\),\" from \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)"，
-		"\"这将会把\",$3.createElement(\"strong\",null,$4.name),\"分支的\",$1.createElement(\"strong\",null,`$${this.commitCount} $${$2}`),\"合并到\",$5.createElement(\"strong\",null,$6.name),\"分支\")"]，
-		["\"Confirm discard changes\""，"\"确认放弃更改\""]，
-		["\"Are you sure you want to discard the selected changes to:\""，"\"是否确实要放弃对以下内容所做的选定更改：\""]，
-		["return\"Discard changes\""，"return\"放弃更改\""]，
-		["\"Unable to \",this.getRetryActionName\\(\\),\" when changes are present on your branch\\.\""，"\"当您的分支上存在更改时，无法\",this.getRetryActionName(),\"。\""]，
-		["\"You can stash your changes now and recover them afterwards\\.\""，"\"您现在可以将更改暂存起来，稍后再恢复它们。\""]，
-		["okButtonText:\"Stash changes and continue\""，"okButtonText:\"暂存更改并继续\""]，
-		["okButtonTitle:\"This will create a stash with your current changes\\. You can recover them by restoring the stash afterwards\\.\""，"okButtonTitle:\"这将使用您当前的更改创建一个暂存。稍后您可以通过恢复该暂存来找回这些更改。\""]，
-		["return\"checkout\";case (..)\\.Pull:return\"pull\";case (..)\\.Merge:return\"merge\";case (..)\\.Rebase:return\"rebase\";case (..)\\.Clone:return\"clone\";case (..)\\.Fetch:return\"fetch\";case (..)\\.Push:return\"push\";case (..)\\.CherryPick:case (..)\\.CreateBranchForCherryPick:return\"cherry-pick\";case (..)\\.Squash:return\"squash\";case (..)\\.Reorder:return\"reorder\";case (..)\\.DiscardChanges:return\"discard changes\""，
-		"return\"检出\";case $1.Pull:return\"拉取\";case $1.Merge:return\"合并\";case $1.Rebase:return\"变基\";case $1.Clone:return\"克隆\";case $1.Fetch:return\"获取\";case $1.Push:return\"推送\";case $1.CherryPick:case $1.CreateBranchForCherryPick:return\"拣选\";case $1.Squash:return\"压缩\";case $1.Reorder:return\"重新排序\";case $1.DiscardChanges:return\"丢弃更改\""]，
-		["title:\"Error\""，"title:\"错误\""]，
-		["\"The file is empty\""，"\"这个文件是空的\""]，
-		["cancelButtonText:\"Open options\""，"cancelButtonText:\"打开选项\""]，
-		["\"Are you sure you want to discard all changes to:\""，"\"你确定要放弃对这些文件所做的所有修改吗:\""]，
-		["\"Changes can be restored by retrieving them from the \",(..),\"\\.\""，"\"可以通过检查\",$1,\"来恢复所有更改。\""]，
-		["\"Sign in using your browser\""，"\"在你的浏览器中登录\""]，
-		["\"Your browser will redirect you back to GitHub Desktop once you've signed in\\. If your browser asks for your permission to launch GitHub Desktop please allow it to\\.\""，
-		"\"登录后，您的浏览器将把您重定向回GitHub Desktop。如果浏览器请求您允许启动GitHub Desktop，请予以允许。\""]，
-		["\"Your browser will redirect you back to GitHub Desktop once you've signed in\\. If your browser asks for your permission to launch GitHub Desktop, please allow it\\.\""，
-		"\"登录后，您的浏览器将把您重定向回GitHub Desktop。如果浏览器请求您允许启动GitHub Desktop，请允许它这么做。\""]，
-		["\"Continue with browser\""，"\"在浏览器中继续\""]，
-		["`your \\$\\{(..)\\(this.props.accounts\\[0\\]\\)\\?\"GitHub\":\"GitHub Enterprise\"\\} account`"，
-		"`你的$${$1(this.props.accounts[0])?\"GitHub\":\"GitHub企业版\"}账户`"]，
-		["\"either of your GitHub.com nor GitHub Enterprise accounts\""，"\"您的GitHub账户或GitHub企业版账户全都\""]，
-		["`This email address \\$\\{(.)\\?\"matches\":\"does not match\"\\} \\$\\{this\\.getAccountTypeDescription\\(\\)\\}"，
-		"`这个邮箱地址和$${this.getAccountTypeDescription()}$${$1?\"匹配\":\"不匹配\"} "]，
-		["\"Your commits will be wrongly attributed\\. \""，"\"这将会导致你的提交被错误的归属。\""]，
-		["\"Learn more\\.\""，"\"查看更多。\""]，
-		["\"The email in your global Git config \\(\""，"\"你git公共配置中的当前邮箱(\""]，
-		["isEnterpriseAccount\\?\" Enterprise\":\"\""，"isEnterpriseAccount?\"企业版\":\"\""]，
-		["` for \\$\\{this\\.props\\.user\\.name\\}`"，"`($${this.props.user.name})`"]，
-		["\" doesn't match your GitHub\",(.),\" \",\"account\",(.),\""，"\"和你的GitHub\",$1,\" \",\"账户\",$2,\"不匹配\",\""]，
-		["\"You can\",(.)\\?\" also\":\"\",\" choose an email local to this repository from the\",\" \""，"\"您\",$1?\"也\":\"\",\"可以设置一个针对此仓库的本地邮箱\""]，
-		["\"repository settings\""，"\"仓库设置\""]，
-		["type:\"button\"\\},\"Ignore\""，"type:\"button\"},\"放弃\""]，
-		["type:\"submit\"\\},\"Update email\""，"type:\"submit\"},\"更新邮箱\""]，
-		["title:\"Authentication failed\""，"title:\"验证失败\""]，
-		["\"We were unable to authenticate with\",\" \",(..).createElement\\((..),null,this\\.props\\.remoteUrl\\),\""，"\"我们无法对\",\" \",$1.createElement($2,null,this.props.remoteUrl),\"站点进行身份验证\",\""]，
-		["\". Please enter\""，"\"。请输入一个\""]，
-		["\"the password for the user \""，"\"此用户的密码\""]，
-		["\"your username and password\""，"\"你的用户名和密码\""]，
-		["\"to try again\\.\""，"\"并重试。\""]，
-		["\"Depending on your repository's hosting service, you might need to use a Personal Access Token \\(PAT\\) as your password\\. Learn more about creating a PAT in our\""，
-		"\"根据您的存储库托管服务，您可能需要使用个人访问令牌（PAT）作为密码。在我们的文档中了解更多关于创建PAT的信息\""]，
-		["\"integration docs\""，"\"集成文档\""]，
-		["\"Select a repository\""，"\"选择一个仓库\""]，
-		["\"No repositories\""，"\"没有仓库\""]，
-		["\"No repository selected\""，"\"没有选中的仓库\""]，
-		["\" files selected\""，"\"个文件被选中\""]，
-		["\\{className:\"image-diff-header\"\\},\"Added\""，"{className:\"image-diff-header\"},\"新增\""]，
-		["1\\?\"commits\":\"commit\""，"1?\"更改\":\"更改\""]，
-		["`Cherry-pick \\$\\{this\\.props\\.commitCount\\} \\$\\{(.)\\}`"，"`签出$${this.props.commitCount}个$${$1}`"]，
-		["\"This binary file has changed\\.\""，"\"此分支文件存在更改。\""]，
-		["\"Open file in external program\\.\""，"\"使用外部程序打开文件。\""]，
-		["title:\"Expand All\""，"title:\"全部展开\""]，
-		["return\"Downloading\";case\"upload\":return\"Uploading\";case\"checkout\":return\"Checking out\""，
-		"return\"下载中\";case\"upload\":return\"上传中\";case\"checkout\":return\"检查签出中\""]，
-		["`Checking out \\$\\{(.).target\\}`"，"`检查签出中 $${$1.target}`"]，
-		["\"Welcome to \""，"\"欢迎来到\""]，
-		["\"GitHub Desktop is a seamless way to contribute to projects on GitHub and GitHub Enterprise\\. Sign in below to get started with your existing projects\\.\""，"\"GitHub Desktop 是一种为 GitHub 及 GitHub Enterprise 上的项目做贡献的无缝对接方式。在下方登录，即可开始使用您已有的项目。\""]，
-		["\"Sign in to GitHub.com\""，"\"登录到GitHub.com\""]，
-		["\"Sign in to GitHub Enterprise\""，"\"登录到GitHub企业版\""]，
-		["\"New to GitHub\\?\""，"\"首次使用GitHub？\""]，
-		["\"Create your free account\\.\""，"\"免费创建一个账户。\""]，
-		["\"Skip this step\""，"\"跳过这步\""]，
-		["\"By creating an account, you agree to the\",\" \""，"\"若创建账户，即表示您同意\""]，
-		["\"Terms of Service\""，"\"服务条款\""]，
-		["\"\\. For more information about GitHub's privacy practices, see the\",\" \""，"\"。如需了解更多关于 GitHub 隐私惯例的信息，请查看\""]，
-		["\"GitHub Privacy Statement\\.\""，"\"GitHub 隐私声明。\""]，
-		["\"GitHub Desktop sends usage metrics to improve the product and inform feature decisions\\.\",\" \""，"\"GitHub Desktop 会发送使用指标数据，以便改进产品并为功能决策提供参考。了解\""]，
-		["\"Learn more about user metrics\\.\""，"\"更多有关用户指标的信息。\""]，
-		["\"welcome-title\"\\},\"Configure Git\""，"\"welcome-title\"},\"配置 Git\""]，
-		["\"This is used to identify the commits you create\\. Anyone will be able to see this information if you publish commits\\.\""，"\"这用于识别您所创建的提交内容。如果您发布提交内容，任何人都将能够看到此信息。\""]，
-		["saveLabel:\"Finish\""，"saveLabel:\"完成\""]，
-		["\"Example commit\""，"\"提交示例\""]，
-		["\"Checking for ability to merge automatically\\.\\.\\.\""，"\"检查是否具备自动合并的能力……\""]，
-		["description:\"Checking out\""，"description:\"检查签出\""]，
-		["`Checking out branch \\$\\{(.).name\\}`"，"`检查签出$${$1.name}分支`"]，
-		["\"Switching to branch\""，"\"切换到分支\""]，
-		["title:\"Newer commits on remote\""，"title:\"远程上的较新提交\""]，
-		["\"GitHub Desktop is unable to push commits to this branch because there are commits on the remote that are not present on your local branch\\. Fetch these new commits before pushing in order to reconcile them with your local commits\\.\""，
-		"\"本地无法将提交推送到此分支，因为远程存在一些在本地分支上不存在的提交。在推送之前，请先拉取这些新变化，以便使其与本地提交相协调一致。\""]，
-		["okButtonText:\"Fetch\""，"okButtonText:\"获取\""]，
-		["label:\"View Pull Request on GitHub\""，"label:\"在GitHub显示拉取请求\""]，
-		["`The directory \\$\\{(.)\\} appears to be a Git repository\\. Would you like to add this repository instead\\?`"，
-		"`目录$${$1}似乎是一个Git仓库。您是否想要添加这个仓库来替代（原有的相关内容）呢？`"]，
-		["\"The directory \",(..)\\.createElement\\((..),null,(.)\\),\"appears to be a Git repository\\. Would you like to\",\" \",(..)\\.createElement\\((..),\\{onClick:this.onAddRepositoryClicked\\},\"add this repository\"\\),\" \",\"instead\\?\""，
-		"\"此目录\",$1.createElement($2,null,$3),\"似乎是一个Git仓库。 您是否想要\",$4.createElement($5,{onClick:this.onAddRepositoryClicked},\"添加这个仓库\"),\"来替代（原有的相关内容）呢？\""]，
-		["\"A branch with that name already exists\\.\""，"\"已经存在一个具有该名称的分支。\""]，
-		["label:\"Include selected files\""，"label:\"包含所选文件\""]，
-		["label:\"Exclude selected files\""，"label:\"排除所选文件\""]，
-		["\"The default branch of the upstream repository\\. Pick this to start on something new that's not dependent on your current branch\\.\""，"\"上游仓库的默认分支。选择此项可开始处理不依赖于当前分支的新内容。\""]，
-		["\"Your default branch source is determined by your\""，"\"你的默认分支来源决定于你的\""]，
-		["\"fork behavior settings\""，"\"复刻行为设置\""]，
-		["\"Showing changes from all commits\""，"\"显示所有提交的更改\""]，
-		["\" Able to merge\\.\""，"\"能够合并。\""]，
-		["\"These branches can be automatically merged\\.\""，"\"这些分支可以自动合并。\""]，
-		["\"Sorry, I can't find that remote branch\\.\""，"\"抱歉，我找不到那个远程分支。\""]，
-		["\"You can only open pull requests against remote branches\\.\""，"\"你只能针对远程分支发起拉取请求。\""]，
-		["\"Cherry-pick \",this.props.commitCount,\" \",(.),\" to a branch\""，"\"签出\",this.props.commitCount,\"处\",$1,\"到一个分支\""]，
-		["title:\"Delete tag\""，"title:\"删除标签\""]，
-		["\"Are you sure you want to delete the tag\""，"\"你确定想要删除这个标签\""]，
-		["\"A tag named \",(..)\\.createElement\\((..),null,this\\.state\\.tagName\\),\" already exists\""，
-		"\"一个名为\",$1.createElement($2,null,this.state.tagName),\"的标签已经存在\""]，
-		["\"The diff is too large to be displayed by default.\""，"\"差异太大，无法按默认方式显示。\""]，
-		["\"You can try to show it anyway, but performance may be negatively impacted.\""，"\"你仍可以尝试显示它，但性能可能会受到影响。 \""]，
-		["\"Show diff\""，"\"显示差异\""]，
-		["title:\"Files too large\""，"title:\"文件太大\""]，
-		["\"The following files are over 100MB.\""，"\"以下文件大小超过了100MB。 \""]，
-		["\"If you commit these files, you will no longer be able to push this repository to GitHub.com.\""，"\"如果你提交这些文件，你将无法再把这个代码仓库推送到 GitHub.com 上。 \""]，
-		["\"We recommend you avoid committing these files or use\""，"\"我们建议你避免提交这些文件，或者使用 \""]，
-		["\" to store large files on GitHub.\""，"\" 在 GitHub 上存储大文件。\""]，
-		["okButtonText:\"Commit anyway\""，"okButtonText:\"仍然提交\""]，
-		["title:\"Compressing objects\""，"title:\"正在压缩对象\""]，
-		["title:\"Writing objects\""，"title:\"正在写入对象\""]，
-		["title:\"remote: Resolving deltas\""，"title:\"远程:正在解析差异\""]，
-		["title:\"remote: Compressing objects\""，"title:\"远程:正在压缩对象\""]，
-		["title:\"Receiving objects\""，"title:\"正在接收对象\""]，
-		["title:\"Resolving deltas\""，"title:\"解析差异\""]，
-		["title:\"Checking out files\""，"title:\"正在检出文件\""]，
-		["\"Your branch is up to date with the compared branch \\(\",(..)\\.createElement\\((..),null,(.)\\),\"\\)\""，"\"你的分支与所对比的分支(\",$1.createElement($2,null,$3),\")\",\"保持同步\""]，
-		["\"No commit selected\""，"\"未选择任何提交记录\""]，
-		["`\\$\\{(.)!==(.)\\.length\\?`\\$\\{(.)\\} of `:\"\"\\}\\\\n    \\$\\{(.).length\\} changed file\\$\\{(..)\\((.)\\.length\\)\\}`"，
-		"`共$${$4.length}份已更改文件\\n    $${$1!==$2.length?`，以下为其中$${$3}份`:\"\"}`"]，
-		["\"Filter Options\\s?\""，"\"过滤器选项\""]，
-		["label:`Included in commit \\(\\$\\{(.)\\}\\)`"，"label:`仅包含已选择的提交项 ($${$1})`"]，
-		["\"Hidden changes will be committed. \""，"\"未显示的更改将会被提交\""]，
-		["\"Adjust the filters to see all \",(.)\\.length,\" changes\""，"\"调整筛选条件以查看全部的\",$1.length,\"项更改\""]，
-		["\" \",\"is already up to date with \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)"，
-		"\"分支已经与\",$1().createElement(\"strong\",null,$2.name),\"分支保持同步(更新)了\")"]，
-		["\"The current branch is already up to date with the selected branch.\""，
-		"\"当前分支已经与所选分支保持同步（更新）了。 \""]，
-		["label:\"Copy paths\""，"label:\"复制路径\""]，
-		["label:\"Copy relative paths\""，"label:\"复制相对路径\""]，
-		["`Could not find user with username \\$\\{(.)\\.username\\}`"，"`无法使用用户名'$${$1.username}'查找到用户`"]，
-		["`Searching for @\\$\\{(.)\\.username\\}`"，"`正在搜索用户 @$${$1.username}`"]，
-		["\"Search for user\""，"\"搜索这个用户\""]，
-		["\"Generate commit message with Copilot\"\\+\\((.)\\?\"\\. Files must be selected to generate a commit message\\.\""，
-		"\"使用 GitHub Copilot 生成提交信息\"+($1?\". 必须选择文件才能生成提交信息.\""]，
-		["\"Copilot is powered by AI, so mistakes are possible. Review and edit the generated message carefully before use.\""，"\"GitHub Copilot由人工智能驱动，所以有可能出现错误。在使用生成的提交信息之前，请仔细检查并编辑它。 \""]，
-		["\"Learn more about Copilot in GitHub Desktop.\""，"\"了解更多关于GitHub Desktop中Copilot的信息。 \""]，
-		["okButtonText:\"I understand\""，"okButtonText:\"我明白了\""]，
-		["\"Generating commit details…\""，"\"正在生成提交详情…\""]，
-		["title:\"Commit message override\""，"title:\"提交信息覆盖\""]，
-		["\"The commit message you have entered will be overridden by the generated commit message.\""，"\"你输入的提交信息将被生成的提交信息所覆盖。\""]，
-		["okButtonText:\"Override\""，"okButtonText:\"覆盖\""]，
-		["\"Responsible use of Copilot in GitHub Desktop\""，"\"在GitHub Desktop中合理使用GitHub Copilot\""]，
-		["\"Previous tags\""，"\"以前的标签\""]，
-		["`No matches found for '\\$\\{(.)\\}'`"，"`未找到'$${$1}'的匹配项`"]，
-		["\"The file was renamed and includes changes.\""，"\"文件已重命名，且包含有改动内容。 \""]，
-		["\"The file was renamed but not changed\""，"\"文件已重命名，但未作修改\""]，
-		["\"The file is in conflict and must be resolved via the command line.\""，"\"该文件存在冲突，必须通过命令行来解决。 \""]，
-		["\"Only whitespace changes found\""，"\"仅发现了空白字符方面的更改\""]，
-		["\"No content changes found\""，"\"未发现内容变更\""]，
-		["\"You have changes in progress\\. Undoing the commit might result in some of these changes being lost\\. Do you want to continue anyway\\?\""，
-		"\"您有进行中的更改。撤销提交可能会导致其中一些更改丢失。您确定仍要继续吗？\""]，
-		["`Sorry, I can't find any changed files matching the following filters: \\$\\{(.)\\}`"，
-		"`抱歉，找不到任何与以下筛选条件匹配的已更改文件:$${$1}.`"]，
-		["\"No files match your current filters\""，"\"没有文件与您当前的筛选条件匹配\""]，
-		["\"Clear filters\""，"\"清除筛选条件\""]，
-		["`\\(\\$\\{(.)\\} applied\\)`"，"`($${$1} 个正在使用)`"]，
-		["`Excluded from commit \\(\\$\\{(.)\\}\\)`"，"`未暂存的提交($${$1})`"]，
-		["`New files \\(\\$\\{(.)\\}\\)`"，"`新文件($${$1})`"]，
-		["`Modified files \\(\\$\\{(.)\\}\\)`"，"`修改的文件($${$1})`"]，
-		["`Deleted files \\(\\$\\{(.)\\}\\)`"，"`删除的文件($${$1})`"]，
-		["join\\(\", \"\\)\\}, 和 \\$\\{(.)\\}`"，"join(\", \")},和$${$1}`"]，
-		["push\\(\"Included in commit\"\\)"，"push(\"已暂存的提交\")"]，
-		["push\\(\"New files\"\\)"，"push(\"新文件\")"]，
-		["push\\(\"Modified files\"\\)"，"push(\"修改的文件\")"]，
-		["push\\(\"Deleted files\"\\)"，"push(\"删除的文件\")"]，
-		["push\\(\"Excluded from commit\"\\)"，"push(\"未暂存的提交\")"]，
-		["`\\$\\{(.)\\[0\\]\\} and \\$\\{(.)\\[1\\]\\}`"，"`$${$1[0]}和$${$2[1]}`"]，
-		["`Squash \\$\\{(.)\\.length\\} Commits`"，"`压缩了$${$1.length}处提交`"]，
-		["\"Squash\":\"Merge\""，"\"压缩\":\"合并\""]，
-		["operation:\"Rebase\""，"operation:\"变基\""]，
-		["\"Successfully reordered \""，"\"已成功重新排序了\""]，
-		["\"Successfully squashed \""，"\"已成功压缩了\""]，
-		["\"Successfully copied \""，"\"已成功复制了\""]，
-		["\"Successfully rebased \""，"\"已成功变基了\""]，
-		["\"Successfully merged into \""，"\"已成功合并到\""]，
-		["\"Successfully merged \""，"\"已成功合并了\""]，
-		["\"Successfully reordered \""，"\"已成功排序了\""]，
-		["\"Undo\""，"\"撤销\""]，
-		["\"There are unresolved conflicts in the working directory\\.\""，"\"工作目录中存在未解决的冲突。\""]，
-		["\"Undo is disabled while the repository is being updated\""，"\"当仓库正在更新时，撤销功能已禁用。\""]，
-		["\"This will merge\""，"\"这将会合并\""]，
-		["\" from \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \""，"\"从\",$1().createElement(\"strong\",null,$2.name),\"分支到\""]，
-		["\" The following files would be overwritten:\""，"\"以下文件将被覆盖\""]，
-		["showInputLabels\\?\"Summary\""，"showInputLabels?\"摘要\""]，
-		[",\" into \","，",\"分支到\","]，
-		["\"Discarded changes will be unrecoverable\""，"\"已丢弃的更改将无法恢复\""]，
-		["\"Failed to discard changes to \",(..),\".\""，"\"放弃更改到\",$1,\"失败.\""]，
-		["\"Common reasons are:\""，"\"常见原因如下：\""]，
-		["\"The \",(..),\" is configured to delete items immediately.\""，"\"已配置\",$1,\"为立即删除项目.\""]，
-		["\"Restricted access to move the file\\(s\\)\\.\""，"\"移动文件的权限受到限制.\""]，
-		["\"These changes will be unrecoverable from the \",(..),\".\""，"\"这些更改将无法从\",$1,\"中恢复.\""]，
-		["\"Permanently discard changes\""，"\"永久丢弃更改\""]，
-		["\"This will discard changes and they will be unrecoverable.\""，"\"此操作将丢弃更改，且这些更改将无法恢复.\""]，
-		["\"Are you sure you want to discard all \",this\\.props\\.files\\.length,\" changed files\\?\""，"\"你确定要放弃所有\",this.props.files.length,\"个已修改的文件吗？\""]，
-		["\"Do you want to continue anyway\\?\""，"\"你无论如何都要继续吗？\""]，
-		["\"Undoing a merge commit will apply the changes from the merge into\\\\n your working directory, 和 committing again will create an entirely new\\\\n commit. This means you will lose the merge commit and, as a result, commits\\\\n from the merged branch could disappear from this branch.\""，
-        "\"撤销合并提交会将合并所带来的更改应用到你的工作目录中，\\n再次提交则会创建一个全新的提交。\\n这意味着你将丢失该合并提交，\\n进而导致来自被合并分支的提交可能会从当前分支中消失。\""]，
-		["\"Overwrite any changes on \",(.),\" with your local changes\""，"\"用你的本地更改覆盖\",$1.replace(\"origin\",\"远程仓库(origin)\"),\"上的所有更改\""]，
-		["\"Date: \""，"\"日期: \""]，
-		["\"remote: Counting objects\""，"\"远程：正在统计对象数量\""]，
-		["\"Fast-forwarding branches\""，"\"快速推进分支\""]，
-		[",\"This submodule changed its commit from\",\" \",this.renderCommitSHA\\(n,\"previous\"\\),\" to\","，",\"此子模块已将其提交从\",\" \",this.renderCommitSHA(n,\"previous\"),\"更改为\","]，
-		["\"Full Name: \""，"\"全名: \""]，
-		["\"Last Modified: \""，"\"最后修改时间: \""]，
-		["\"label\"\\},\"Path: \"\\)"，"\"label\"},\"路径: \")"]，
-		["\"The currently checked out branch is\""，"\"当前检出的分支与其跟踪的分支相比有\""]，
-		["\"its tracked branch.\""，"\"\""]，
-		["\"There are uncommitted changes in this repository.\""，"\"该代码仓库中存在未提交的更改。\""]，
-		["\"Generate commit message with Copilot\""，"\"借助 Copilot 生成提交说明\""]，
-		["\"Open with…\""，"\"用...打开\""]，
-		["\"Select an editor\""，"\"选择一个编辑器\""]，
-		["okButtonText:\"Open\""，"okButtonText:\"打开\""]，
-		["\"Author\""，"\"作者\""]，
-		["\"Hooks\""，"\"钩子\""]，
-		["\"Load Git hook environment variables from shell\""，"\"从Shell环境中加载Git钩子环境变量\""]，
-		["\"When enabled, GitHub Desktop will attempt to load environment variables from your shell when executing Git hooks. This is useful if your Git hooks depend on environment variables set in your shell configuration files, a common practice for version managers such as nvm, rbenv, asdf, etc.\""，"\"启用此选项后，GitHub Desktop 在执行 Git 钩子时会尝试从你的 Shell 加载环境变量。如果你的 Git 钩子依赖于在 Shell 配置文件中设置的环境变量，这一功能会很有用，这也是 nvm、rbenv、asdf 等版本管理工具的常见用法。\""]，
-		["\"Shell to use when loading environment\""，"\"加载环境时所采用的Shell\""]，
-		["\"Cache Git hook environment variables\""，"\"缓存Git钩子环境变量\""]，
-		["\"Cache hook environment variables to improve performance. Disable if your hooks rely on frequently changing environment variables.\""，"\"将钩子的环境变量进行缓存以提升性能。若您的钩子依赖于频繁变动的环境变量，则请禁用此项功能。\""]，
-		["\"Overriding commit message with generated message\""，"\"以生成的消息覆盖提交消息\""]，
-		["\"About \""，"\"关于 \""]，
-		["\\}return\"Error\"\\}"，"}return\"出错了\"}"]，
-		["\"Updating submodules\""，"\"更新子模块\""]，
-		["\"Cloning \""，"\"正在克隆 \""]，
-		["\"You don't have write access to \",(..).createElement\\(\"strong\",null,(.).name\\),\". Want to\",\" \",(..).createElement\\((..),\\{onClick:this.props.onShowCreateForkDialog\\},\"create a fork\""，"\"你对\",$1.createElement(\"strong\",null,$2.name),\"没有写入权限，是否需要\",\" \",$3.createElement($4,{onClick:this.props.onShowCreateForkDialog},\"创建一个分支\""]，
-		["\"Review requested\""，"\"待审阅\""]，
-		["\"_No description provided._\""，"\"_未提供描述。_\""]，
-		["\\?\"Draft\":\"Open\""，"?\"草案\":\"待处理\""]，
-		["`\\#\\$\\{this\\.props\\.number\\} opened \\$\\{(.)\\} by \\$\\{this\\.props\\.author\\}`"，"`#$${this.props.number}于$${$1}由$${this.props.author}创建`"]，
-		["\"Quota exceeded\""，"\"配额已用尽\""]，
-		["\"Upgrade to increase your limit.\""，"\"升级以提升你的限额。\""]，
-		["\\(\"p\",null,(.)\\.message\\),(..)\\.createElement"，"(\"p\",null,$1.message.replace(\"Payment Required\",\"需要付款\")),$2.createElement"]，
-		["\"View Branch on GitHub\""，"\"在 GitHub 上查看分支\""]，
-		["\\{className:\"call-to-action-bubble\"\\},\"New\""，"{className:\"call-to-action-bubble\"},\"新功能\""]，
-		["\"Configure commit options\""，"\"配置提交选项\""]，
-		["label:\"Add Signed-off-by trailer\""，"label:\"添加 Signed-off-by 签名尾注\""]，
-		["label:\"Allow empty commit\""，"label:\"允许空提交\""]，
-		["\"Your new branch will be based on the commit '\",(.)\\.summary,\"' \\(\",(.)\\.sha\\.substring\\(0,7\\),\"\\) from your repository\\.\""，"\"你的新分支将基于代码仓库中的提交记录“\",$1.summary,\"” (\",$2.sha.substring(0,7),\")创建.\""]，
-		["\"GitHub Enterprise\"\\)"，"\"GitHub企业版\")"]，
-		["\"No history\""，"\"无历史记录\""]，
-		["\"\""，"\"\""]
-	]，
+		["\"Switch branch\"","\"切换分支\""],
+		["`Leave my changes on \\$\\{this.state.currentBranchName\\}`","`将我的修改保留在$${this.state.currentBranchName}分支上`"],
+		["\"Your in-progress work will be stashed on this branch for you to return to later\"","\"将您的更改保留在这个分支上,以便您日后回来修改\""],
+		["`Bring my changes to \\$\\{(.).name\\}`","`将我的修改带到$${$1.name}分支`"],
+		["\"Your in-progress work will follow you to the new branch\"","\"您正在进行的修改将跟随您到新的分支\""],
+		["\"Diff Options\"","\"差异选项\""],
+		["\"Whitespace\"","\"空白字符\""],
+		["\"Hide whitespace changes\"","\"隐藏空白字符的变化\""],
+		["\"Interacting with individual lines or hunks will be disabled while hiding whitespace.\"","\"当隐藏空白字符时，与单独的行或块的交互将被禁用。\""],
+		["\"Diff display\"","\"差异显示\""],
+		["label:\"Unified\"","label:\"统一\""],
+		["null,\"Split\"","null,\"分割\""],
+		["\"No files in commit\"","\"此提交中无文件\""],
+		["\"Copy the full SHA\"","\"复制完整的SHA\""],
+		["\"to quickly add a local repository, and\"","\"快速添加本地仓库，按下\""],
+		["\"to clone from anywhere within the app\"","\"从任意网络位置克隆一个仓库\""],
+		["\"Committing as \",(..)\\(\\).createElement\\(\"strong\",null,(.)\\)","\"以\",$1().createElement(\"strong\",null,$2),\"的身份提交\""],
+		["\"Committing with \",(.)\\)","\"与\",$1,\"一起进行提交\")"],
+		["\"You can update your \",(.),\" git configuration \",(.),\" in your \",(.),\".\"","\"你可以在你的\",$3,\"中更新你\",$2,\"的\",$1,\"git配置\",\".\""],
+		["\"repository settings\":\"git options\"","\"仓库设置\":\"git选项\""],
+		["\"for your repository\"","\"仓库中\""],
+		["\"local\":\"global\"","\"本地\":\"全局\""],
+		["\"You can also set an email local to this repository from the\",\" \",(..)\\(\\).createElement\\((..),\\{onClick:this.onRepositorySettingsClick\\},\"repository settings\"\\),\".\"","\"你也可以从\",$1().createElement($2,{onClick:this.onRepositorySettingsClick},\"仓库设置\"),\"中为这个仓库设置一个本地邮箱.\""],
+		["\"Open git settings\"","\"打开git设置\""],
+		["\"Rename branch\"","\"分支重命名\""],
+		["\"This branch is tracking \",(..).createElement\\((..),null,(.).upstream\\),\" and renaming this branch will not change the branch name on the remote.\"",
+		"\"这个分支正在追踪\",$1.createElement($2,null,$3.upstream),\",重命名这个分支不会改变远程分支的名称.\""],
+		["`Rename \\$\\{this.props.branch.name\\}`","`重命名$${this.props.branch.name}分支`"],
+		["\"This commit has not been pushed to the remote repository\"","\"这个提交还没有被推送到远程仓库\""],
+		["`This commit has \\$\\{(.)\\} tag\\$\\{(.)>1\\?\"s\":\"\"\\} to push`","`这个提交有$${$1}个标签需要推送`"],
+		["label:\"Expand whole file\"","label:\"展开整个文件\""],
+		["label:\"Collapse expanded lines\"","label:\"展开折叠的行\""],
+		["`Discard \\$\\{(.)\\} line\\$\\{(.)>1\\?\"s\":\"\"\\}\\$\\{(.)\\}`","`放弃$${$1}行$${$3}`"],
+		["Additions\\?(.)=\"added\"","Additions?$1=\"新增的\""],
+		["Deletions\\?(.)=\"removed\"","Deletions?$1=\"删除的\""],
+		["Mixed\\?(.)=\"modified\"","Mixed?$1=\"修改的\""],
+		["label:\"Copy\"","label:\"复制\""],
+		["label:\"Select all\"","label:\"全选\""],
+		["tooltip:(.)\\},\"Undo\"","tooltip:$1},\"撤销\""],
+		["\"Committed \"","\"提交于\""],
+		["\"View on GitHub\"","\"去GitHub上查看\""],
+		["\"Disable commit spellcheck\":\"Enable commit spellcheck\"","\"关闭提交时的拼写检查\":\"启用提交时的拼写检查\""],
+		["\"Your changes will modify your \",(..).createElement\\(\"strong\",null,\"most recent commit\"\\),\".\",\" \",(..).createElement\\((..),\\{onClick:this.props.onStopAmending\\},\"Stop amending\"\\),\" \",\"to make these changes as a new commit.\"",
+		"\"你的更改将修改你\",$1.createElement(\"strong\",null,\"最近的一次提交\"),\".\",$2.createElement($3,{onClick:this.props.onStopAmending},\"停止修改\"),\"以将这些变化作为一个新的提交.\""],
+		["\"Reset to commit\"","\"重置提交\""],
+		["\"You have changes in progress. Resetting to a previous commit might result in some of these changes being lost. Do you want to continue anyway\\?\"","\"你当前有未完成的更改。‌重置到之前的提交可能会导致其中一些更改丢失。‌你是否无论如何都想继续？\""],
+		["\"Great commit summaries contain fewer than 50 characters\"","\"优秀的提交说明应少于50个字符\""],
+		["\"Place extra information in the description field.\"","\"‌额外信息请放在描述字段中。‌\""],
+		["\"Great commit summaries contain fewer than 50 characters. Place extra information in the description field.\"","\"好的提交说明应少于50个字符。‌额外信息请放在描述字段中。‌\""],
+		["label:\"Remove alias\"","label:\"删除别名\""],
+		["alias\\?\"Create\":\"Change\"","alias?\"创建\":\"更换\""],
+		["`\\$\\{(.)\\} repository alias`","`$${$1}仓库别名`"],
+		["'Choose a new alias for the repository \"","'为这个仓库选择一个新的别名\""],
+		["\"This will not affect the original repository name on GitHub.\"","\"这不会影响GitHub上的原有的仓库名称。‌\""],
+		["ButtonText:`\\$\\{(.)\\} alias`","ButtonText:`$${$1}别名`"],
+		["\"Refresh the list of pull requests\"","\"刷新拉取请求列表\""],
+		["Modified:return\"Modified\"","Modified:return\"修改的\""],
+		["Untracked:return\"New\"","Untracked:return\"新增的\""],
+		["Deleted:return\"Deleted\"","Deleted:return\"删除的\""],
+		["Renamed:return\"Renamed\"","Renamed:return\"重命名的\""],
+		["\"Conflicted\":\"Resolved\":\"Conflicted\"","\"有冲突的\":\"已解决的\":\"有冲突的\""],
+		["Copied:return\"Copied\"","Copied:return\"复制的\""],
+		["`Unknown file status \\$\\{(.)\\}`","`未知的文件状态$${$1}`"],
+		["\"Configure custom editor…\"","\"配置自定义编辑器...\""],
+		["\"Path to executable\"","\"可执行文件路径\""],
+		["label:\"Path\"","label:\"路径\""],
+		["label:\"Arguments\"","label:\"参数\""],
+		["\"Command line arguments\"","\"命令行参数\""],
+		["\"Configure custom shell…\"","\"配置自定义shell...\""],
+		["\"This commit will be misattributed\"","\"该提交将被错误归属\""],
+		["\"This email address is disallowed\"","\"此邮箱地址不允许使用\""],
+		["=\"Copy file path\"","=\"复制文件路径\""],
+		["=\"Copy relative file path\"","=\"复制相对文件路径\""],
+		["=\"Open in external editor\"","=\"用外部编辑器打开\""],
+		["=\"Show in Explorer\"","=\"在文件管理器中显示\""],
+		["=\"Recycle Bin\"","=\"回收站\""],
+		["=\"Open with default program\"","=\"使用默认程序打开\""],
+		["return\"Explorer\"","return\"文件管理器\""],
+		["\"Collapse\":\"Expand\"","\"折叠\":\"展开\""],
+		["\"Delete branch\"","\"删除分支\""],
+		["\"Delete branch \"","\"删除分支\""],
+		["\"This action cannot be undone.\"","\"该操作无法撤销。\""],
+		["\"The branch also exists on the remote, do you wish to delete it there as well\\?\"","\"该分支也存在于远程分支中，您是否也想在远程分支中删除该分支？\""],
+		["ButtonText:\"Delete\"","ButtonText:\"删除\""],
+		["\"Squash \",(.),\" commits\"","\"压缩\",$1,\"条提交记录\""],
+		["length\\?\"commit\":\"commits\"","length?\"此提交记录\":\"这些提交记录\""],
+		["`Move \\$\\{(.)\\} here`","`移动$${$1}到这里`"],
+		["`Email: \\$\\{(.).email\\}`","`邮箱: $${$1.email}`"],
+		["\" added lines\"","\"行新增\""],
+		["\" removed lines\"","\"行移除\""],
+		["\"Expand Up\"","\"向上展开\""],
+		["\"Expand Down\"","\"向下展开\""],
+		["\\},\"base:\"\\)","},\"基础分支:\")"],
+		["\"The repository will be created at \"","\"此仓库将被创建在\""],
+		["\"Publish your repository to GitHub. Need help\\?\"","\"将你的仓库发布到GitHub。需要帮助吗？\""],
+		["\"Publish your repository to GitHub\"","\"将你的仓库发布到GitHub\""],
+		["\"This repository is currently only available on your local machine. By publishing it on GitHub you can share it, and collaborate with others.\"",
+		"\"当前仓库仅在本地可用，发布到GitHub后可共享与协作。\""],
+		["\"Always available in the toolbar for local repositories or\"","\"对于本地仓库，工具栏项目始终可用，或者\""],
+		["\"Keep this code private\"","\"保持此项目代码为私有\""],
+		["\"Will be created as \"","\"名称将被创建为\""],
+		["\"Will be \",this.props.warningMessageVerb\\?\\?\"created\",\" as\",\" \"","\"名称将被\",this.props.warningMessageVerb??\"创建\",\"为\""],
+		["warningMessageVerb:\"saved\"","warningMessageVerb:\"保存\""],
+		["\"This folder contains files. Git can only clone to empty folders.\"","\"此文件夹包含文件。Git 只能克隆到空文件夹中。\""],
+		["\\{className:\"archived\"\\},\"Archived\"","{className:\"archived\"},\"已归档\""],
+		["\"How are you planning to use this fork\\?\"","\"你打算如何使用这个克隆项目？\""],
+		["\"To contribute to the parent project\"","\"为父项目做出贡献\""],
+		["\"We will help you contribute to the\"","\"我们将帮助你为\""],
+		["\" \",\"repository\"","\"仓库做出贡献\""],
+		["\"Pull requests in \",this.getRepositoryName\\(\\)","\"关于\",this.getRepositoryName(),\"项目的拉取请求\""],
+		["`\\$\\{(.)\\} will require force push`","`$${$1}提交需要强制推送`"],
+		["\"Are you sure you want to \"","\"你确定想要\""],
+		["\"At the end of the \",(.).toLowerCase\\(\\),\" flow, GitHub Desktop will enable you to force push the branch to update the upstream branch. Force pushing will alter the history on the remote and potentially cause problems for others collaborating on this branch.\"",
+		"\"在\",$1.toLowerCase(),\"流程结束时，GitHub Desktop 将允许您强制推送该分支以更新上游分支。强制推送会更改远程仓库的历史记录，并可能为在该分支上协作的其他人带来问题。\""],
+		["ButtonText:`Begin \\$\\{(.)\\.toLowerCase\\(\\)\\}`","ButtonText:`开始$${$1.toLowerCase()}`"],
+		["`\\$\\{this\\.getButtonVerb\\(\\)\\} last commit`","`$${this.getButtonVerb()}最新提交`"],
+		["\"Are you sure you want to force push\\?\"","\"你确定要强制推送吗？\""],
+		["\"A force push will rewrite history on\",\" \",(..)\\.createElement\\((..),null,this\\.props\\.upstreamBranch\\),\"\\. Any collaborators working on this branch will need to reset their own local branch to match the history of the remote\\.\"",
+		"\"强制推送将重写\",\" \",$1.createElement($2,null,this.props.upstreamBranch),\"分支上的历史记录。在该分支上工作的任何协作者都需要将自己的本地分支重置为与远程仓库的历史记录相匹配。\""],
+		["ButtonText:\"I'm sure\"","ButtonText:\"我确定\""],
+		["\"Your new branch will be based on\",\" \",(..)\\.createElement\\(\"strong\",null,(.)\\),\"'s \"","\"您将创建的新分支将基于\",$1.createElement(\"strong\",null,$2),\"的\""],
+		["\"Unable to squash\\. Squashing replays all commits up to the last one required for the squash\\. A merge commit cannot exist among those commits\\.\"",
+		"\"无法压缩。压缩操作会重新生成所有提交，直到达到需要进行压缩的最后一个提交为止。在这些提交中不能存在合并提交。\""],
+		["\" is already up to date with \",(..)\\.createElement\\(\"strong\",null,(.)\\)","\"分支已经通过\",$1.createElement(\"strong\",null,$2),\"分支进行了更新\""],
+		["\" is already up to date\"","\"分支已经是最新的\""],
+		["\"You are not able to rebase this branch onto itself\\.\"","\"您无法将此分支变基到自身。\""],
+		["=1===(.)\\?\"commit\":\"commits\"","=1===$1?\"个提交\":\"个提交\""],
+		["\"This will update \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" by applying its \",(..)\\(\\).createElement\\(\"strong\",null,` \\$\\{(.)\\} \\$\\{(.)\\}`\\),\" on top of \",(..)\\(\\).createElement\\(\"strong\",null,(.).name\\)\\)",
+		"\"这将通过在\",$6().createElement(\"strong\",null,$7.name),\"分支上应用其\",$3().createElement(\"strong\",null,` $${$4} $${$5}`),\"来更新\",$1().createElement(\"strong\",null,$2.name),\"分支。\")"],
+		["\"Checking for ability to rebase automatically…\"","\"检查是否可以自动变基……\""],
+		["`A branch named \\$\\{(.)\\} already exists\\.`","`名为$${$1}的分支已存在`"],
+		["\"A branch named \",(..)\\.createElement\\((..),null,(.)\\),\" already exists on the remote.\"",
+		"\"远程仓库已存在名为\",$1.createElement($2,null,$3),\"的分支。\""],
+		["`Behind \\(","`落后("],
+		["`Ahead \\(","`领先("],
+		["\"There will be\",(..)\\(\\)\\.createElement\\(\"strong\",null,` \\$\\{(.)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
+		"\"将\",$4().createElement(\"strong\",null,$5.name),\"分支合并到\",$6().createElement(\"strong\",null,$7.name),\"分支时将出现\",$1().createElement(\"strong\",null,` $${$2}个冲突$${$3}`))"],
+		["\"There will be\",(..)\\.createElement\\(\"strong\",null,` \\$\\{(.)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
+		"\"将\",$4.createElement(\"strong\",null,$5.name),\"分支合并到\",$6.createElement(\"strong\",null,$7.name),\"分支时将出现\",$1.createElement(\"strong\",null,` $${$2}个冲突$${$3}`))"],
+		["selectedOperation:\"Merge\"","selectedOperation:\"合并\""],
+		["\"Checking for ability to \",this.state.selectedOperation.toLowerCase\\(\\),\" \",\"automatically…\"",
+		"\"正在检查是否有条件自动\",this.state.selectedOperation.toLowerCase(),\"…\""],
+		["\\?\"commit\":\"commits\"","?\"个更改\":\"个更改\""],
+		["\"This will merge\",(..)\\.createElement\\(\"strong\",null,` \\$\\{this\\.commitCount\\} \\$\\{(.)\\}`\\),\" from \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
+		"\"这将会把\",$3.createElement(\"strong\",null,$4.name),\"分支的\",$1.createElement(\"strong\",null,`$${this.commitCount} $${$2}`),\"合并到\",$5.createElement(\"strong\",null,$6.name),\"分支\")"],
+		["\"Confirm discard changes\"","\"确认放弃更改\""],
+		["\"Are you sure you want to discard the selected changes to:\"","\"是否确实要放弃对以下内容所做的选定更改：\""],
+		["return\"Discard changes\"","return\"放弃更改\""],
+		["\"Unable to \",this.getRetryActionName\\(\\),\" when changes are present on your branch\\.\"","\"当您的分支上存在更改时，无法\",this.getRetryActionName(),\"。\""],
+		["\"You can stash your changes now and recover them afterwards\\.\"","\"您现在可以将更改暂存起来，稍后再恢复它们。\""],
+		["okButtonText:\"Stash changes and continue\"","okButtonText:\"暂存更改并继续\""],
+		["okButtonTitle:\"This will create a stash with your current changes\\. You can recover them by restoring the stash afterwards\\.\"","okButtonTitle:\"这将使用您当前的更改创建一个暂存。稍后您可以通过恢复该暂存来找回这些更改。\""],
+		["return\"checkout\";case (..)\\.Pull:return\"pull\";case (..)\\.Merge:return\"merge\";case (..)\\.Rebase:return\"rebase\";case (..)\\.Clone:return\"clone\";case (..)\\.Fetch:return\"fetch\";case (..)\\.Push:return\"push\";case (..)\\.CherryPick:case (..)\\.CreateBranchForCherryPick:return\"cherry-pick\";case (..)\\.Squash:return\"squash\";case (..)\\.Reorder:return\"reorder\";case (..)\\.DiscardChanges:return\"discard changes\"",
+		"return\"检出\";case $1.Pull:return\"拉取\";case $1.Merge:return\"合并\";case $1.Rebase:return\"变基\";case $1.Clone:return\"克隆\";case $1.Fetch:return\"获取\";case $1.Push:return\"推送\";case $1.CherryPick:case $1.CreateBranchForCherryPick:return\"拣选\";case $1.Squash:return\"压缩\";case $1.Reorder:return\"重新排序\";case $1.DiscardChanges:return\"丢弃更改\""],
+		["title:\"Error\"","title:\"错误\""],
+		["\"The file is empty\"","\"这个文件是空的\""],
+		["cancelButtonText:\"Open options\"","cancelButtonText:\"打开选项\""],
+		["\"Are you sure you want to discard all changes to:\"","\"你确定要放弃对这些文件所做的所有修改吗:\""],
+		["\"Changes can be restored by retrieving them from the \",(..),\"\\.\"","\"可以通过检查\",$1,\"来恢复所有更改。\""],
+		["\"Sign in using your browser\"","\"在你的浏览器中登录\""],
+		["\"Your browser will redirect you back to GitHub Desktop once you've signed in\\. If your browser asks for your permission to launch GitHub Desktop please allow it to\\.\"",
+		"\"登录后，您的浏览器将把您重定向回GitHub Desktop。如果浏览器请求您允许启动GitHub Desktop，请予以允许。\""],
+		["\"Your browser will redirect you back to GitHub Desktop once you've signed in\\. If your browser asks for your permission to launch GitHub Desktop, please allow it\\.\"",
+		"\"登录后，您的浏览器将把您重定向回GitHub Desktop。如果浏览器请求您允许启动GitHub Desktop，请允许它这么做。\""],
+		["\"Continue with browser\"","\"在浏览器中继续\""],
+		["`your \\$\\{(..)\\(this.props.accounts\\[0\\]\\)\\?\"GitHub\":\"GitHub Enterprise\"\\} account`",
+		"`你的$${$1(this.props.accounts[0])?\"GitHub\":\"GitHub企业版\"}账户`"],
+		["\"either of your GitHub.com nor GitHub Enterprise accounts\"","\"您的GitHub账户或GitHub企业版账户全都\""],
+		["`This email address \\$\\{(.)\\?\"matches\":\"does not match\"\\} \\$\\{this\\.getAccountTypeDescription\\(\\)\\}",
+		"`这个邮箱地址和$${this.getAccountTypeDescription()}$${$1?\"匹配\":\"不匹配\"} "],
+		["\"Your commits will be wrongly attributed\\. \"","\"这将会导致你的提交被错误的归属。\""],
+		["\"Learn more\\.\"","\"查看更多。\""],
+		["\"The email in your global Git config \\(\"","\"你git公共配置中的当前邮箱(\""],
+		["isEnterpriseAccount\\?\" Enterprise\":\"\"","isEnterpriseAccount?\"企业版\":\"\""],
+		["` for \\$\\{this\\.props\\.user\\.name\\}`","`($${this.props.user.name})`"],
+		["\" doesn't match your GitHub\",(.),\" \",\"account\",(.),\"","\"和你的GitHub\",$1,\" \",\"账户\",$2,\"不匹配\",\""],
+		["\"You can\",(.)\\?\" also\":\"\",\" choose an email local to this repository from the\",\" \"","\"您\",$1?\"也\":\"\",\"可以设置一个针对此仓库的本地邮箱\""],
+		["\"repository settings\"","\"仓库设置\""],
+		["type:\"button\"\\},\"Ignore\"","type:\"button\"},\"放弃\""],
+		["type:\"submit\"\\},\"Update email\"","type:\"submit\"},\"更新邮箱\""],
+		["title:\"Authentication failed\"","title:\"验证失败\""],
+		["\"We were unable to authenticate with\",\" \",(..).createElement\\((..),null,this\\.props\\.remoteUrl\\),\"","\"我们无法对\",\" \",$1.createElement($2,null,this.props.remoteUrl),\"站点进行身份验证\",\""],
+		["\". Please enter\"","\"。请输入一个\""],
+		["\"the password for the user \"","\"此用户的密码\""],
+		["\"your username and password\"","\"你的用户名和密码\""],
+		["\"to try again\\.\"","\"并重试。\""],
+		["\"Depending on your repository's hosting service, you might need to use a Personal Access Token \\(PAT\\) as your password\\. Learn more about creating a PAT in our\"",
+		"\"根据您的存储库托管服务，您可能需要使用个人访问令牌（PAT）作为密码。在我们的文档中了解更多关于创建PAT的信息\""],
+		["\"integration docs\"","\"集成文档\""],
+		["\"Select a repository\"","\"选择一个仓库\""],
+		["\"No repositories\"","\"没有仓库\""],
+		["\"No repository selected\"","\"没有选中的仓库\""],
+		["\" files selected\"","\"个文件被选中\""],
+		["\\{className:\"image-diff-header\"\\},\"Added\"","{className:\"image-diff-header\"},\"新增\""],
+		["1\\?\"commits\":\"commit\"","1?\"更改\":\"更改\""],
+		["`Cherry-pick \\$\\{this\\.props\\.commitCount\\} \\$\\{(.)\\}`","`签出$${this.props.commitCount}个$${$1}`"],
+		["\"This binary file has changed\\.\"","\"此分支文件存在更改。\""],
+		["\"Open file in external program\\.\"","\"使用外部程序打开文件。\""],
+		["title:\"Expand All\"","title:\"全部展开\""],
+		["return\"Downloading\";case\"upload\":return\"Uploading\";case\"checkout\":return\"Checking out\"",
+		"return\"下载中\";case\"upload\":return\"上传中\";case\"checkout\":return\"检查签出中\""],
+		["`Checking out \\$\\{(.).target\\}`","`检查签出中 $${$1.target}`"],
+		["\"Welcome to \"","\"欢迎来到\""],
+		["\"GitHub Desktop is a seamless way to contribute to projects on GitHub and GitHub Enterprise\\. Sign in below to get started with your existing projects\\.\"","\"GitHub Desktop 是一种为 GitHub 及 GitHub Enterprise 上的项目做贡献的无缝对接方式。在下方登录，即可开始使用您已有的项目。\""],
+		["\"Sign in to GitHub.com\"","\"登录到GitHub.com\""],
+		["\"Sign in to GitHub Enterprise\"","\"登录到GitHub企业版\""],
+		["\"New to GitHub\\?\"","\"首次使用GitHub？\""],
+		["\"Create your free account\\.\"","\"免费创建一个账户。\""],
+		["\"Skip this step\"","\"跳过这步\""],
+		["\"By creating an account, you agree to the\",\" \"","\"若创建账户，即表示您同意\""],
+		["\"Terms of Service\"","\"服务条款\""],
+		["\"\\. For more information about GitHub's privacy practices, see the\",\" \"","\"。如需了解更多关于 GitHub 隐私惯例的信息，请查看\""],
+		["\"GitHub Privacy Statement\\.\"","\"GitHub 隐私声明。\""],
+		["\"GitHub Desktop sends usage metrics to improve the product and inform feature decisions\\.\",\" \"","\"GitHub Desktop 会发送使用指标数据，以便改进产品并为功能决策提供参考。了解\""],
+		["\"Learn more about user metrics\\.\"","\"更多有关用户指标的信息。\""],
+		["\"welcome-title\"\\},\"Configure Git\"","\"welcome-title\"},\"配置 Git\""],
+		["\"This is used to identify the commits you create\\. Anyone will be able to see this information if you publish commits\\.\"","\"这用于识别您所创建的提交内容。如果您发布提交内容，任何人都将能够看到此信息。\""],
+		["saveLabel:\"Finish\"","saveLabel:\"完成\""],
+		["\"Example commit\"","\"提交示例\""],
+		["\"Checking for ability to merge automatically\\.\\.\\.\"","\"检查是否具备自动合并的能力……\""],
+		["description:\"Checking out\"","description:\"检查签出\""],
+		["`Checking out branch \\$\\{(.).name\\}`","`检查签出$${$1.name}分支`"],
+		["\"Switching to branch\"","\"切换到分支\""],
+		["title:\"Newer commits on remote\"","title:\"远程上的较新提交\""],
+		["\"GitHub Desktop is unable to push commits to this branch because there are commits on the remote that are not present on your local branch\\. Fetch these new commits before pushing in order to reconcile them with your local commits\\.\"",
+		"\"本地无法将提交推送到此分支，因为远程存在一些在本地分支上不存在的提交。在推送之前，请先拉取这些新变化，以便使其与本地提交相协调一致。\""],
+		["okButtonText:\"Fetch\"","okButtonText:\"获取\""],
+		["label:\"View Pull Request on GitHub\"","label:\"在GitHub显示拉取请求\""],
+		["`The directory \\$\\{(.)\\} appears to be a Git repository\\. Would you like to add this repository instead\\?`",
+		"`目录$${$1}似乎是一个Git仓库。您是否想要添加这个仓库来替代（原有的相关内容）呢？`"],
+		["\"The directory \",(..)\\.createElement\\((..),null,(.)\\),\"appears to be a Git repository\\. Would you like to\",\" \",(..)\\.createElement\\((..),\\{onClick:this.onAddRepositoryClicked\\},\"add this repository\"\\),\" \",\"instead\\?\"",
+		"\"此目录\",$1.createElement($2,null,$3),\"似乎是一个Git仓库。 您是否想要\",$4.createElement($5,{onClick:this.onAddRepositoryClicked},\"添加这个仓库\"),\"来替代（原有的相关内容）呢？\""],
+		["\"A branch with that name already exists\\.\"","\"已经存在一个具有该名称的分支。\""],
+		["label:\"Include selected files\"","label:\"包含所选文件\""],
+		["label:\"Exclude selected files\"","label:\"排除所选文件\""],
+		["\"The default branch of the upstream repository\\. Pick this to start on something new that's not dependent on your current branch\\.\"","\"上游仓库的默认分支。选择此项可开始处理不依赖于当前分支的新内容。\""],
+		["\"Your default branch source is determined by your\"","\"你的默认分支来源决定于你的\""],
+		["\"fork behavior settings\"","\"复刻行为设置\""],
+		["\"Showing changes from all commits\"","\"显示所有提交的更改\""],
+		["\" Able to merge\\.\"","\"能够合并。\""],
+		["\"These branches can be automatically merged\\.\"","\"这些分支可以自动合并。\""],
+		["\"Sorry, I can't find that remote branch\\.\"","\"抱歉，我找不到那个远程分支。\""],
+		["\"You can only open pull requests against remote branches\\.\"","\"你只能针对远程分支发起拉取请求。\""],
+		["\"Cherry-pick \",this.props.commitCount,\" \",(.),\" to a branch\"","\"签出\",this.props.commitCount,\"处\",$1,\"到一个分支\""],
+		["title:\"Delete tag\"","title:\"删除标签\""],
+		["\"Are you sure you want to delete the tag\"","\"你确定想要删除这个标签\""],
+		["\"A tag named \",(..)\\.createElement\\((..),null,this\\.state\\.tagName\\),\" already exists\"",
+		"\"一个名为\",$1.createElement($2,null,this.state.tagName),\"的标签已经存在\""],
+		["\"The diff is too large to be displayed by default.\"","\"差异太大，无法按默认方式显示。\""],
+		["\"You can try to show it anyway, but performance may be negatively impacted.\"","\"你仍可以尝试显示它，但性能可能会受到影响。 \""],
+		["\"Show diff\"","\"显示差异\""],
+		["title:\"Files too large\"","title:\"文件太大\""],
+		["\"The following files are over 100MB.\"","\"以下文件大小超过了100MB。 \""],
+		["\"If you commit these files, you will no longer be able to push this repository to GitHub.com.\"","\"如果你提交这些文件，你将无法再把这个代码仓库推送到 GitHub.com 上。 \""],
+		["\"We recommend you avoid committing these files or use\"","\"我们建议你避免提交这些文件，或者使用 \""],
+		["\" to store large files on GitHub.\"","\" 在 GitHub 上存储大文件。\""],
+		["okButtonText:\"Commit anyway\"","okButtonText:\"仍然提交\""],
+		["title:\"Compressing objects\"","title:\"正在压缩对象\""],
+		["title:\"Writing objects\"","title:\"正在写入对象\""],
+		["title:\"remote: Resolving deltas\"","title:\"远程:正在解析差异\""],
+		["title:\"remote: Compressing objects\"","title:\"远程:正在压缩对象\""],
+		["title:\"Receiving objects\"","title:\"正在接收对象\""],
+		["title:\"Resolving deltas\"","title:\"解析差异\""],
+		["title:\"Checking out files\"","title:\"正在检出文件\""],
+		["\"Your branch is up to date with the compared branch \\(\",(..)\\.createElement\\((..),null,(.)\\),\"\\)\"","\"你的分支与所对比的分支(\",$1.createElement($2,null,$3),\")\",\"保持同步\""],
+		["\"No commit selected\"","\"未选择任何提交记录\""],
+		["`\\$\\{(.)!==(.)\\.length\\?`\\$\\{(.)\\} of `:\"\"\\}\\\\n    \\$\\{(.).length\\} changed file\\$\\{(..)\\((.)\\.length\\)\\}`",
+		"`共$${$4.length}份已更改文件\\n    $${$1!==$2.length?`，以下为其中$${$3}份`:\"\"}`"],
+		["\"Filter Options\\s?\"","\"过滤器选项\""],
+		["label:`Included in commit \\(\\$\\{(.)\\}\\)`","label:`仅包含已选择的提交项 ($${$1})`"],
+		["\"Hidden changes will be committed. \"","\"未显示的更改将会被提交\""],
+		["\"Adjust the filters to see all \",(.)\\.length,\" changes\"","\"调整筛选条件以查看全部的\",$1.length,\"项更改\""],
+		["\" \",\"is already up to date with \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
+		"\"分支已经与\",$1().createElement(\"strong\",null,$2.name),\"分支保持同步(更新)了\")"],
+		["\"The current branch is already up to date with the selected branch.\"",
+		"\"当前分支已经与所选分支保持同步（更新）了。 \""],
+		["label:\"Copy paths\"","label:\"复制路径\""],
+		["label:\"Copy relative paths\"","label:\"复制相对路径\""],
+		["`Could not find user with username \\$\\{(.)\\.username\\}`","`无法使用用户名'$${$1.username}'查找到用户`"],
+		["`Searching for @\\$\\{(.)\\.username\\}`","`正在搜索用户 @$${$1.username}`"],
+		["\"Search for user\"","\"搜索这个用户\""],
+		["\"Generate commit message with Copilot\"\\+\\((.)\\?\"\\. Files must be selected to generate a commit message\\.\"",
+		"\"使用 GitHub Copilot 生成提交信息\"+($1?\". 必须选择文件才能生成提交信息.\""],
+		["\"Copilot is powered by AI, so mistakes are possible. Review and edit the generated message carefully before use.\"","\"GitHub Copilot由人工智能驱动，所以有可能出现错误。在使用生成的提交信息之前，请仔细检查并编辑它。 \""],
+		["\"Learn more about Copilot in GitHub Desktop.\"","\"了解更多关于GitHub Desktop中Copilot的信息。 \""],
+		["okButtonText:\"I understand\"","okButtonText:\"我明白了\""],
+		["\"Generating commit details…\"","\"正在生成提交详情…\""],
+		["title:\"Commit message override\"","title:\"提交信息覆盖\""],
+		["\"The commit message you have entered will be overridden by the generated commit message.\"","\"你输入的提交信息将被生成的提交信息所覆盖。\""],
+		["okButtonText:\"Override\"","okButtonText:\"覆盖\""],
+		["\"Responsible use of Copilot in GitHub Desktop\"","\"在GitHub Desktop中合理使用GitHub Copilot\""],
+		["\"Previous tags\"","\"以前的标签\""],
+		["`No matches found for '\\$\\{(.)\\}'`","`未找到'$${$1}'的匹配项`"],
+		["\"The file was renamed and includes changes.\"","\"文件已重命名，且包含有改动内容。 \""],
+		["\"The file was renamed but not changed\"","\"文件已重命名，但未作修改\""],
+		["\"The file is in conflict and must be resolved via the command line.\"","\"该文件存在冲突，必须通过命令行来解决。 \""],
+		["\"Only whitespace changes found\"","\"仅发现了空白字符方面的更改\""],
+		["\"No content changes found\"","\"未发现内容变更\""],
+		["\"You have changes in progress\\. Undoing the commit might result in some of these changes being lost\\. Do you want to continue anyway\\?\"",
+		"\"您有进行中的更改。撤销提交可能会导致其中一些更改丢失。您确定仍要继续吗？\""],
+		["`Sorry, I can't find any changed files matching the following filters: \\$\\{(.)\\}`",
+		"`抱歉，找不到任何与以下筛选条件匹配的已更改文件:$${$1}.`"],
+		["\"No files match your current filters\"","\"没有文件与您当前的筛选条件匹配\""],
+		["\"Clear filters\"","\"清除筛选条件\""],
+		["`\\(\\$\\{(.)\\} applied\\)`","`($${$1} 个正在使用)`"],
+		["`Excluded from commit \\(\\$\\{(.)\\}\\)`","`未暂存的提交($${$1})`"],
+		["`New files \\(\\$\\{(.)\\}\\)`","`新文件($${$1})`"],
+		["`Modified files \\(\\$\\{(.)\\}\\)`","`修改的文件($${$1})`"],
+		["`Deleted files \\(\\$\\{(.)\\}\\)`","`删除的文件($${$1})`"],
+		["join\\(\", \"\\)\\}, and \\$\\{(.)\\}`","join(\", \")},和$${$1}`"],
+		["push\\(\"Included in commit\"\\)","push(\"已暂存的提交\")"],
+		["push\\(\"New files\"\\)","push(\"新文件\")"],
+		["push\\(\"Modified files\"\\)","push(\"修改的文件\")"],
+		["push\\(\"Deleted files\"\\)","push(\"删除的文件\")"],
+		["push\\(\"Excluded from commit\"\\)","push(\"未暂存的提交\")"],
+		["`\\$\\{(.)\\[0\\]\\} and \\$\\{(.)\\[1\\]\\}`","`$${$1[0]}和$${$2[1]}`"],
+		["`Squash \\$\\{(.)\\.length\\} Commits`","`压缩了$${$1.length}处提交`"],
+		["\"Squash\":\"Merge\"","\"压缩\":\"合并\""],
+		["operation:\"Rebase\"","operation:\"变基\""],
+		["\"Successfully reordered \"","\"已成功重新排序了\""],
+		["\"Successfully squashed \"","\"已成功压缩了\""],
+		["\"Successfully copied \"","\"已成功复制了\""],
+		["\"Successfully rebased \"","\"已成功变基了\""],
+		["\"Successfully merged into \"","\"已成功合并到\""],
+		["\"Successfully merged \"","\"已成功合并了\""],
+		["\"Successfully reordered \"","\"已成功排序了\""],
+		["\"Undo\"","\"撤销\""],
+		["\"There are unresolved conflicts in the working directory\\.\"","\"工作目录中存在未解决的冲突。\""],
+		["\"Undo is disabled while the repository is being updated\"","\"当仓库正在更新时，撤销功能已禁用。\""],
+		["\"This will merge\"","\"这将会合并\""],
+		["\" from \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \"","\"从\",$1().createElement(\"strong\",null,$2.name),\"分支到\""],
+		["\" The following files would be overwritten:\"","\"以下文件将被覆盖\""],
+		["showInputLabels\\?\"Summary\"","showInputLabels?\"摘要\""],
+		[",\" into \",",",\"分支到\","],
+		["\"Discarded changes will be unrecoverable\"","\"已丢弃的更改将无法恢复\""],
+		["\"Failed to discard changes to \",(..),\".\"","\"放弃更改到\",$1,\"失败.\""],
+		["\"Common reasons are:\"","\"常见原因如下：\""],
+		["\"The \",(..),\" is configured to delete items immediately.\"","\"已配置\",$1,\"为立即删除项目.\""],
+		["\"Restricted access to move the file\\(s\\)\\.\"","\"移动文件的权限受到限制.\""],
+		["\"These changes will be unrecoverable from the \",(..),\".\"","\"这些更改将无法从\",$1,\"中恢复.\""],
+		["\"Permanently discard changes\"","\"永久丢弃更改\""],
+		["\"This will discard changes and they will be unrecoverable.\"","\"此操作将丢弃更改，且这些更改将无法恢复.\""],
+		["\"Are you sure you want to discard all \",this\\.props\\.files\\.length,\" changed files\\?\"","\"你确定要放弃所有\",this.props.files.length,\"个已修改的文件吗？\""],
+		["\"Do you want to continue anyway\\?\"","\"你无论如何都要继续吗？\""],
+		["\"Undoing a merge commit will apply the changes from the merge into\\\\n    your working directory, and committing again will create an entirely new\\\\n    commit. This means you will lose the merge commit and, as a result, commits\\\\n    from the merged branch could disappear from this branch.\"",
+        "\"撤销合并提交会将合并所带来的更改应用到你的工作目录中，\\n再次提交则会创建一个全新的提交。\\n这意味着你将丢失该合并提交，\\n进而导致来自被合并分支的提交可能会从当前分支中消失。\""],
+		["\"Overwrite any changes on \",(.),\" with your local changes\"","\"用你的本地更改覆盖\",$1.replace(\"origin\",\"远程仓库(origin)\"),\"上的所有更改\""],
+		["\"Date: \"","\"日期: \""],
+		["\"remote: Counting objects\"","\"远程：正在统计对象数量\""],
+		["\"Fast-forwarding branches\"","\"快速推进分支\""],
+		[",\"This submodule changed its commit from\",\" \",this.renderCommitSHA\\(n,\"previous\"\\),\" to\",",",\"此子模块已将其提交从\",\" \",this.renderCommitSHA(n,\"previous\"),\"更改为\","],
+		["\"Full Name: \"","\"全名: \""],
+		["\"Last Modified: \"","\"最后修改时间: \""],
+		["\"label\"\\},\"Path: \"\\)","\"label\"},\"路径: \")"],
+		["\"The currently checked out branch is\"","\"当前检出的分支与其跟踪的分支相比有\""],
+		["\"its tracked branch.\"","\"\""],
+		["\"There are uncommitted changes in this repository.\"","\"该代码仓库中存在未提交的更改。\""],
+		["\"Generate commit message with Copilot\"","\"借助 Copilot 生成提交说明\""],
+		["\"Open with…\"","\"用...打开\""],
+		["\"Select an editor\"","\"选择一个编辑器\""],
+		["okButtonText:\"Open\"","okButtonText:\"打开\""],
+		["\"Author\"","\"作者\""],
+		["\"Hooks\"","\"钩子\""],
+		["\"Load Git hook environment variables from shell\"","\"从Shell环境中加载Git钩子环境变量\""],
+		["\"When enabled, GitHub Desktop will attempt to load environment variables from your shell when executing Git hooks. This is useful if your Git hooks depend on environment variables set in your shell configuration files, a common practice for version managers such as nvm, rbenv, asdf, etc.\"","\"启用此选项后，GitHub Desktop 在执行 Git 钩子时会尝试从你的 Shell 加载环境变量。如果你的 Git 钩子依赖于在 Shell 配置文件中设置的环境变量，这一功能会很有用，这也是 nvm、rbenv、asdf 等版本管理工具的常见用法。\""],
+		["\"Shell to use when loading environment\"","\"加载环境时所采用的Shell\""],
+		["\"Cache Git hook environment variables\"","\"缓存Git钩子环境变量\""],
+		["\"Cache hook environment variables to improve performance. Disable if your hooks rely on frequently changing environment variables.\"","\"将钩子的环境变量进行缓存以提升性能。若您的钩子依赖于频繁变动的环境变量，则请禁用此项功能。\""],
+		["\"Overriding commit message with generated message\"","\"以生成的消息覆盖提交消息\""],
+		["\"About \"","\"关于 \""],
+		["\\}return\"Error\"\\}","}return\"出错了\"}"],
+		["\"Updating submodules\"","\"更新子模块\""],
+		["\"Cloning \"","\"正在克隆 \""],
+		["\"You don't have write access to \",(..).createElement\\(\"strong\",null,(.).name\\),\". Want to\",\" \",(..).createElement\\((..),\\{onClick:this.props.onShowCreateForkDialog\\},\"create a fork\"","\"你对\",$1.createElement(\"strong\",null,$2.name),\"没有写入权限，是否需要\",\" \",$3.createElement($4,{onClick:this.props.onShowCreateForkDialog},\"创建一个分支\""],
+		["\"Review requested\"","\"待审阅\""],
+		["\"_No description provided._\"","\"_未提供描述。_\""],
+		["\\?\"Draft\":\"Open\"","?\"草案\":\"待处理\""],
+		["`\\#\\$\\{this\\.props\\.number\\} opened \\$\\{(.)\\} by \\$\\{this\\.props\\.author\\}`","`#$${this.props.number}于$${$1}由$${this.props.author}创建`"],
+		["\"Quota exceeded\"","\"配额已用尽\""],
+		["\"Upgrade to increase your limit.\"","\"升级以提升你的限额。\""],
+		["\\(\"p\",null,(.)\\.message\\),(..)\\.createElement","(\"p\",null,$1.message.replace(\"Payment Required\",\"需要付款\")),$2.createElement"],
+		["\"View Branch on GitHub\"","\"在 GitHub 上查看分支\""],
+		["\\{className:\"call-to-action-bubble\"\\},\"New\"","{className:\"call-to-action-bubble\"},\"新功能\""],
+		["\"Configure commit options\"","\"配置提交选项\""],
+		["label:\"Add Signed-off-by trailer\"","label:\"添加 Signed-off-by 签名尾注\""],
+		["label:\"Allow empty commit\"","label:\"允许空提交\""],
+		["\"Your new branch will be based on the commit '\",(.)\\.summary,\"' \\(\",(.)\\.sha\\.substring\\(0,7\\),\"\\) from your repository\\.\"","\"你的新分支将基于代码仓库中的提交记录“\",$1.summary,\"” (\",$2.sha.substring(0,7),\")创建.\""],
+		["\"GitHub Enterprise\"\\)","\"GitHub企业版\")"],
+		["\"No history\""，"\"无历史记录\""],
+		["\"\"","\"\""]
+	],
 	"renderer_dev": [
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]，
-		["\"\""，"\"\""]
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""],
+		["\"\"","\"\""]
 	]
 }
