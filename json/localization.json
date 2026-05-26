@@ -950,6 +950,11 @@
 		["\"GitHub Enterprise\"\\)","\"GitHub企业版\")"],
 		["\"No history\"","\"无历史记录\""],
 		["\\((.)\\),className:\"status status-\"\\+.\\.toLowerCase","($1),className:\"status status-\"+$1.kind.toLowerCase"],
+		["\"Formatting\"","\"格式化\""],
+		["\"Date format\"","\"日期格式\""],
+		["\"Time format\"","\"时间格式\""],
+		["\"Number format\"","\"数字格式\""],
+		["\"Prefer absolute dates over relative\"","\"优先使用绝对日期而非相对日期\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
