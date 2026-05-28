@@ -820,7 +820,6 @@
 		["title:\"Checking out files\"","title:\"正在检出文件\""],
 		["\"Your branch is up to date with the compared branch \\(\",(..)\\.createElement\\((..),null,(.)\\),\"\\)\"","\"你的分支与所对比的分支(\",$1.createElement($2,null,$3),\")\",\"保持同步\""],
 		["\"No commit selected\"","\"未选择任何提交记录\""],
-		"`共$${$4.length}份已更改文件\\n    $${$1!==$2.length?`，以下为其中$${$3}份`:\"\"}`"],
 		["\"Filter Options\\s?\"","\"过滤器选项\""],
 		["label:`Included in commit \\(\\$\\{(.)\\}\\)`","label:`仅包含已选择的提交项 ($${$1})`"],
 		["\"Hidden changes will be committed. \"","\"未显示的更改将会被提交\""],
