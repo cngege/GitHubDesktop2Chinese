@@ -940,6 +940,7 @@
     	["\"There will be\",(..)\\(\\)\\.createElement\\(\"strong\",null,` \\$\\{(..)\\((.)\\)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
 		"\"将\",$5().createElement(\"strong\",null,$6.name),\"分支合并到\",$7().createElement(\"strong\",null,$8.name),\"分支时将出现\",$1().createElement(\"strong\",null,` $${$2($3)}个冲突$${$4}`))"],
 		[",\" into \",",",\"分支到\","],
+        ["\"Adjust the filters to see all \",(..)\\((.)\\.length\\),\" \",\"changes\"","\"调整筛选条件以查看全部的\",$1($2.length),\"项更改\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
