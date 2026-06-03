@@ -936,6 +936,7 @@
 		["\"Time format\"","\"时间格式\""],
 		["\"Number format\"","\"数字格式\""],
 		["\"Prefer absolute dates over relative\"","\"优先使用绝对日期而非相对日期\""],
+        ["\"1 local commit\":`\\$\\{(..)\\((.)\\.ahead\\)\\} local commits`","\"1 个本地提交\":`$${$1($2.ahead)} 个本地提交`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
