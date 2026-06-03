@@ -876,7 +876,6 @@
 		["\" from \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \"","\"从\",$1().createElement(\"strong\",null,$2.name),\"分支到\""],
 		["\" The following files would be overwritten:\"","\"以下文件将被覆盖\""],
 		["showInputLabels\\?\"Summary\"","showInputLabels?\"摘要\""],
-		[",\" into \",",",\"分支到\","],
 		["\"Discarded changes will be unrecoverable\"","\"已丢弃的更改将无法恢复\""],
 		["\"Failed to discard changes to \",(..),\".\"","\"放弃更改到\",$1,\"失败.\""],
 		["\"Common reasons are:\"","\"常见原因如下：\""],
@@ -938,6 +937,9 @@
 		["\"Prefer absolute dates over relative\"","\"优先使用绝对日期而非相对日期\""],
         ["\"1 local commit\":`\\$\\{(..)\\((.)\\.ahead\\)\\} local commits`","\"1 个本地提交\":`$${$1($2.ahead)} 个本地提交`"],
         ["\\$\\{(..)\\((.)\\.length\\)\\} changed file\\$\\{(..)\\((.).length\\)\\}`","$${$2.length} 个更改的文件`"],
+    	["\"There will be\",(..)\\(\\)\\.createElement\\(\"strong\",null,` \\$\\{(..)\\((.)\\)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
+		"\"将\",$5().createElement(\"strong\",null,$6.name),\"分支合并到\",$7().createElement(\"strong\",null,$8.name),\"分支时将出现\",$1().createElement(\"strong\",null,` $${$2($3)}个冲突$${$4}`))"],
+		[",\" into \",",",\"分支到\","],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
