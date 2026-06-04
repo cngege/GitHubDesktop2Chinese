@@ -6,7 +6,7 @@
 		{
 			"replaceFile":"renderer.js",
 			"tooltip":"是否强制开启预览版选项对应的功能",
-			"enable": true,
+			"enable": false,
 			"replace": [
 				["===process\\.env\\.GITHUB_DESKTOP_PREVIEW_FEATURES\\}","===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/\"1\"}"]
 			]
@@ -688,7 +688,6 @@
 		["selectedOperation:\"Merge\"","selectedOperation:\"合并\""],
 		["\"Checking for ability to \",this.state.selectedOperation.toLowerCase\\(\\),\" \",\"automatically…\"",
 		"\"正在检查是否有条件自动\",this.state.selectedOperation.toLowerCase(),\"…\""],
-		["\\?\"commit\":\"commits\"","?\"个更改\":\"个更改\""],
 		["\"This will merge\",(..)\\.createElement\\(\"strong\",null,` \\$\\{this\\.commitCount\\} \\$\\{(.)\\}`\\),\" from \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
 		"\"这将会把\",$3.createElement(\"strong\",null,$4.name),\"分支的\",$1.createElement(\"strong\",null,`$${this.commitCount} $${$2}`),\"合并到\",$5.createElement(\"strong\",null,$6.name),\"分支\")"],
 		["\"Confirm discard changes\"","\"确认放弃更改\""],
@@ -935,13 +934,15 @@
 		["\"Time format\"","\"时间格式\""],
 		["\"Number format\"","\"数字格式\""],
 		["\"Prefer absolute dates over relative\"","\"优先使用绝对日期而非相对日期\""],
-        ["\"1 local commit\":`\\$\\{(..)\\((.)\\.ahead\\)\\} local commits`","\"1 个本地提交\":`$${$1($2.ahead)} 个本地提交`"],
-        ["\\$\\{(..)\\((.)\\.length\\)\\} changed file\\$\\{(..)\\((.).length\\)\\}`","$${$2.length} 个更改的文件`"],
-    	["\"There will be\",(..)\\(\\)\\.createElement\\(\"strong\",null,` \\$\\{(..)\\((.)\\)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
+    ["\"1 local commit\":`\\$\\{(..)\\((.)\\.ahead\\)\\} local commits`","\"1 个本地提交\":`$${$1($2.ahead)} 个本地提交`"],
+    ["\\$\\{(..)\\((.)\\.length\\)\\} changed file\\$\\{(..)\\((.).length\\)\\}`","$${$2.length} 个更改的文件`"],
+    ["\"There will be\",(..)\\(\\)\\.createElement\\(\"strong\",null,` \\$\\{(..)\\((.)\\)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\(\\)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
 		"\"将\",$5().createElement(\"strong\",null,$6.name),\"分支合并到\",$7().createElement(\"strong\",null,$8.name),\"分支时将出现\",$1().createElement(\"strong\",null,` $${$2($3)}个冲突$${$4}`))"],
 		[",\" into \",",",\"分支到\","],
-        ["\"Adjust the filters to see all \",(..)\\((.)\\.length\\),\" \",\"changes\"","\"调整筛选条件以查看全部的\",$1($2.length),\"项更改\""],
-		["\"Create a tutorial repository…\"","\"创建教程存储库…\""],
+    ["\"Adjust the filters to see all \",(..)\\((.)\\.length\\),\" \",\"changes\"","\"调整筛选条件以查看全部的\",$1($2.length),\"项更改\""],
+		["`Pull \\$\\{(..)\\((.)\\.behind\\)\\} \\$\\{1===(.)\\.behind\\?\"commit\":\"commits\"\\} from the \\$\\{(.)\\.name\\} remote`","`从远程($${$4.name})拉取$${$1($2.behind)}个更改`"],
+		["\\?\"commit\":\"commits\"","?\"个更改\":\"个更改\""],
+    ["\"Create a tutorial repository…\"","\"创建教程存储库…\""],
 		["\"Clone failed\"","\"克隆失败\""],
 		["\"Retry clone\"","\"重试克隆\""],
 		["\"Would you like to retry cloning \"","\"是否要重试克隆 \""],
