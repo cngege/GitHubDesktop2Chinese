@@ -941,6 +941,10 @@
 		"\"将\",$5().createElement(\"strong\",null,$6.name),\"分支合并到\",$7().createElement(\"strong\",null,$8.name),\"分支时将出现\",$1().createElement(\"strong\",null,` $${$2($3)}个冲突$${$4}`))"],
 		[",\" into \",",",\"分支到\","],
         ["\"Adjust the filters to see all \",(..)\\((.)\\.length\\),\" \",\"changes\"","\"调整筛选条件以查看全部的\",$1($2.length),\"项更改\""],
+		["\"Create a tutorial repository…\"","\"创建教程存储库…\""],
+		["\"Clone failed\"","\"克隆失败\""],
+		["\"Retry clone\"","\"重试克隆\""],
+		["\"Would you like to retry cloning \"","\"是否要重试克隆 \""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
