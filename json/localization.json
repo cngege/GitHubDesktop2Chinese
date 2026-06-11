@@ -946,6 +946,7 @@
 		["\"Clone failed\"","\"克隆失败\""],
 		["\"Retry clone\"","\"重试克隆\""],
 		["\"Would you like to retry cloning \"","\"是否要重试克隆 \""],
+		["\"This repository is a fork. How do you plan to use it?\"","\"此存储库是一个分叉，您计划如何使用它？\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
