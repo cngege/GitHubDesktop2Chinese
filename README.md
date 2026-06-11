@@ -85,8 +85,9 @@
   如果你有任何建议可以提issues.
 
 > [!tip]
-> 如果打开 GitHubDesktop2Chinese.exe 时发现缺失 `MSVCP140_ATOMIC_WAIT.dll`，可以尝试下载微软运行库 [Microsoft Visual C++ Redistributable 14.42.34433.0](https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170)。
-> 找到 `最新的 Microsoft Visual C++ 可再发行程序包版本`，选择与你相应的操作系统的版本进行下载（比如64位的电脑选择 `vc_redist.x64.exe	`，32位的电脑选择 `vc_redist.x86.exe`），安装即可。
+> 如果打开 GitHubDesktop2Chinese.exe 时程序不运行或一闪而过， 或发现缺失 `MSVCP140_ATOMIC_WAIT.dll`，可以尝试下载微软运行库 [Microsoft Visual C++ Redistributable 14.42.34433.0](https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170)。  
+> 找到 `最新的 Microsoft Visual C++ 可再发行程序包版本`，选择与你相应的操作系统的版本进行下载（比如64位的电脑选择 `vc_redist.x64.exe	`，32位的电脑选择 `vc_redist.x86.exe`），安装即可。  
+> 如果安装了最新 VC++ 运行库依旧无法运行，请检查程序所在目录下是否残留 MSVCP140.dll、VCRUNTIME140.dll 等文件，如有请删除。
 
 ## 🍬第三方库  
 **感谢以下诸位提供的优质的开源项目**  
