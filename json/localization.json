@@ -968,6 +968,15 @@
 		["i=\"failed \"","i=\"失败的\""],
 		["\"A new attempt of \",(.),\" will be started, including all of \",(.),\" \",\"dependents:\"","\"将启动一项新的 \",$1,\" 检查，包括\",$2,\"依赖项：\""],
 		["\"its\":\"their\"","\"它的\":\"它们的\""],
+		["(.)$$((.),\"step\")","$1$($2,\"步骤\")"],
+		["\"We found some conflicts while trying to merge. Please resolve the conflicts and commit the changes.\"","\"尝试合并时发现一些冲突，请解决冲突并提交更改。\""],
+		["\"Checking out a commit will create a detached HEAD, and you will no longer be on any branch. Are you sure you want to checkout this commit\\?\"","\"签出某个提交将创建一个游离的 HEAD（分离头指针）状态，届时你将不再位于任何分支上。你确定要签出此提交吗？\""],
+		["\"Use Copilot to suggest resolutions for conflicted files\"","\"使用Copilot为冲突文件建议解决方案\""],
+		["\"Checkout commit\\?\"","\"签出提交？\""],
+		["\"You have changes in progress. Undoing the merge commit might result in some of these changes being lost.\"","\"你有正在进行的更改。撤销合并提交可能会导致部分更改丢失。\""],
+		["\"Overwrite stash\\?\"","\"覆盖隐藏？\""],
+		["\"Confirm committing conflicted files\"","\"确认提交冲突的文件\""],
+		["\"Yes, commit files\"","\"确认，提交文件\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
