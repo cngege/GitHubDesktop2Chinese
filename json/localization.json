@@ -977,6 +977,7 @@
 		["\"Overwrite stash\\?\"","\"覆盖隐藏？\""],
 		["\"Confirm committing conflicted files\"","\"确认提交冲突的文件\""],
 		["\"Yes, commit files\"","\"确认，提交文件\""],
+		["`Pull \\$\\{(.)\\.name\\}`","`从远程($${$1.name})拉取`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
