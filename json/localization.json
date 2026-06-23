@@ -996,6 +996,8 @@
 		["okButtonText:\"Create branch and cherry-pick\"","okButtonText:\"创建分支并拣选提交\""],
 		["okButtonText:\"Allow me to expose this secret\"","okButtonText:\"允许显示此密钥\""],
 		["okButtonText:\"Ignore and Continue\"","okButtonText:\"忽略并继续\""],
+		["\" Resolve with Copilot\"","\" 让 Copilot 协助解决\""],
+		["\"Resolve all changes before continuing\"","\"请先处理所有变更再继续\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
