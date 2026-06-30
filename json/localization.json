@@ -1030,6 +1030,7 @@
 		["\"Tell Desktop which models this provider offers. Each one will appear in the model picker for Copilot features.\"","\"告知 Desktop 此提供程序提供哪些模型，每个模型都将显示在 Copilot 功能的模型选择器中。\""],
 		["\"No models yet. Add at least one to use this provider.\"","\"暂无模型，请至少添加一个模型才能使用此提供程序。\""],
 		["\"Add model…\"","\"添加模型...\""],
+		["label:`Delete tag \\$\\{(.)\\}`","label:`移除标签$${$1}`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
