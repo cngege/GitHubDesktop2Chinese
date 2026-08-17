@@ -112,7 +112,7 @@
  - [x] 读取GitHub Desktop的最新版和本地版本比较，如果有新版，则用其他颜色给出提示
 
 ## 🍬星标(收藏)历史
-![Star History Chart](https://api.star-history.com/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
+![Star History Chart](https://star-history.dera.page/svg?repos=cngege/GitHubDesktop2Chinese&type=Date)
 
 ## 🏘️感谢大家的群策群力  
 ![Contributors](https://contrib.rocks/image?repo=cngege/GitHubDesktop2Chinese)
