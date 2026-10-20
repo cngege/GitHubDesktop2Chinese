@@ -1084,6 +1084,8 @@
 		["label:\"Chat messages\"","label:\"聊天消息\""],
 		["label:\"Code completions\"","label:\"代码补全\""],
 		["\"Configure custom providers…\"","\"配置自定义提供程序…\""],
+		["chat:\"Chat messages\"","chat:\"聊天消息\""],
+		["completions:\"Code completions\"","completions:\"代码补全\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
