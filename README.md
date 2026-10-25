@@ -23,9 +23,95 @@
   第二种方法: 下载或自行构建 GitHubDesktop2Chinese.exe  和 localization.json  放在同一个文件夹。运行程序即可  
   GitHubDesktop每次版本更新都需要运行一次此程序才能完成汉化
 
+### 🍏 macOS 使用说明
+
+> macOS 版与 Windows 版功能一致（自动发现 GitHub Desktop、汉化、备份、回滚、开发者选项、失效检测、自动更新）。
+
+- **下载**：从 [Releases](https://github.com/cngege/GitHubDesktop2Chinese/releases) 下载对应架构的二进制：
+  - `GitHubDesktop2Chinese_macos_arm64` —— Apple Silicon（M1/M2/M3…）
+  - `GitHubDesktop2Chinese_macos_x64` —— Intel 芯片
+- **运行**：打开“终端”，进入文件所在目录后执行：
+  ```bash
+  chmod +x GitHubDesktop2Chinese_macos_arm64
+  ./GitHubDesktop2Chinese_macos_arm64
+  ```
+- **自动发现**：程序会自动扫描 `/Applications` 与 `~/Applications` 下的 `GitHub Desktop.app`，读取其版本号并定位 `Contents/Resources/app/` 下的 `main.js`/`renderer.js`；若未找到，会提示手动输入目录（与 Windows 的 `-g` 参数行为一致）。
+- **首次运行被拦截？** 若 macOS 提示“无法验证开发者”，前往 `系统设置 → 隐私与安全性` 点击“仍要打开”；或临时执行 `xattr -d com.apple.quarantine <文件>`。
+- **移除汉化**：执行 `./GitHubDesktop2Chinese_macos_arm64 --rollback` 即可从备份还原汉化前的文件。
+- **代理**：自动读取 `HTTPS_PROXY`/`https_proxy` 环境变量与系统代理（解析 `scutil --proxy`）。
+
+### 🐧 Linux 使用说明
+
+> **重要前提**：GitHub Desktop **没有官方 Linux 版本**。Linux 上使用的是社区分支 [shiftkey/desktop](https://github.com/shiftkey/desktop)（提供 deb/rpm/AppImage/Flatpak/AUR 安装包）。本程序支持该分支汉化。
+
+- **下载**：从 [Releases](https://github.com/cngege/GitHubDesktop2Chinese/releases) 下载 `GitHubDesktop2Chinese_linux_x64`。
+- **运行**：打开终端，进入文件所在目录后执行：
+  ```bash
+  chmod +x GitHubDesktop2Chinese_linux_x64
+  ./GitHubDesktop2Chinese_linux_x64
+  ```
+- **自动发现**：程序会按优先级扫描以下安装根下的 `resources/app`（含 `index.html` 即视为有效）：
+  - `/usr/lib/github-desktop`（deb/rpm 安装）、`/usr/lib64/github-desktop`、`/usr/local/lib/github-desktop`、`/usr/share/github-desktop`、`/opt/github-desktop`
+  - Flatpak 安装目录：`/var/lib/flatpak/app/io.github.shiftey.Desktop/current/active/files/github-desktop`（系统级）与 `~/.local/share/flatpak/app/io.github.shiftey.Desktop/current/active/files/github-desktop`（用户级）
+  - 用户级安装 `~/.local/share/github-desktop`
+- **AppImage/Flatpak 用户注意**：AppImage 是单文件（运行时才挂载出资源目录），无法静态扫描；部分 Flatpak 布局也无法命中。此时请用 `-g` 手动指定资源目录：
+  ```bash
+  # AppImage 示例：先挂载找到 resources/app 路径，再执行
+  ./GitHubDesktop2Chinese_linux_x64 -g /usr/lib/github-desktop/resources/app
+  ```
+- **进入开发者选项**：Linux 上无法检测 Shift 按键（无可靠的无窗口修饰键 API），请用命令行入口：
+  ```bash
+  ./GitHubDesktop2Chinese_linux_x64 dev -d
+  ```
+- **移除汉化**：执行 `./GitHubDesktop2Chinese_linux_x64 --rollback` 从备份还原。
+- **代理**：自动读取 `HTTPS_PROXY`/`https_proxy` 环境变量与 GNOME 系统代理（解析 `gsettings`）。
+
 ## 🎏怎么编译源代码
 
 > 下载克隆项目 本地使用VS2022 使用CMAKE打开（直接用vs2022打开项目文件夹），即可构建
+
+### macOS 构建说明
+
+> 需要通过 [Homebrew](https://brew.sh/) 安装 `openssl@3`：`brew install openssl@3`
+
+```bash
+# 使用预设（推荐）
+cmake --preset macos-release       # 生成于 out/build/macos-release
+cmake --build out/build/macos-release
+
+# 或手动指定（Apple Silicon 示例）
+cmake -B build -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_SYSTEM_PROCESSOR=arm64 \
+      -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
+cmake --build build
+```
+
+- macOS 上不使用 `openssl-proj/` 的 Windows 预编译库，改用 Homebrew 的 `openssl@3`。
+- 若同时安装了多个 OpenSSL，请用 `-DOPENSSL_ROOT_DIR` 显式指向 Homebrew 的安装目录。
+- 构建产物为无后缀的可执行文件 `GitHubDesktop2Chinese`，可自行重命名（如加 `_macos_arm64` 后缀）。
+
+### Linux 构建说明
+
+> 需要通过系统包管理器安装 OpenSSL 开发库（提供 `find_package(OpenSSL)` 所需的头文件与库）：
+> - Debian/Ubuntu：`sudo apt-get install libssl-dev`
+> - Fedora/RHEL：`sudo dnf install openssl-devel`
+> - Arch：`sudo pacman -S openssl`（通常已预装）
+
+```bash
+# 使用预设（推荐）
+cmake --preset linux-release         # 生成于 out/build/linux-release
+cmake --build out/build/linux-release
+
+# 或手动指定
+cmake -B build -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_SYSTEM_PROCESSOR=x86_64
+cmake --build build
+```
+
+- Linux 上直接使用系统 OpenSSL（不使用 `openssl-proj/` 的 Windows 预编译库，也无需 Homebrew）。
+- termios/signal/popen 等能力由 libc 提供，无额外框架依赖。
+- 构建产物为无后缀的可执行文件 `GitHubDesktop2Chinese`，可自行重命名（如加 `_linux_x64` 后缀）。
+- 架构由 `CMAKE_SYSTEM_PROCESSOR` 自动识别（x86_64 / aarch64）。
 
 ## 👕我怎么帮助完成汉化或者后续更新时如何补充汉化
 

@@ -5,23 +5,34 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING   //消除 converter.to_bytes的警告
 #define _CRT_SECURE_NO_WARNINGS                             //消除 sprintf的警告
 
-#define PAUSE if(!no_pause) { spdlog::info("按任意键继续..."); system("pause >nul"); }
+// 按任意键暂停（Windows 下 pause，macOS 下 termios 单键读取）
+#define PAUSE if(!no_pause) { spdlog::info("按任意键继续..."); platform::pause_any_key(); }
 
 #include "GitHubDesktop2Chinese.h"
 #include <string>
 #include <filesystem>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
 #include <regex>
 
 #include "spdlog/spdlog.h"          // 日志式输出库
 #include "nlohmann/json.hpp"        // JSON读取本地配置库
-#include "WinReg/WinReg.hpp"        // 注册表操作库
+#include "Utils/platform.hpp"       // 跨平台抽象层（控制台 / 安装发现 / Shift 检测 / 关窗确认）
+
+#if defined(PLATFORM_WINDOWS)
+    #include "WinReg/WinReg.hpp"    // 注册表操作库（Windows 安装发现由 platform 层封装，此头仅供历史依赖保留）
+#endif
 
 #include <CLI/CLI.hpp>              // 参数管理器:   https://github.com/CLIUtils/CLI11
 #include "Utils/utils.hpp"
 #include "VersionParse/Version.hpp"
 
-#pragma comment(lib, "winhttp.lib")
+#if defined(PLATFORM_WINDOWS)
+    #pragma comment(lib, "winhttp.lib")
+#endif
 
 // 不进行替换 以便调试
 #define NO_REPLACE 0
@@ -34,9 +45,6 @@ using json = nlohmann::json;
 // 设置一个路径的全局变量  指向要修改JS的目录
 fs::path Base;
 fs::path LocalizationJSON;
-
-//fs::path Main_Json_Path;
-//fs::path Renderer_Json_Path;
 
 bool no_pause;                                  // 程序在结束前是否暂停
 bool only_read_from_remote;                     // 仅从远程url中读取本地化文件
@@ -72,48 +80,16 @@ bool _debug_dev_setversion = false;				// 开发模式可以指定当前版本
 std::optional<std::string> formatTime(std::string time_str);
 
 
-BOOL WINAPI ConsoleHandler(DWORD dwCtrlType) {
-    // 仅拦截窗口关闭事件
-    if(dwCtrlType == CTRL_CLOSE_EVENT) {
-        // 弹出确认对话框（使用 Unicode 字符串）
-        int result = MessageBoxW(NULL,
-                                 L"程序中止， 汉化可能失败， 请重新运行后按照程序的流程走，汉化完成后会自动关闭，不建议手动关闭窗口\n开发者:“按任意键继续”是继续的意思，不是已完成的意思",
-                                 L"汉化程序已关闭，本提示五秒后自动关闭",
-                                 MB_OK | MB_ICONQUESTION | MB_DEFBUTTON2);
-
-        if(result == IDYES) {
-            // 用户确认：执行清理并退出
-            // 注意：ExitProcess 会立即终止进程，不会返回
-            ExitProcess(0);
-        }
-        else {
-            // 用户取消：阻止默认关闭行为
-            return TRUE;
-        }
-    }
-    // 其他事件（Ctrl+C、Ctrl+Break、关机等）不处理，让系统默认执行
-    return FALSE;
-}
-
-
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
 {
-    // 设置控制台的输入 输出编码：
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
-
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if(hOut != INVALID_HANDLE_VALUE) {
-        DWORD mode = 0;
-        GetConsoleMode(hOut, &mode);
-        SetConsoleMode(hOut, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-    }
+    // 初始化控制台（Windows: 设置 UTF-8 代码页与虚拟终端处理；macOS: 默认 UTF-8，无需设置）
+    platform::console_init();
 
 
     FileVer = std::Version(FILEVERSION);
     // 设置控制台打印日志输出等级
-    if(FileVer.status == FileVer.Dev) {
+    if(FileVer.status == std::Version::Dev) {
         spdlog::set_level(spdlog::level::debug);
     }
     // 注册命令行
@@ -132,10 +108,6 @@ int main(int argc, char* argv[])
         if(FileVer.major == 0 && FileVer.minor == 0 && FileVer.revision == 0) {
             dev_cmd->add_flag("--devsetver", _debug_dev_setversion,                "[指定当前程序版本]输入一个版本信息可以指定当前程序版本");
         }
-
-        //auto git_cmd = app.add_subcommand("action", "Github自动流程");
-        //git_cmd->add_option("--main_json", Main_Json_Path,                          "手动指定main.json的文件位置,直接处理此文件");
-        //git_cmd->add_option("--renderer_json", Renderer_Json_Path,                  "手动指定renderer.json的文件位置,直接处理此文件");
 
         app.add_flag("--nopause", no_pause,                         "程序在结束前不再暂停等待");
         app.add_option("-g,--githubdesktoppath", Base,              "指定GitHubDesktop要汉化的资源所在目录(js所在目录)");
@@ -166,26 +138,14 @@ int main(int argc, char* argv[])
                     throw CLI::ValidationError("(-g,--githubdesktoppath) 指定的资源文件目录无效,该目录下应该是存放main.js和renderer.js文件的");
                 }
             }
-            //// 验证 Main_Json_Path 是否有效
-            //if(!Main_Json_Path.string().empty()) {
-            //    if(!fs::exists(Main_Json_Path)) {
-            //        throw CLI::ValidationError("(action main_json) 指定的资源文件不存在");
-            //    }
-            //}
-            //// 验证 Renderer_Json_Path 是否有效
-            //if(!Renderer_Json_Path.string().empty()) {
-            //    if(!fs::exists(Renderer_Json_Path)) {
-            //        throw CLI::ValidationError("(action renderer_json) 指定的资源文件不存在");
-            //    }
-            //}
         });
 
 
         CLI11_PARSE(app, argc, argv);
     }
-    if(GetKeyState(VK_SHIFT) & 0x8000 || _debug_goto_devoptions) {
+    if(platform::is_shift_pressed() || _debug_goto_devoptions) {
         // 如果Shift按下, 则进入开发者选项
-        SetConsoleTitle("开发者模式");
+        platform::set_console_title("开发者模式");
         spdlog::info("您已进入开发者模式");
         DeveloperOptions();
     }
@@ -204,13 +164,16 @@ int main(int argc, char* argv[])
             }
             else {
                 FileVer = ver;
-                system("cls");
+                platform::clear_screen();
                 break;
             }
         }
     }
     
-    if(!SetConsoleCtrlHandler(ConsoleHandler, TRUE)) {
+    // 注册“关闭窗口前二次确认”处理器
+    // Windows: 注册控制台关闭处理器并弹出确认对话框
+    // macOS:   无法拦截窗口关闭，仅注册 SIGINT/SIGTERM 打印提示信息
+    if(!platform::register_close_confirmation()) {
         spdlog::error("注册关闭二次确认弹窗处理失败！");
     }
 
@@ -232,7 +195,7 @@ int main(int argc, char* argv[])
         }
     }
     if(proxy.second) {
-        spdlog::info("检测到已开启代理:，{}:{}", proxy.first, proxy.second);
+        spdlog::info("检测到已开启代理：{}:{}", proxy.first, proxy.second);
     }
 
 
@@ -252,7 +215,7 @@ int main(int argc, char* argv[])
     
 
 
-    SetConsoleTitle(FileVer.toString(true).c_str());
+    platform::set_console_title(FileVer.toString(true).c_str());
 
     if (LocalizationJSON.empty()) {
         LocalizationJSON = "localization.json";
@@ -396,30 +359,17 @@ int main(int argc, char* argv[])
 
     // Github Desktop 存在目录没有提前设置
     if (!fs::exists(Base) || !fs::exists(Base / "index.html")) {
-        // 首先要能够成功读取注册表
-        //	拿到当前用户sid
-        //std::string sid = GetCurrentUserSid();
-        //spdlog::debug("sid:{}", sid);
-
-        //	检查注册表中是否存在GithubDesktop
-        winreg::RegKey key;
-        //winreg::RegResult result = key.TryOpen(HKEY_USERS, utils::to_wide_string(sid) + L"\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
-        winreg::RegResult result = key.TryOpen(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
-        if (!result)
-        {
-            spdlog::warn("注册表中未发现GitHubDesktop相关条目, Reg ErrorMessage: {}" ,utils::to_byte_string(result.ErrorMessage()));
-            spdlog::warn("你可能没有安装GithubDesktop，请先安装然后打开此程序或者手动指定main.js所在的文件夹目录");
-            Base = LoopGetBasePath();
-        }
-        else {
-            try
-            {
-                // 首先要从注册表中拿到GithubDesktop相关信息
-                // 任务就是将Base 中写入路径
-                std::wstring ver = key.GetStringValue(L"DisplayVersion");
-                std::wstring path = key.GetStringValue(L"InstallLocation");
-                Base = path + L"\\" + L"app-" + ver + L"\\resources\\app";
-                std::string desktop_local_ver_str = utils::to_byte_string(ver);
+        // 自动发现本地 GitHub Desktop 安装（Windows 读取注册表，macOS 扫描 .app bundle）
+        try {
+            auto install = platform::find_github_desktop();
+            if(!install) {
+                // 未发现安装条目时，platform 层已打印对应来源的错误信息（Windows: 注册表 / macOS: 应用程序目录）
+                spdlog::warn("你可能没有安装GithubDesktop，请先安装然后打开此程序或者手动指定main.js所在的文件夹目录");
+                Base = LoopGetBasePath();
+            }
+            else {
+                Base = install->resource_dir;
+                std::string desktop_local_ver_str = install->version;
 
 
                 spdlog::info("正在读取GitHubDesktop最新版...");
@@ -435,32 +385,24 @@ int main(int argc, char* argv[])
                     spdlog::warn("远程GitHubDesktop版本读取失败.");
                 }
 
-                spdlog::info("已从注册表中读取本地GitHubDesktop信息:");
+                spdlog::info("已从{}中读取本地GitHubDesktop信息:", install->source);
                 spdlog::info("本地GitHubDesktop版本: {}", desktop_local_ver_str);
-                spdlog::info("安装目录: {}", utils::to_byte_string(path));
+                spdlog::info("安装目录: {}", install->install_location.string());
                 spdlog::info("最后拼接完整目录: {}", Base.string());
 
 
                 if (!fs::exists(Base)) {
-                    spdlog::warn("注册表最终获取到的目录不存在,请手动指定main.js所在的文件夹目录");
+                    spdlog::warn("{}最终获取到的目录不存在,请手动指定main.js所在的文件夹目录", install->source);
                     Base = LoopGetBasePath();
                 }
 
             }
-            catch (const winreg::RegException& regerr)
-            {
-                spdlog::error("可能注册表key {} 不存在,请检查注册表目录 {}", "DisplayVersion 或 InstallLocation", "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
-                spdlog::error("RegException {} ,ErrCode:{}  at line: {}", regerr.what(),regerr.code().value(), __LINE__);
-                PAUSE
-                return 1;
-            }
-            catch(const std::runtime_error& err) {
-                spdlog::error("runtime_error {} at line: {}", err.what(), __LINE__);
-                PAUSE
-                return 1;
-            }
         }
-        key.Close();
+        catch(const std::runtime_error& err) {
+            spdlog::error("runtime_error {} at line: {}", err.what(), __LINE__);
+            PAUSE
+            return 1;
+        }
     }
 
     fs::path mainjs = "main.js";
@@ -591,7 +533,7 @@ int main(int argc, char* argv[])
                         std::regex pattern3(item.value()[2].get<std::string>());
                         found = std::regex_search(main_str, pattern3);
                         if(!found) {
-                            spdlog::warn("[renderer] 检测到失效项: {}", item.value()[2].get<std::string>());
+                            spdlog::warn("[main 3] 检测到失效项: {}", item.value()[2].get<std::string>());
                             ret_num++;
                         }
                     }
@@ -632,7 +574,8 @@ int main(int argc, char* argv[])
 
             // 循环select 如果是非测试替换
             if(!_debug_dev_replace) {
-                // 循环select 列表
+                // 循环select 列表（映射文件可能未提供 select 节, 需先校验存在且为数组, 否则 items() 会抛 type_error 逃出本层 catch）
+                if(localization.contains("select") && localization.at("select").is_array()) {
                 for(auto& item_select : localization["select"].items()) {
                     // 判断此项 是否是 对应js， 并且enable项是否开启
                     if(item_select.value()["replaceFile"].get<std::string>() == "main.js" && item_select.value()["enable"].get<bool>()) {
@@ -678,7 +621,7 @@ int main(int argc, char* argv[])
                                     }
                                     std::regex pattern(rege);
                                     // 如果有第三个字符串
-                                    if(replaces.size() >= 3) {
+                                    if(v_item.size() >= 3) {
                                         // 预备用第三个字符串查找关键字 用来替换第二个字符串
                                         std::regex pattern3(v_item[2]);
                                         std::sregex_iterator it = std::sregex_iterator(main_str.begin(), main_str.end(), pattern3);
@@ -693,7 +636,7 @@ int main(int argc, char* argv[])
                                         }
                                         else {
                                             // 如果没有找到，则应该进行提示并跳过此项，以免进行错误的字符插入，造成程序无法打开
-                                            spdlog::warn("[select renderer 3] 出现一处失效项,此项将跳过: {}", v_item[2].c_str());
+                                            spdlog::warn("[select main 3] 出现一处失效项,此项将跳过: {}", v_item[2].c_str());
                                             continue;
                                         }
                                     }
@@ -703,6 +646,7 @@ int main(int argc, char* argv[])
                             }
                         }
                     }
+                }
                 }
             }
         }
@@ -791,7 +735,8 @@ int main(int argc, char* argv[])
 
             // 循环select 如果是非测试替换
             if(!_debug_dev_replace) {
-                // 循环select 列表
+                // 循环select 列表（映射文件可能未提供 select 节, 需先校验存在且为数组, 否则 items() 会抛 type_error 逃出本层 catch）
+                if(localization.contains("select") && localization.at("select").is_array()) {
                 for(auto& item_select : localization["select"].items()) {
                     // 判断此项 是否是 对应js， 并且enable项是否开启
                     if(item_select.value()["replaceFile"].get<std::string>() == "renderer.js" && item_select.value()["enable"].get<bool>()) {
@@ -837,7 +782,7 @@ int main(int argc, char* argv[])
                                     }
                                     std::regex pattern(rege);
                                     // 如果有第三个字符串
-                                    if(replaces.size() >= 3) {
+                                    if(v_item.size() >= 3) {
                                         // 预备用第三个字符串查找关键字 用来替换第二个字符串
                                         std::regex pattern3(v_item[2]);
                                         std::sregex_iterator it = std::sregex_iterator(renderer_str.begin(), renderer_str.end(), pattern3);
@@ -862,6 +807,7 @@ int main(int argc, char* argv[])
                             }
                         }
                     }
+                }
                 }
             }
         }
@@ -956,7 +902,7 @@ std::string LoopGetBasePath() {
 void DeveloperOptions() {
     while (true)
     {
-        system("cls");
+        platform::clear_screen();
         spdlog::info("选择你要修改的功能");
         spdlog::info("0) 跳出.");
         spdlog::info("1) [{}] main崩溃调试.", _debug_error_check_mode_main);
@@ -971,7 +917,6 @@ void DeveloperOptions() {
         std::cout << std::endl;
 
         int sys = 0;
-        //int sw = 0;	//功能开关
         spdlog::info("请输入你要修改的功能:");
         std::cin >> sys;
         switch (sys)
@@ -979,39 +924,24 @@ void DeveloperOptions() {
         case 0:
             return;
         case 1:
-            //spdlog::info("输入你要切换的状态(0关 1开):");
-            //std::cin >> sw;
-            //_debug_error_check_mode_main = (bool)sw;
             _debug_error_check_mode_main = utils::ReadUserInput_bool({ "false", "true" });
             break;
         case 2:
-            //spdlog::info("输入你要切换的状态(0关 1开):");
-            //std::cin >> sw;
             _debug_error_check_mode_renderer = utils::ReadUserInput_bool({ "false", "true" });
             break;
         case 3:
-            //spdlog::info("输入你要切换的状态(0关 1开):");
-            //std::cin >> sw;
             _debug_invalid_check_mode = utils::ReadUserInput_bool({ "false", "true" });
             break;
         case 4:
-            //spdlog::info("输入你要切换的状态(0关 1开):");
-            //std::cin >> sw;
             _debug_no_replace_res = utils::ReadUserInput_bool({ "false", "true" });
             break;
         case 5:
-            //spdlog::info("输入你要切换的状态(0关 1开):");
-            //std::cin >> sw;
             _debug_translation_from_bak = utils::ReadUserInput_bool({ "false", "true" });
             break;
         case 6:
-            //spdlog::info("输入你要切换的状态(0关 1开):");
-            //std::cin >> sw;
             _debug_dev_replace = utils::ReadUserInput_bool({ "false", "true" });
             break;
         case 20:
-            //spdlog::info("输入你要切换的状态(0关 1开):");
-            //std::cin >> sw;
             _debug_dev_setversion = utils::ReadUserInput_bool({ "false", "true" });
             break;
         }
@@ -1023,6 +953,8 @@ void DeveloperOptions() {
 std::optional<std::string> formatTime(std::string time_str) {
     using namespace std::chrono;
     std::optional<std::string> ret;
+#if defined(_WIN32) || defined(_WIN64)
+    // MSVC STL 支持 C++23 的 std::chrono::parse，保留原实现
     std::istringstream ss{ time_str };
 
     sys_seconds tp;
@@ -1031,9 +963,25 @@ std::optional<std::string> formatTime(std::string time_str) {
         auto sctp = time_point_cast<seconds>(tp);
         std::time_t cftime = decltype(sctp)::clock::to_time_t(sctp);
         std::tm* tm = std::localtime(&cftime);
-        std::ostringstream oss;
-        oss << std::put_time(tm, "%Y年%m月%d日 %H时%M分%S秒");
-        ret = oss.str();
+        if(tm != nullptr) {
+            std::ostringstream oss;
+            oss << std::put_time(tm, "%Y年%m月%d日 %H时%M分%S秒");
+            ret = oss.str();
+        }
     }
+#else
+    // libc++ 对 chrono parse 的支持不完整，改用 POSIX strptime 解析 UTC 时间
+    // 输入格式: 2024-04-13T12:34:56Z
+    std::tm tm = {};
+    if(::strptime(time_str.c_str(), "%Y-%m-%dT%H:%M:%SZ", &tm) != nullptr) {
+        std::time_t cftime = ::timegm(&tm);
+        std::tm* local = std::localtime(&cftime);
+        if(local != nullptr) {
+            std::ostringstream oss;
+            oss << std::put_time(local, "%Y年%m月%d日 %H时%M分%S秒");
+            ret = oss.str();
+        }
+    }
+#endif
     return ret;
 }

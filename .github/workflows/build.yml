@@ -61,9 +61,102 @@ jobs:
             ${{github.workspace}}/build/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese.exe
             ${{github.workspace}}/build32/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese_x86.exe
 
+  build-macos:
+    # macOS 构建：x64（Intel）与 arm64（Apple Silicon）双架构
+    # 使用本机 Homebrew 提供的 openssl@3，不依赖 openssl-proj 的 Windows 预编译库
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs-on: macos-13
+            arch: x64
+            cmake-arch: x86_64
+          - runs-on: macos-latest
+            arch: arm64
+            cmake-arch: arm64
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Get tag
+      id: tag
+      uses: devops-actions/action-get-tag@v1.0.2
+      with:
+          default: v0.0.0 # Optional: Default version when tag not found
+
+    - name: Configure CMake (macOS ${{ matrix.arch }})
+      # macOS 单配置生成器需显式指定 CMAKE_BUILD_TYPE；openssl@3 由 Homebrew 提供
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DCMAKE_SYSTEM_PROCESSOR=${{matrix.cmake-arch}} \
+          -DGitHubActions=1 \
+          -DFILE_VERSION="${{steps.tag.outputs.tag}}" \
+          -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
+
+    - name: Build (macOS ${{ matrix.arch }})
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Run platform logic tests (macOS ${{ matrix.arch }})
+      # 运行平台无关逻辑的回归测试（Version 解析 / 代理 URL / scutil / plist 解析）
+      working-directory: ${{github.workspace}}/build
+      run: ctest -R platform_logic_tests --output-on-failure
+
+    - name: Rename (macOS ${{ matrix.arch }})
+      run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+
+    - name: Upload Release GitHubDesktop2Chinese (macOS ${{ matrix.arch }})
+      uses: actions/upload-artifact@v4
+      with:
+        name: GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+        path: ${{github.workspace}}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+
+  build-linux:
+    # Linux 构建：ubuntu-latest，使用系统 libssl-dev（apt 安装）
+    # Linux 版 GitHub Desktop 为社区 fork（shiftkey/desktop），此处仅构建汉化工具本身
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      # libssl-dev 提供 OpenSSL 头文件与库（find_package(OpenSSL)）
+      run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+    - name: Get tag
+      id: tag
+      uses: devops-actions/action-get-tag@v1.0.2
+      with:
+          default: v0.0.0 # Optional: Default version when tag not found
+
+    - name: Configure CMake (Linux)
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DGitHubActions=1 \
+          -DFILE_VERSION="${{steps.tag.outputs.tag}}"
+
+    - name: Build (Linux)
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Run platform logic tests (Linux)
+      # 运行平台无关逻辑的回归测试（Version 解析 / 代理 URL / scutil / gsettings / plist / package.json）
+      working-directory: ${{github.workspace}}/build
+      run: ctest -R platform_logic_tests --output-on-failure
+
+    - name: Rename (Linux)
+      run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
+
+    - name: Upload Release GitHubDesktop2Chinese (Linux)
+      uses: actions/upload-artifact@v4
+      with:
+        name: GitHubDesktop2Chinese_linux_x64
+        path: ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
+
   publish_release:
     name: Publish release
-    needs: build
+    needs: [build, build-macos, build-linux]
     runs-on: windows-latest
     permissions:
       contents: write
@@ -104,6 +197,9 @@ jobs:
           artifacts: |
             ./build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe
             ./build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe
+            ./build/GitHubDesktop2Chinese_macos_x64/GitHubDesktop2Chinese_macos_x64
+            ./build/GitHubDesktop2Chinese_macos_arm64/GitHubDesktop2Chinese_macos_arm64
+            ./build/GitHubDesktop2Chinese_linux_x64/GitHubDesktop2Chinese_linux_x64
             ./json/localization.json
         env:
           GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
