@@ -121,9 +121,11 @@ if(WIN32)
     SET(DOWNLOAD_OPENSSL_TIMEOUT 300 CACHE STRING "Timeout in seconds when downloading openssl_lib.")
     if(NOT EXISTS "openssl-proj/lib")
         file(MAKE_DIRECTORY "openssl-proj/lib")
-        SET(LOCAL_OPENSSL_LIBRARIES_PATH "openssl-proj/lib")
         MESSAGE(STATUS "Folder “openssl-proj/lib” created successfully.")
     endif()
+    # 无论目录是否已存在（x64 与 x86 两次配置共享同一目录），都必须给出有效下载路径，
+    # 否则第二次配置时 LOCAL_OPENSSL_LIBRARIES_PATH 为空，库会下载到源码根目录导致链接失败
+    SET(LOCAL_OPENSSL_LIBRARIES_PATH "openssl-proj/lib")
 
     # /////////////////////////////////////ssl库lib名称////////////////////////////////////////////////
     if(DEFINED CURRENT_PLATFORM_ISX64)
