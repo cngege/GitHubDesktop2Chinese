@@ -58,6 +58,10 @@ public:
         return false;
     }
 
+    bool operator!=(const Version& b) const {
+        return !(*this == b);
+    }
+
     bool operator<=(const Version& b) const {
         return *this < b || *this == b;
 
