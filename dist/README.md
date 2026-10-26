@@ -1,15 +1,30 @@
 # dist/ —— 发布产物
 
-本目录存放**本机构建**的 Windows 发布产物。macOS 与 Linux 产物由 `build.yml` 在 CI 上生成（打 tag 触发），不放在这里。
+本目录存放发布产物：`dist/` 根目录为**本机 MSVC 构建的 Windows 产物**，`dist/ci/` 为 **CI（`build.yml` 打 tag 触发）构建的各平台产物**。
 
-## 当前产物
+## 当前产物（v1.3.0）
+
+### 本机构建（dist/ 根目录）
 
 | 文件 | 平台 | 构建方式 | 依赖 |
 | --- | --- | --- | --- |
 | `GitHubDesktop2Chinese_x64.exe` | Windows x64 | MSVC `cl.exe`（本机） | VC++ 2022 运行库 |
 | `GitHubDesktop2Chinese_x86.exe` | Windows x86 | MSVC `cl.exe` 交叉编译（Hostx64/x86） | VC++ 2022 运行库 |
 
-两个产物均以 `-DFILEVERSION="1.3.0"` 构建，版本号由 GitHub tag 决定，发布前与 `git tag` 保持一致。
+### CI 构建（dist/ci/）
+
+| 文件 | 平台 | 构建方式 | 依赖 |
+| --- | --- | --- | --- |
+| `GitHubDesktop2Chinese.exe` | Windows x64 | `build.yml` 的 `build` 任务（CMake `-A x64`） | VC++ 2022 运行库 |
+| `GitHubDesktop2Chinese_x86.exe` | Windows x86 | `build.yml` 的 `build` 任务（CMake `-A Win32`） | VC++ 2022 运行库 |
+| `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux`（系统 libssl-dev） | glibc / libssl3 |
+| `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（macos-13） | macOS 13+ |
+| `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（macos-latest） | macOS 14+ |
+
+> macOS 两个产物由 CI 产出后拷入本目录；本机无法构建 macOS/Linux（无 macOS/Linux 工具链）。
+
+CI 构建与本机构建使用同一份源码，参数等价（`CMakeLists.txt` 的 `-O2 Release` + `FILEVERSION` 注入）。两者可互换使用；CI 版本经过完整 `platform_logic_tests` 回归。
+
 
 ## 构建方式（无 CMake 时的备选）
 
