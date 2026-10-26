@@ -37,14 +37,16 @@ jobs:
       run: |
         $jsonContent = Get-Content -Path '${{github.workspace}}\release.json' -Raw
         $jsonObj = ConvertFrom-Json -InputObject $jsonContent
-        if ( $($jsonObj.assets[4].browser_download_url) -like "*-x64-full.nupkg" ) {
-          Add-Content -Path $env:GITHUB_ENV -Value "browser_download_url=$($jsonObj.assets[4].browser_download_url)"
+        # 不依赖资产下标：按文件名后缀查找 -x64-full.nupkg，避免上游资产排序变化导致误挂
+        $nupkg = $jsonObj.assets | Where-Object { $_.browser_download_url -like "*-x64-full.nupkg" } | Select-Object -First 1
+        if ($null -ne $nupkg) {
+          Add-Content -Path $env:GITHUB_ENV -Value "browser_download_url=$($nupkg.browser_download_url)"
         } else {
-          echo "下标为4的资源不是以 -x64-full.nupkg结尾,请手动打开链接确认..."
+          echo "未找到以 -x64-full.nupkg 结尾的资产,请手动打开链接确认..."
           echo "https://api.github.com/repos/desktop/desktop/releases/latest"
           exit 1
         }
-        
+
     - name: download github desktop
       shell: pwsh
       run: |
@@ -59,7 +61,14 @@ jobs:
       shell: pwsh
       run: |
         ${{github.workspace}}\GitHubDesktop2Chinese.exe --nopause -j "json/localization.json" -g "${{github.workspace}}\GitHubDesktopFull\lib\net45\resources\app" dev --invalidcheck
-        
+
+    - name: Verify localization.json against shipped files
+      # 与 --invalidcheck 同语义的独立复核：解析 JSON 并逐条校验正则是否失效，
+      # 输出每一条失效项及总数，便于在 CI 页面上直接定位（exe 只输出到日志、无摘要）。
+      shell: pwsh
+      run: |
+        node "tests/check_localization.js" "json/localization.json" "${{github.workspace}}\GitHubDesktopFull\lib\net45\resources\app"
+
     #- name: Test Tree
     #  shell: pwsh
     #  run: tree . /A /F

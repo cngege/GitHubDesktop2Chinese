@@ -140,6 +140,40 @@ cmake --build build
 - 主节点 - renderer(array): 存储用于替换GitHubDesktop的renderer.js的映射
 - 主节点 - renderer_dev(array): 存储用于替换GitHubDesktop的renderer.js的映射,区别于开发时快速替换
 
+## ⚠️minifier 敏感条目维护说明
+> GitHub Desktop 的 `main.js`/`renderer.js` 是**压缩后**的产物，变量名由压缩器分配（如 `Ae`、`xe`、`EH`、`ZB`），  
+  且不同版本/不同打包轮次可能采用**不同的压缩形态**。这是大部分"失效项"的根源，编写正则时务必注意。
+
+### 两种 createElement 形态
+同一份 `renderer.js` 里常常同时存在两种写法：
+- `Ae.createElement(...)` —— 无调用括号的别名（多数）
+- `xe().createElement(...)` —— 带调用括号（少数）
+
+**不要**写死成 `(.)\(\)\.createElement`（只能匹配带括号形态），也**不要**写死成 `Ae\.createElement`（升级后别名一变就失效）。  
+应使用同时兼容两者的写法：
+
+```
+([A-Za-z$_][\w$]*(?:\(\))?)?\.createElement
+```
+
+### 捕获组与替换串回填必须配套
+- 正则里的占位符请使用**捕获组** `(...)` 而非非捕获组 `(?:...)`，否则其后的 `$N` 编号会错位，回填出类似 `strong().createElement(...)` 的**非法代码**（程序运行时报错）。
+- 替换串中若引用别名，写 `$1.createElement` 即可（捕获组已含可选括号）；匹配到 `Ae` 回填 `Ae.createElement`，匹配到 `xe()` 回填 `xe().createElement`，两种都合法。
+- 优先用**固定文案做锚点**（如 `createElement("strong"`、`"Pull requests targeting "`），少用 `(.)/(..)` 这类单字符占位符，可显著降低升级失效概率。
+
+### 改完如何自查（不用等 CI）
+CI（`check.yml`）会用 `--invalidcheck` 对 `json/localization.json` 全量校验，有任何失效项即挂；  
+此外 CI 还会跑 `tests/check_localization.js` 做同语义复核，在日志里直接列出每一条失效项。  
+
+本地自查方式：下载对应版本的 `-x64-full.nupkg`，解压取 `lib/net45/resources/app/` 下的 `main.js`/`renderer.js`，然后运行：
+
+```bash
+node tests/check_localization.js json/localization.json <解压出的 app 目录>
+```
+
+输出 `失效项总数: 0` 即通过；否则会逐条列出失效正则，按上面的规则修正即可。
+
+
 ## 使用环境变量开启GitHubDesktop预览版选项
 > 内部脚本预览版判断机制  
 ```javascript
