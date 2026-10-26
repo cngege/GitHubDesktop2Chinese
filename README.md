@@ -193,6 +193,78 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
  - **或者通过加载器按提示选择自动开启预览版功能**
 
 
+## 🚀发布流程（Release）
+
+> 本项目通过 **打 tag 触发 `build.yml`** 自动构建全部平台并发布 GitHub Release；Windows 产物也可在本机用 MSVC 直接构建交付。  
+> 发布前请先确认 `check.yml`（含 `--invalidcheck` 与 `tests/check_localization.js`）全部通过，避免发布失效映射。
+
+### 产物清单
+
+| 产物文件 | 平台 | 构建方式 |
+| --- | --- | --- |
+| `GitHubDesktop2Chinese.exe` | Windows x64 | `build.yml` 的 `build` 任务，或本机 MSVC |
+| `GitHubDesktop2Chinese_x86.exe` | Windows x86 | 同上（`-A Win32`） |
+| `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（matrix: macos-latest） |
+| `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（matrix: macos-13） |
+| `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux` |
+| `json/localization.json` | 映射文件 | 随 Release 一并发布 |
+
+### 方式一：打 tag 触发 CI（推荐，出全平台）
+
+```bash
+# 1. 确认工作区干净且 check 已通过
+git status --short
+
+# 2. 打上版本 tag（build.yml 只在 push tag 时触发发布）
+git tag v1.3.0
+git push origin v1.3.0
+```
+
+CI 流程（`build.yml`）会依次完成：
+1. **Windows**：CMake 构建 x64 与 x86（`-A x64` / `-A Win32`），产物重命名 `GitHubDesktop2Chinese_x86.exe`
+2. **macOS**：`macos-13`（Intel）与 `macos-latest`（Apple Silicon）各构建一份，跑 `platform_logic_tests`，按架构加 `_macos_arm64` / `_macos_x64` 后缀
+3. **Linux**：ubuntu-latest + 系统 `libssl-dev` 构建，跑 `platform_logic_tests`，加 `_linux_x64` 后缀
+4. **发布**：`publish_release` 任务汇总全部产物 + `json/localization.json`，用 `ReleaseBody.md` 作为 Release 说明创建 GitHub Release（tag 含 `beta` 时自动标记为预发布）
+
+> [!note]
+> tag 名含 `beta` 时 Release 会自动标记为预发布（`isPrerelease`）。
+
+### 方式二：本机构建 Windows 产物（MSVC，无 CMake）
+
+本机没有 cmake/ninja 时，可直接用 VS 自带的 `cl.exe` 复刻 `CMakeLists.txt` 的参数构建：
+
+```bash
+# 前置：CLI11 单头文件与 openssl 预编译库（放到临时目录）
+curl -L -o CLI/CLI.hpp https://github.com/CLIUtils/CLI11/releases/download/v2.4.1/CLI11.hpp
+# Windows 预编译库来自 cngege.github.io 的 v0.1-beta.1 release：
+#   x64:  libssl.lib / libcrypto.lib
+#   x86:  libssl_x86.lib / libcrypto_x86.lib
+
+# x64
+cl.exe -nologo -std:c++20 -EHsc -O2 -utf-8 "-DFILEVERSION=\"1.3.0\"" \
+  -I. -ICLI -IUtils -Iinclude \
+  GitHubDesktop2Chinese.cpp libssl.lib libcrypto.lib -Fe:GitHubDesktop2Chinese_x64.exe
+
+# x86（用 Hostx64/x86 交叉编译）
+cl.exe -nologo -std:c++20 -EHsc -O2 -utf-8 "-DFILEVERSION=\"1.3.0\"" \
+  -I. -ICLI -IUtils -Iinclude \
+  GitHubDesktop2Chinese.cpp libssl_x86.lib libcrypto_x86.lib -Fe:GitHubDesktop2Chinese_x86.exe
+```
+
+需要在 VS 开发者命令行（或手动导出 `INCLUDE`/`LIB`/`PATH`）中执行，详见 `dist/build/README.md`。
+
+### 版本号约定
+
+- 源码默认 `FILE_VERSION` 为 `0.0.0-Dev.0`，发布时通过 CMake 参数 `-DFILE_VERSION=<tag>` 注入（CI 已自动从 tag 名读取）
+- 程序运行时会打印 `程序架构 / 版本`（`GitHubDesktop2Chinese.cpp:210`），版本号错会导致 json 的 `minversion` 校验告警
+- Release 说明维护在 `ReleaseBody.md`，发布前更新对应版本的更新日志
+
+### 发布后的校验
+
+- 从 Release 下载对应平台产物，运行 `--version` 类命令或直接双击运行确认架构与版本号正确
+- 用 `tests/check_localization.js` 对 Release 附带的 `localization.json` 做一次失效项复核
+- Windows 若提示缺失 `MSVCP140_ATOMIC_WAIT.dll`，安装 [VC++ 运行库](https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170)（见上方“其他”一节）
+
 ## 🧭其他
 
 > 如果报错提示找不到openssl 的dll文件，请更新到[最新版](https://github.com/cngege/GitHubDesktop2Chinese/releases)   
