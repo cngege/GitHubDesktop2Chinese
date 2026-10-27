@@ -103,8 +103,10 @@ jobs:
           --prefix="$OPENSSL_PREFIX" \
           CC="clang -target x86_64-apple-darwin" \
           CXX="clang++ -target x86_64-apple-darwin" \
-          no-tests no-shared
-        make -j"$(sysctl -n hw.ncpu)" install_sw
+          no-tests no-shared no-apps
+        # 注意：并行 make 会与 -MMD 依赖文件产生竞争（mv: .d.tmp: No such file），
+        # 单线程构建约 2-3 分钟，可靠性优先
+        make install_sw
         echo "OPENSSL_ROOT_DIR=$OPENSSL_PREFIX" >> $GITHUB_ENV
 
     - name: Configure CMake (macOS ${{ matrix.arch }})
