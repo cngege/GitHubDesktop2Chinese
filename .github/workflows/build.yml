@@ -89,12 +89,23 @@ jobs:
           default: v0.0.0 # Optional: Default version when tag not found
 
     - name: Prepare OpenSSL for target arch (macOS ${{ matrix.arch }})
-      # arm64 runner 上默认只有 arm64 版 openssl；交叉编译 x86_64 时
-      # 通过 arch -x86_64 brew 安装 Intel 版到独立前缀
+      # arm64 runner 上默认只有 arm64 版 openssl；交叉编译 x86_64 时需要 Intel 版库。
+      # macos-latest 镜像没有 Intel Homebrew 前缀（/usr/local/bin/brew 不存在），
+      # 因此从源码交叉编译：用 clang 的 -target x86_64-apple-darwin 生成 Intel 库，
+      # 无需 Rosetta（perl/Configure 与 make 本身在 arm64 下运行即可）。
       if: matrix.cross-compile
       run: |
-        arch -x86_64 /usr/local/bin/brew install openssl@3 || true
-        echo "OPENSSL_ROOT_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
+        OPENSSL_PREFIX="${{github.workspace}}/openssl-x86_64"
+        curl -fsSL -o openssl.tar.gz https://www.openssl.org/source/openssl-3.0.22.tar.gz
+        tar xzf openssl.tar.gz
+        cd openssl-3.0.22
+        ./Configure darwin64-x86_64-cc \
+          --prefix="$OPENSSL_PREFIX" \
+          CC="clang -target x86_64-apple-darwin" \
+          CXX="clang++ -target x86_64-apple-darwin" \
+          no-tests no-shared
+        make -j"$(sysctl -n hw.ncpu)" install_sw
+        echo "OPENSSL_ROOT_DIR=$OPENSSL_PREFIX" >> $GITHUB_ENV
 
     - name: Configure CMake (macOS ${{ matrix.arch }})
       # macOS 单配置生成器需显式指定 CMAKE_BUILD_TYPE；openssl@3 由 Homebrew 提供
