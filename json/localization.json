@@ -684,7 +684,7 @@
 		"\"远程仓库已存在名为\",$1.createElement($2,null,$3),\"的分支。\""],
 		["`Behind \\(","`落后("],
 		["`Ahead \\(","`领先("],
-		["\"There will be\",([A-Za-z$_][\\w$]*(?:\\(\\))?)?\\.createElement\\(\"strong\",null,` \\$\\{(.)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",([A-Za-z$_][\\w$]*(?:\\(\\))?)?\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",(..)\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
+		["\"There will be\",([A-Za-z$_][\\w$]*(?:\\(\\))?)?\\.createElement\\(\"strong\",null,` \\$\\{(.)\\} conflicted \\$\\{(.)\\}`\\),\" when merging \",([A-Za-z$_][\\w$]*(?:\\(\\))?)?\\.createElement\\(\"strong\",null,(.)\\.name\\),\" into \",([A-Za-z$_][\\w$]*(?:\\(\\))?)?\\.createElement\\(\"strong\",null,(.)\\.name\\)\\)",
 		"\"将\",$4.createElement(\"strong\",null,$5.name),\"分支合并到\",$6.createElement(\"strong\",null,$7.name),\"分支时将出现\",$1.createElement(\"strong\",null,` $${$2}个冲突$${$3}`))"],
 		["selectedOperation:\"Merge\"","selectedOperation:\"合并\""],
 		["\"Checking for ability to \",this.state.selectedOperation.toLowerCase\\(\\),\" \",\"automatically…\"",
