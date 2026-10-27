@@ -64,17 +64,20 @@ jobs:
   build-macos:
     # macOS 构建：x64（Intel）与 arm64（Apple Silicon）双架构
     # 使用本机 Homebrew 提供的 openssl@3，不依赖 openssl-proj 的 Windows 预编译库
+    # 注意：Intel macOS runner（macos-13）长期容量短缺，任务可能数小时排不到 runner，
+    # 因此两个架构都在 macos-latest（arm64）上构建：arm64 原生构建，
+    # x64 通过 CMAKE_OSX_ARCHITECTURES=x86_64 交叉编译（Universal 工具链支持）。
     strategy:
       fail-fast: false
       matrix:
         include:
-          - runs-on: macos-13
-            arch: x64
+          - arch: x64
             cmake-arch: x86_64
-          - runs-on: macos-latest
-            arch: arm64
+            cross-compile: true
+          - arch: arm64
             cmake-arch: arm64
-    runs-on: ${{ matrix.runs-on }}
+            cross-compile: false
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -85,21 +88,37 @@ jobs:
       with:
           default: v0.0.0 # Optional: Default version when tag not found
 
+    - name: Prepare OpenSSL for target arch (macOS ${{ matrix.arch }})
+      # arm64 runner 上默认只有 arm64 版 openssl；交叉编译 x86_64 时
+      # 通过 arch -x86_64 brew 安装 Intel 版到独立前缀
+      if: matrix.cross-compile
+      run: |
+        arch -x86_64 /usr/local/bin/brew install openssl@3 || true
+        echo "OPENSSL_ROOT_DIR=/usr/local/opt/openssl@3" >> $GITHUB_ENV
+
     - name: Configure CMake (macOS ${{ matrix.arch }})
       # macOS 单配置生成器需显式指定 CMAKE_BUILD_TYPE；openssl@3 由 Homebrew 提供
       run: |
         cmake -B ${{github.workspace}}/build \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
           -DCMAKE_SYSTEM_PROCESSOR=${{matrix.cmake-arch}} \
+          ${{ matrix.cross-compile && '-DCMAKE_OSX_ARCHITECTURES=x86_64' || '' }} \
           -DGitHubActions=1 \
           -DFILE_VERSION="${{steps.tag.outputs.tag}}" \
-          -DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)
+          -DOPENSSL_ROOT_DIR=${{ env.OPENSSL_ROOT_DIR || '$(brew --prefix openssl@3)' }}
 
     - name: Build (macOS ${{ matrix.arch }})
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Verify binary architecture (macOS ${{ matrix.arch }})
+      run: |
+        file ${{github.workspace}}/build/GitHubDesktop2Chinese
+        lipo -archs ${{github.workspace}}/build/GitHubDesktop2Chinese || true
+
     - name: Run platform logic tests (macOS ${{ matrix.arch }})
       # 运行平台无关逻辑的回归测试（Version 解析 / 代理 URL / scutil / plist 解析）
+      # 交叉编译产物无法在本机直接运行，仅原生构建执行测试
+      if: '!matrix.cross-compile'
       working-directory: ${{github.workspace}}/build
       run: ctest -R platform_logic_tests --output-on-failure
 
