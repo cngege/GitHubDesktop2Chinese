@@ -103,10 +103,14 @@ jobs:
           --prefix="$OPENSSL_PREFIX" \
           CC="clang -target x86_64-apple-darwin" \
           CXX="clang++ -target x86_64-apple-darwin" \
-          no-tests no-shared no-apps
-        # 注意：并行 make 会与 -MMD 依赖文件产生竞争（mv: .d.tmp: No such file），
-        # 单线程构建约 2-3 分钟，可靠性优先
-        make install_sw
+          no-tests no-shared
+        # 注意：并行 make 会触发 OpenSSL Makefile 的依赖文件竞争
+        # （同一目标被编译两次后 mv: .d.tmp: No such file），单线程约 3-5 分钟；
+        # 只构建并安装库（build_libs + 手动安装头文件与静态库），跳过 apps
+        make build_libs
+        mkdir -p "$OPENSSL_PREFIX/lib" "$OPENSSL_PREFIX/include"
+        cp -r include/openssl "$OPENSSL_PREFIX/include/"
+        cp libssl.a libcrypto.a "$OPENSSL_PREFIX/lib/"
         echo "OPENSSL_ROOT_DIR=$OPENSSL_PREFIX" >> $GITHUB_ENV
 
     - name: Configure CMake (macOS ${{ matrix.arch }})
