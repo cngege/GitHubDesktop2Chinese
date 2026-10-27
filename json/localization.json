@@ -1087,6 +1087,8 @@
 		["\"Configure custom providers…\"","\"配置自定义提供程序…\""],
 		["chat:\"Chat messages\"","chat:\"聊天消息\""],
 		["completions:\"Code completions\"","completions:\"代码补全\""],
+		["\"Make sure notifications are \",(.),\" for GitHub Desktop in the\",\" \",(.)\\(\\)\\.createElement\\((..),\\{uri:(.)\\},\"Notifications Settings\"\\),\"\\.\"",
+        "\"确保GitHub Desktop的\",$2().createElement($3,{uri:$4},\"通知设置\"),\"的通知状态为\",$1,\".\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
