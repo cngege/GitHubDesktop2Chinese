@@ -18,10 +18,16 @@
 | `GitHubDesktop2Chinese.exe` | Windows x64 | `build.yml` 的 `build` 任务（CMake `-A x64`） | VC++ 2022 运行库 |
 | `GitHubDesktop2Chinese_x86.exe` | Windows x86 | `build.yml` 的 `build` 任务（CMake `-A Win32`） | VC++ 2022 运行库 |
 | `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux`（系统 libssl-dev） | glibc / libssl3 |
-| `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（macos-13） | macOS 13+ |
-| `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（macos-latest） | macOS 14+ |
+| `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（macos-latest 原生构建） | macOS 14+ |
+| `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（macos-latest 上交叉编译） | macOS 13+ |
 
-> macOS 两个产物由 CI 产出后拷入本目录；本机无法构建 macOS/Linux（无 macOS/Linux 工具链）。
+> **macOS 产物说明**：Intel macOS runner（macos-13）在 GitHub 免费层长期容量短缺，
+> 任务可能数小时甚至更久都排不到 runner。因此两个架构都在 `macos-latest`（arm64）上构建：
+> - arm64：原生构建
+> - x64：通过 `CMAKE_OSX_ARCHITECTURES=x86_64` 交叉编译，OpenSSL 3.0.22 也从源码
+>   用 `clang -target x86_64-apple-darwin` 交叉编译（runner 镜像无 Intel Homebrew 前缀）
+>
+> 交叉编译产物已通过 CI 的 `file` / `lipo -archs` 验证为 x86_64 Mach-O。
 
 CI 构建与本机构建使用同一份源码，参数等价（`CMakeLists.txt` 的 `-O2 Release` + `FILEVERSION` 注入）。两者可互换使用；CI 版本经过完整 `platform_logic_tests` 回归。
 

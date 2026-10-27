@@ -204,8 +204,8 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
 | --- | --- | --- |
 | `GitHubDesktop2Chinese.exe` | Windows x64 | `build.yml` 的 `build` 任务，或本机 MSVC |
 | `GitHubDesktop2Chinese_x86.exe` | Windows x86 | 同上（`-A Win32`） |
-| `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（matrix: macos-latest） |
-| `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（matrix: macos-13） |
+| `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（macos-latest 原生构建） |
+| `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（macos-latest 上交叉编译，见下文说明） |
 | `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux` |
 | `json/localization.json` | 映射文件 | 随 Release 一并发布 |
 
@@ -222,7 +222,10 @@ git push origin v1.3.0
 
 CI 流程（`build.yml`）会依次完成：
 1. **Windows**：CMake 构建 x64 与 x86（`-A x64` / `-A Win32`），产物重命名 `GitHubDesktop2Chinese_x86.exe`
-2. **macOS**：`macos-13`（Intel）与 `macos-latest`（Apple Silicon）各构建一份，跑 `platform_logic_tests`，按架构加 `_macos_arm64` / `_macos_x64` 后缀
+2. **macOS**：`macos-latest`（Apple Silicon）原生构建 arm64；x64 通过
+   `CMAKE_OSX_ARCHITECTURES=x86_64` 在同一 runner 上交叉编译（Intel 版 OpenSSL 3.0.22
+   亦从源码交叉编译，因 runner 镜像无 Intel Homebrew 前缀）。跑 `platform_logic_tests`
+   （仅原生构建，交叉编译产物无法在本机执行），按架构加 `_macos_arm64` / `_macos_x64` 后缀
 3. **Linux**：ubuntu-latest + 系统 `libssl-dev` 构建，跑 `platform_logic_tests`，加 `_linux_x64` 后缀
 4. **发布**：`publish_release` 任务汇总全部产物 + `json/localization.json`，用 `ReleaseBody.md` 作为 Release 说明创建 GitHub Release（tag 含 `beta` 时自动标记为预发布）
 
