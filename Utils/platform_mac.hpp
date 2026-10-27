@@ -19,7 +19,10 @@
 #include <signal.h>
 
 #include <CoreGraphics/CoreGraphics.h>
-#include <Foundation/Foundation.h>
+// 注意：不包含 <Foundation/Foundation.h>。本文件按 C++ 编译，而 Foundation 是
+// Objective-C 头（NSObjCRuntime.h 会引入 NSString 等 ObjC 类型），按 C++ 编译会
+// 报 "expected unqualified-id" / "unknown type name 'NSString'"。
+// 本模块读取 plist 走 popen 调用 /usr/libexec/PlistBuddy，不直接用 Foundation API。
 
 #include "Utils/utils.hpp"
 
