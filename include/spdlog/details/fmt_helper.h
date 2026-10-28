@@ -88,7 +88,11 @@ inline void pad2(int n, memory_buf_t &dest) {
         dest.push_back(static_cast<char>('0' + n % 10));
     } else  // unlikely, but just in case, let fmt deal with it
     {
-        fmt_lib::format_to(std::back_inserter(dest), SPDLOG_FMT_STRING("{:02}"), n);
+        // 兼容性修复：新版 Apple Clang（Xcode 26+）下 FMT_STRING 的 consteval 转换
+        // 无法通过编译期求值检查（"call to consteval function ... is not a constant
+        // expression"）。此分支仅在 n >= 100 或 n < 0 的少见情况下执行，改用
+        // SPDLOG_FMT_RUNTIME 走运行期格式串，结果不变。
+        fmt_lib::format_to(std::back_inserter(dest), SPDLOG_FMT_RUNTIME("{:02}"), n);
     }
 }
 

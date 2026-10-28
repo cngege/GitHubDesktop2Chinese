@@ -58,6 +58,10 @@ public:
         return false;
     }
 
+    bool operator!=(const Version& b) const {
+        return !(*this == b);
+    }
+
     bool operator<=(const Version& b) const {
         return *this < b || *this == b;
 
@@ -267,25 +271,25 @@ private:
                     v++;
 
                     // 检查是否是 alpha 或者 dev
-                    int ret = CheckIsAlphaOrBeta(v, "alpha");
-                    if(!ret) ret = CheckIsAlphaOrBeta(v, "dev");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 alpha 内部测试版 -> Dev
+                    int alphaRet = CheckIsAlphaOrBeta(v, "alpha");
+                    if(!alphaRet) alphaRet = CheckIsAlphaOrBeta(v, "dev");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 alpha 内部测试版 -> Dev
                         status = Status::Dev;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
                         continue;
                     }
                     // 检查是否是 beta
-                    ret = CheckIsAlphaOrBeta(v, "beta");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 beta
+                    alphaRet = CheckIsAlphaOrBeta(v, "beta");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 beta
                         status = Status::Beta;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
@@ -311,25 +315,25 @@ private:
                     v++;
 
                     // 检查是否是 alpha 或者 dev
-                    int ret = CheckIsAlphaOrBeta(v, "alpha");
-                    if (!ret) ret = CheckIsAlphaOrBeta(v, "dev");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 alpha 内部测试版 -> Dev
+                    int alphaRet = CheckIsAlphaOrBeta(v, "alpha");
+                    if (!alphaRet) alphaRet = CheckIsAlphaOrBeta(v, "dev");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 alpha 内部测试版 -> Dev
                         status = Status::Dev;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
                         continue;
                     }
                     // 检查是否是 beta
-                    ret = CheckIsAlphaOrBeta(v, "beta");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 beta
+                    alphaRet = CheckIsAlphaOrBeta(v, "beta");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 beta
                         status = Status::Beta;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
