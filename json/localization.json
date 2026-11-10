@@ -1089,6 +1089,13 @@
 		["completions:\"Code completions\"","completions:\"代码补全\""],
 		["\"Make sure notifications are \",(.),\" for GitHub Desktop in the\",\" \",(.)\\(\\)\\.createElement\\((..),\\{uri:(.)\\},\"Notifications Settings\"\\),\"\\.\"",
         "\"确保GitHub Desktop的\",$2().createElement($3,{uri:$4},\"通知设置\"),\"的通知状态为\",$1,\".\""],
+		["\"The repositories use\"","\"这些仓库使用\""],
+		["\"This repository uses\"","\"该仓库使用\""],
+		["\". To contribute to\",\" \",.,\", Git LFS must first be initialized. Would you like to do so now\\?\"","\"。如果你要向该仓库提交内容，必须先初始化 Git LFS。是否现在执行初始化？\""],
+		["cancelButtonText:\"Not now\"","cancelButtonText:\"稍后再说\""],
+		["\" repositories use\"","\"个仓库使用\""],
+		["\". To contribute to them, Git LFS must first be initialized. Would you like to do so now\\?\"","\"。这些仓库使用 Git LFS。要向这些仓库提交内容，必须先初始化 Git LFS。是否现在执行初始化？\""],
+		["title:\"Initialize Git LFS\"","title:\"初始化Git LFS\""],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
