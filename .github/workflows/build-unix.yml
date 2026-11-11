@@ -11,29 +11,45 @@ permissions:
 
 env:
   BUILD_TYPE: Release
-  FILE_VERSION: 1.3.0-ci-unix
+  FILE_VERSION: 1.3.0
 
 jobs:
   build-linux:
-    name: Linux x86_64
-    runs-on: ubuntu-latest
+    name: Linux ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
 
-      - name: Configure CMake (Linux)
+      - name: Configure CMake (Linux ${{ matrix.arch }})
         run: |
           cmake -B ${{ github.workspace }}/build \
             -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
             -DGitHubActions=1 \
             -DFILE_VERSION=${{ env.FILE_VERSION }}
 
-      - name: Build (Linux)
-        run: cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
+      - name: Build (Linux ${{ matrix.arch }})
+        run: |
+          set +e
+          set -o pipefail
+          cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }} 2>&1 | tee /tmp/unix-build.log
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            grep -aE 'fatal error:|error:|FAILED:|Error [0-9]+' /tmp/unix-build.log | head -12 | sed 's/^/::error::/'
+          fi
+          exit "$rc"
 
-      - name: Run platform logic tests (Linux)
+      - name: Run platform logic tests (Linux ${{ matrix.arch }})
         working-directory: ${{ github.workspace }}/build
         run: |
           set +e
@@ -45,19 +61,20 @@ jobs:
           fi
           exit "$rc"
 
-      - name: Locate and stage binary (Linux)
+      - name: Locate and stage binary (Linux ${{ matrix.arch }})
         run: |
           set -e
           bin=$(find ${{ github.workspace }}/build -type f -name 'GitHubDesktop2Chinese' | head -1)
           if [ -z "$bin" ]; then echo "::error::built binary not found under build/"; exit 1; fi
           echo "::notice::built binary: $bin"
-          cp "$bin" "${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_x64"
+          file "$bin"
+          cp "$bin" "${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}"
 
-      - name: Upload artifact (Linux)
+      - name: Upload artifact (Linux ${{ matrix.arch }})
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: GitHubDesktop2Chinese_linux_x64
-          path: ${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_x64
+          name: GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+          path: ${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}
 
   build-macos:
     name: macOS ${{ matrix.arch }}

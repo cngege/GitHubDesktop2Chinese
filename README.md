@@ -135,15 +135,20 @@ cmake --build build
 | 路径 | 用途 |
 | --- | --- |
 | `GitHubDesktop2Chinese.cpp` / `GitHubDesktop2Chinese.h` | 程序入口：命令行、替换流程、自更新 |
-| `Utils/` | 跨平台抽象（`platform.hpp` + `platform_win/mac/linux.hpp`）、通用工具（`utils.hpp`）、可单测纯逻辑（`net_parse.hpp`、`localization_text.hpp`） |
+| `Utils/` | 跨平台抽象（`platform.hpp` + `platform_win/mac/linux.hpp`）、通用工具（`utils.hpp`）、可单测纯逻辑（`net_parse.hpp`、`localization_text.hpp`、`sha256.hpp`） |
 | `include/` | 随仓库分发的第三方头文件：spdlog / nlohmann-json / cpp-httplib / WinReg / VersionParse |
-| `openssl-proj/include/`、`openssl-proj/lib/` | Windows 预编译 OpenSSL 头文件与静态库；`lib/` 由 CMake 按需下载，已被 `.gitignore` 忽略 |
+| `openssl-proj/include/`、`openssl-proj/lib/` | Windows 预编译 OpenSSL 头文件与静态库；`lib/` 由 CMake 按需下载（下载后校验 SHA256），已被 `.gitignore` 忽略 |
 | `json/` | 翻译映射 `localization.json` 与编写注意事项 `localization_notes.md` |
 | `tests/` | 平台无关回归测试（C++ / CTest）与映射失效项复核脚本（Node.js） |
-| `dist/` | 随仓库发布的 Windows x64 / x86 二进制 |
-| `.github/workflows/` | `build.yml`（打 tag 构建全平台并发布）、`check.yml`（PR 与映射变更校验） |
+| `dist/` | 随仓库发布的 5 个平台二进制：Windows x64 / x86、Linux x64 / arm64、macOS x64 / arm64 |
+| `.github/workflows/` | `build.yml`（打 tag 构建全平台并发布）、`check.yml`（PR 与映射变更校验）、`build-unix.yml`（手动触发，交叉验证 Linux/macOS 构建） |
 | `CMakeLists.txt`、`CMakePresets.json` | 构建定义与 Windows/macOS/Linux 预设 |
 | `README.md`、`ReleaseBody.md`、`LICENSE.txt` | 使用文档、Release 说明、许可证 |
+
+> **CI 工作流里的第三方 action 已固定到完整 commit SHA**（形如 `owner/repo@<40 位 SHA>  # v1.2.3`），
+> 避免可变 tag 被篡改后自动执行恶意代码。升级某个 action 时需同时更新 SHA 与后面的版本注释：
+> 用 `git ls-remote https://github.com/<owner>/<repo>.git refs/tags/<tag>` 取该 tag 指向的 commit，
+> 再用 GitHub API `/repos/<owner>/<repo>/commits/<sha>` 确认其 `object.type` 为 `commit`。
 
 ## 👕我怎么帮助完成汉化或者后续更新时如何补充汉化
 

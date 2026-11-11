@@ -37,7 +37,7 @@
     #pragma comment(lib, "winhttp.lib")
 #endif
 
-std::Version FileVer{0,0,0};
+version_parse::Version FileVer{0,0,0};
 
 
 using json = nlohmann::json;
@@ -395,9 +395,9 @@ int main(int argc, char* argv[])
     platform::console_init();
 
 
-    FileVer = std::Version(FILEVERSION);
+    FileVer = version_parse::Version(FILEVERSION);
     // 设置控制台打印日志输出等级
-    if(FileVer.status == std::Version::Dev) {
+    if(FileVer.status == version_parse::Version::Dev) {
         spdlog::set_level(spdlog::level::debug);
     }
     // 注册命令行
@@ -474,7 +474,7 @@ int main(int argc, char* argv[])
             if(instr == "exit") {
                 break;
             }
-            auto ver = std::Version(instr.c_str());
+            auto ver = version_parse::Version(instr.c_str());
             if(!ver) {
                 spdlog::error("你输入的版本无效");
             }
@@ -558,14 +558,14 @@ int main(int argc, char* argv[])
     // https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/latest
     {
         // 还原操作不应该被"检查更新/自动更新"打断
-        if(FileVer.status != std::Version::Dev && !rollback) {
+        if(FileVer.status != version_parse::Version::Dev && !rollback) {
             spdlog::info("检查更新中..");
             try {
                 std::string repoinfo;
                 if(utils::ReadHttpDataString("https://api.github.com" , "/repos/cngege/GitHubDesktop2Chinese/releases/latest", repoinfo, proxy)) {
                     auto infojson = json::parse(repoinfo);
                     auto tag_name = infojson["tag_name"].get<std::string>();
-                    std::Version remoteVer(tag_name.c_str());
+                    version_parse::Version remoteVer(tag_name.c_str());
                     if(!remoteVer) {
                         spdlog::warn("远程仓库中的版本号解析失败, ({})", tag_name);
                     }
@@ -575,11 +575,18 @@ int main(int argc, char* argv[])
                             // Release 一次会附带多个平台产物，assets[0] 不再保证是当前平台的可执行文件。
                             // 按产物名精确匹配，找不到就跳过更新，绝不把其它平台的二进制替换到自身。
                             const json* self_asset = nullptr;
+                            // 校验和附属文件：与产物同名的 "<产物名>.sha256"（发布端提供时才有）
+                            const json* checksum_asset = nullptr;
+                            const std::string checksum_asset_name = std::string(kSelfAssetName) + ".sha256";
                             if(infojson.contains("assets") && infojson["assets"].is_array()) {
                                 for(const auto& asset : infojson["assets"]) {
-                                    if(asset.is_object() && asset.value("name", std::string()) == kSelfAssetName) {
+                                    if(!asset.is_object()) continue;
+                                    const std::string asset_name = asset.value("name", std::string());
+                                    if(asset_name == kSelfAssetName) {
                                         self_asset = &asset;
-                                        break;
+                                    }
+                                    else if(asset_name == checksum_asset_name) {
+                                        checksum_asset = &asset;
                                     }
                                 }
                             }
@@ -600,7 +607,32 @@ int main(int argc, char* argv[])
                                     std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
                                     std::smatch matches;
                                     if(std::regex_match(downlink, matches, url_regex)) {
-                                        auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy);
+                                        // 取出发布端提供的 SHA-256 期望值；取不到则跳过摘要校验（向后兼容）
+                                        std::string expected_sha256;
+                                        if(checksum_asset != nullptr) {
+                                            const std::string sum_url = (*checksum_asset)["browser_download_url"].get<std::string>();
+                                            std::smatch sum_matches;
+                                            if(std::regex_match(sum_url, sum_matches, url_regex)) {
+                                                std::string sum_text;
+                                                if(utils::ReadHttpDataString(sum_matches[1].str(), sum_matches[2].str(), sum_text, proxy)) {
+                                                    if(!sha256::extract_hash(sum_text, expected_sha256)) {
+                                                        spdlog::warn("校验和文件内容无法解析出 SHA-256, 本次更新只做大小校验");
+                                                        expected_sha256.clear();
+                                                    }
+                                                }
+                                                else {
+                                                    spdlog::warn("校验和文件下载失败, 本次更新只做大小校验");
+                                                }
+                                            }
+                                            if(!expected_sha256.empty()) {
+                                                spdlog::info("已获取发布端 SHA-256 校验值: {}", expected_sha256);
+                                            }
+                                        }
+                                        else {
+                                            spdlog::warn("发布资产中未提供 {} 校验和文件, 本次更新只做大小校验", checksum_asset_name);
+                                        }
+
+                                        auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy, expected_sha256);
                                         if(!result) {
                                             spdlog::error("失败 更新过程出现异常");
                                         }
@@ -734,8 +766,8 @@ int main(int argc, char* argv[])
                         if(httpjson.is_array() && !httpjson.empty()
                            && httpjson[0].contains("version") && httpjson[0]["version"].is_string()) {
                             std::string v = httpjson[0]["version"].get<std::string>();
-                            std::Version desktop_remote_ver(v.c_str());
-                            std::Version desktop_local_ver(desktop_local_ver_str.c_str());
+                            version_parse::Version desktop_remote_ver(v.c_str());
+                            version_parse::Version desktop_local_ver(desktop_local_ver_str.c_str());
                             spdlog::info("已读取到远程GitHubDesktop最新版:{} {}", v, desktop_remote_ver > desktop_local_ver ? "(\033[1;33m需更新\033[0m)" : "");
                         }
                         else {
@@ -862,9 +894,9 @@ int main(int argc, char* argv[])
     const bool has_min_version = localization.contains("minversion")
                                  && localization.at("minversion").is_string()
                                  && !localization.at("minversion").get<std::string>().empty();
-    if(FileVer.status != std::Version::Dev && has_min_version) {
+    if(FileVer.status != version_parse::Version::Dev && has_min_version) {
         const std::string min_version_str = localization.at("minversion").get<std::string>();
-        std::Version JsonVer(min_version_str.c_str());
+        version_parse::Version JsonVer(min_version_str.c_str());
         if(!JsonVer) {
             spdlog::warn("映射文件中 minversion 解析失败... at {}", min_version_str.c_str());
             PAUSE

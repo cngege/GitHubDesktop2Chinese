@@ -6,7 +6,9 @@
 #include <string>
 #include <cctype>       // std::isdigit
 
-namespace std {
+// 类原本定义在 namespace std 中（标准未定义行为：向 std 注入自定义类型）。
+// 现迁入 version_parse 命名空间；调用点同步改为 version_parse::Version。
+namespace version_parse {
 
 class Version {
 public:
@@ -366,7 +368,7 @@ private:
     }
 };
 
-}
+} // namespace version_parse
 
 
 #endif // !VERSIONPARSE_VERSION_HPP

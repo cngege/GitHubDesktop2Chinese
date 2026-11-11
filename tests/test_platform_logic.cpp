@@ -18,6 +18,7 @@
 #include "VersionParse/Version.hpp"
 #include "Utils/net_parse.hpp"
 #include "Utils/localization_text.hpp"
+#include "Utils/sha256.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 // 直接测试被测实现：代理地址解析
@@ -133,44 +134,44 @@ static void test_version() {
     std::printf("\n[Version 解析与比较]\n");
 
     // 基本版本号解析
-    std::Version v1("1.2.3");
+    version_parse::Version v1("1.2.3");
     check((bool)v1, "解析 \"1.2.3\" 有效");
     check_eq(v1.major, 1, "major=1");
     check_eq(v1.minor, 2, "minor=2");
     check_eq(v1.revision, 3, "revision=3");
 
     // v 前缀
-    std::Version v2("v1.2.3");
+    version_parse::Version v2("v1.2.3");
     check((bool)v2, "解析 \"v1.2.3\" 有效（v 前缀兼容）");
 
     // 两段版本号
-    std::Version v3("1.40");
+    version_parse::Version v3("1.40");
     check((bool)v3, "解析 \"1.40\" 有效（两位版本号）");
 
     // 无效输入
-    std::Version v4("not-a-version");
+    version_parse::Version v4("not-a-version");
     check(!(bool)v4, "解析 \"not-a-version\" 无效");
 
-    std::Version v5("");
+    version_parse::Version v5("");
     check(!(bool)v5, "解析空字符串无效");
 
     // 比较
-    std::Version a("1.2.3");
-    std::Version b("1.2.4");
+    version_parse::Version a("1.2.3");
+    version_parse::Version b("1.2.4");
     check(a < b, "1.2.3 < 1.2.4");
     check(b > a, "1.2.4 > 1.2.3");
     check(a != b, "1.2.3 != 1.2.4");
 
-    std::Version c("1.2.3");
+    version_parse::Version c("1.2.3");
     check(a == c, "1.2.3 == 1.2.3");
     check(!(a < c), "1.2.3 不小于自身");
 
     // 跨大版本比较
-    std::Version d("2.0.0");
+    version_parse::Version d("2.0.0");
     check(a < d, "1.2.3 < 2.0.0（跨大版本）");
 
     // 程序内置版本（FILEVERSION 由 CMake 注入）
-    std::Version fileVer(FILEVERSION);
+    version_parse::Version fileVer(FILEVERSION);
     check((bool)fileVer || std::string(FILEVERSION) == "0.0.0-Dev.0",
           "FILEVERSION 宏已定义且可解析（或为开发占位版本）");
 }
@@ -619,6 +620,48 @@ static void test_unsafe_feature_rule() {
 
 //////////////////////////////////////////////////////////////////////////
 
+// SHA-256 实现自检：用 NIST/FIPS 180-4 标准测试向量，
+// 保证自更新下载校验用的摘要算法在三个平台上行为一致。
+static void test_sha256() {
+    std::printf("\n[SHA-256 实现自检]\n");
+
+    check_eq_str(sha256::hex(""),
+                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                 "空串摘要");
+    check_eq_str(sha256::hex("abc"),
+                 "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+                 "\"abc\" 摘要");
+    check_eq_str(sha256::hex("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"),
+                 "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+                 "448bit 标准向量");
+    check_eq_str(sha256::hex(std::string(1000000, 'a')),
+                 "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
+                 "100 万个 'a'");
+
+    // 分块喂入必须与一次性喂入结果一致
+    {
+        sha256::Sha256 h;
+        const std::string data(5000, 'x');
+        for (int i = 0; i < 5000; i += 137) {
+            const std::size_t n = std::min<std::size_t>(137, data.size() - i);
+            h.update(reinterpret_cast<const unsigned char*>(data.data() + i), n);
+        }
+        check_eq_str(h.final_hex(), sha256::hex(data), "分块喂入与一次性喂入结果一致");
+    }
+
+    // sha256sum 风格文本解析
+    {
+        std::string out;
+        check(sha256::extract_hash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  file.bin", out)
+              && out == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+              "解析 sha256sum 风格文本");
+        check(sha256::extract_hash("SHA256 (file) = BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", out)
+              && out == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+              "解析带前缀文本并统一为小写");
+        check(!sha256::extract_hash("not a hash", out), "非法文本解析失败");
+    }
+}
+
 int main() {
     std::printf("=== GitHubDesktop2Chinese 平台无关逻辑回归测试 ===\n");
     std::printf("FILEVERSION = %s\n", FILEVERSION);
@@ -633,6 +676,7 @@ int main() {
     test_linux_resource_candidates();
     test_packagejson_version();
     test_unsafe_feature_rule();
+    test_sha256();
 
     std::printf("\n=== 测试结束 ===\n");
     if(g_failures > 0) {
