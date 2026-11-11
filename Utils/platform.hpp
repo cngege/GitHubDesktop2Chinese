@@ -78,8 +78,10 @@ namespace platform {
     };
 
     // 自动发现本地 GitHub Desktop 安装。
-    //  - 返回 nullopt：未发现安装（应回退为手动输入目录）。
-    //  - 抛出 std::runtime_error：发现了安装条目但读取其信息失败（致命错误，主程序应中止）。
+    //  - Windows：优先读注册表；只读方式打开，失败或拼出的资源目录无效时
+    //    回退扫描 %LOCALAPPDATA%\GitHubDesktop\app-<版本>\resources\app。
+    //  - 返回 nullopt：注册表与本地目录扫描均未发现安装（应回退为手动输入目录）。
+    //  - 抛出 std::runtime_error：发现了注册表安装条目但读取其信息失败（致命错误，主程序应中止）。
     std::optional<GitHubDesktopInstall> find_github_desktop();
 
 } // namespace platform

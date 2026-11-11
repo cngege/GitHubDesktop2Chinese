@@ -18,6 +18,10 @@
 #include <string>
 #include <optional>
 #include <filesystem>
+#include <vector>
+#include <cctype>
+#include <algorithm>
+#include <system_error>
 
 #include <windows.h>
 #include <winhttp.h>        // GetSystemProxySettings 需要（沿用原实现）
@@ -96,38 +100,148 @@ namespace platform {
     }
 
     ////////////////////////////////////////////////////////////////////
-    // GitHub Desktop 安装发现（注册表）
+    // GitHub Desktop 安装发现（注册表 + 本地安装目录回退）
     ////////////////////////////////////////////////////////////////////
 
-    inline std::optional<GitHubDesktopInstall> find_github_desktop() {
-        // 检查注册表中是否存在GithubDesktop
-        winreg::RegKey key;
-        winreg::RegResult result = key.TryOpen(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop");
-        if(!result) {
-            // 未发现安装条目：打印原有注册表错误信息，返回 nullopt 由主程序回退为手动输入
-            spdlog::warn("注册表中未发现GitHubDesktop相关条目, Reg ErrorMessage: {}", utils::to_byte_string(result.ErrorMessage()));
-            return std::nullopt;
-        }
-        GitHubDesktopInstall install;
-        install.source = "注册表";
-        try {
-            // 首先要从注册表中拿到GithubDesktop相关信息
-            std::wstring ver = key.GetStringValue(L"DisplayVersion");
-            std::wstring path = key.GetStringValue(L"InstallLocation");
-            install.install_location = path;
-            install.resource_dir = fs::path(path + L"\\" + L"app-" + ver + L"\\resources\\app");
-            install.version = utils::to_byte_string(ver);
-        }
-        catch(const winreg::RegException& regerr) {
-            // 发现了安装条目但读取失败，属于致命错误，向上抛出由主程序中止
-            // 保留原有 Windows 错误提示内容（键名 + RegException 描述 + 错误码）
-            key.Close();
-            throw std::runtime_error(std::string("可能注册表key DisplayVersion 或 InstallLocation 不存在,请检查注册表目录 Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop ; RegException ")
-                + regerr.what() + " ,ErrCode:" + std::to_string(regerr.code().value()));
+    namespace detail {
+
+        // 版本目录名按数值比较，避免 "3.6.10" 在字典序上小于 "3.6.8"
+        inline std::vector<unsigned long long> version_parts(const std::string& v) {
+            std::vector<unsigned long long> parts;
+            size_t i = 0;
+            while (i < v.size()) {
+                if (std::isdigit(static_cast<unsigned char>(v[i]))) {
+                    unsigned long long n = 0;
+                    while (i < v.size() && std::isdigit(static_cast<unsigned char>(v[i]))) {
+                        n = n * 10 + static_cast<unsigned>(v[i] - '0');
+                        ++i;
+                    }
+                    parts.push_back(n);
+                }
+                else {
+                    ++i;
+                }
+            }
+            return parts;
         }
 
-        key.Close();
-        return install;
+        inline bool version_less(const std::string& a, const std::string& b) {
+            const auto pa = version_parts(a);
+            const auto pb = version_parts(b);
+            const size_t n = std::max(pa.size(), pb.size());
+            for (size_t i = 0; i < n; ++i) {
+                const auto x = i < pa.size() ? pa[i] : 0ULL;
+                const auto y = i < pb.size() ? pb[i] : 0ULL;
+                if (x != y) return x < y;
+            }
+            return a < b;   // 数字段相同时用字典序保证结果稳定
+        }
+
+        // 主程序校验 index.html，汉化还需要 main.js / renderer.js
+        inline bool is_valid_resource_dir(const fs::path& dir) {
+            std::error_code ec;
+            return fs::exists(dir / "index.html", ec)
+                && fs::exists(dir / "main.js", ec)
+                && fs::exists(dir / "renderer.js", ec);
+        }
+
+        // 用宽字符环境变量，避免中文用户名路径在窄字符转换时损坏
+        inline std::wstring local_app_data() {
+            wchar_t buf[32768] = {};
+            const DWORD n = ::GetEnvironmentVariableW(L"LOCALAPPDATA", buf,
+                                                      static_cast<DWORD>(sizeof(buf) / sizeof(buf[0])));
+            if (n == 0 || n >= sizeof(buf) / sizeof(buf[0])) return {};
+            return std::wstring(buf, n);
+        }
+
+        // 注册表不可用时的回退：扫描 %LOCALAPPDATA%\GitHubDesktop\app-<版本>\resources\app
+        // 选择版本号最新且资源完整的目录（Squirrel 会保留旧版本目录，不能随便取第一个）
+        inline std::optional<GitHubDesktopInstall> scan_local_app_dirs() {
+            const std::wstring local = local_app_data();
+            if (local.empty()) return std::nullopt;
+
+            const fs::path root = fs::path(local) / L"GitHubDesktop";
+            std::error_code ec;
+            if (!fs::is_directory(root, ec)) return std::nullopt;
+
+            std::string best_ver;
+            fs::path best_dir;
+            for (fs::directory_iterator it(root, ec), end; !ec && it != end; it.increment(ec)) {
+                const fs::path entry = it->path();
+                const std::string name = entry.filename().string();
+                if (name.rfind("app-", 0) != 0) continue;
+                if (!fs::is_directory(entry, ec)) continue;
+
+                const fs::path resource = entry / "resources" / "app";
+                if (!is_valid_resource_dir(resource)) continue;
+
+                const std::string ver = name.substr(4);
+                if (best_dir.empty() || version_less(best_ver, ver)) {
+                    best_ver = ver;
+                    best_dir = resource;
+                }
+            }
+            if (best_dir.empty()) return std::nullopt;
+
+            GitHubDesktopInstall install;
+            install.resource_dir     = best_dir;
+            install.install_location = root;
+            install.version          = best_ver;
+            install.source           = "本地程序目录";
+            return install;
+        }
+
+    } // namespace detail
+
+    inline std::optional<GitHubDesktopInstall> find_github_desktop() {
+        // 这里只读取 DisplayVersion / InstallLocation，不需要写权限。
+        // WinReg::TryOpen 默认请求 KEY_READ|KEY_WRITE|KEY_WOW64_64KEY，
+        // 在受限令牌或被安全策略拦截时会返回「拒绝访问」，使明明存在的
+        // 安装条目被误判为未安装。显式改为只读。
+        winreg::RegKey key;
+        winreg::RegResult result = key.TryOpen(
+            HKEY_CURRENT_USER,
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop",
+            KEY_READ | KEY_WOW64_64KEY);
+
+        if (result) {
+            GitHubDesktopInstall install;
+            install.source = "注册表";
+            try {
+                // 首先要从注册表中拿到GithubDesktop相关信息
+                std::wstring ver = key.GetStringValue(L"DisplayVersion");
+                std::wstring path = key.GetStringValue(L"InstallLocation");
+                install.install_location = path;
+                install.resource_dir = fs::path(path + L"\\" + L"app-" + ver + L"\\resources\\app");
+                install.version = utils::to_byte_string(ver);
+            }
+            catch(const winreg::RegException& regerr) {
+                // 发现了安装条目但读取失败，属于致命错误，向上抛出由主程序中止
+                // 保留原有 Windows 错误提示内容（键名 + RegException 描述 + 错误码）
+                key.Close();
+                throw std::runtime_error(std::string("可能注册表key DisplayVersion 或 InstallLocation 不存在,请检查注册表目录 Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GitHubDesktop ; RegException ")
+                    + regerr.what() + " ,ErrCode:" + std::to_string(regerr.code().value()));
+            }
+            key.Close();
+
+            if (detail::is_valid_resource_dir(install.resource_dir)) {
+                return install;
+            }
+            spdlog::warn("注册表指向的资源目录无效: {}", install.resource_dir.string());
+        }
+        else {
+            spdlog::warn("注册表中未发现GitHubDesktop相关条目, Reg ErrorMessage: {}",
+                         utils::to_byte_string(result.ErrorMessage()));
+        }
+
+        // 注册表读不到、或拼出的目录无效时，回退扫描本地安装目录，避免要求手动输入
+        auto scanned = detail::scan_local_app_dirs();
+        if (scanned) {
+            spdlog::info("已从本地程序目录发现 GitHub Desktop {}: {}",
+                         scanned->version, scanned->resource_dir.string());
+            return scanned;
+        }
+        return std::nullopt;
     }
 
 } // namespace platform
