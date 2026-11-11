@@ -1,4 +1,27 @@
 ﻿
+### 1.3.0 更新内容
+
+#### 新增功能
+- 新增 macOS（Apple Silicon arm64 / Intel x64）与 Linux x86_64 支持，Release 产物由 2 个 Windows 二进制扩展为 5 个平台二进制
+- 新增跨平台安装发现（macOS `/Applications`、Linux deb/rpm 等）与系统代理读取（`scutil --proxy` / `gsettings`）
+- 新增 `--insecure-tls` 参数：仅在企业中间人代理等确无法通过证书校验时显式关闭 HTTPS 校验
+- 新增平台无关逻辑回归测试（`platform_logic_tests`）与映射文件失效项独立复核（`tests/check_localization.js`）
+- 更新映射文件，适配 GitHub Desktop 3.5.11～3.6.10，并统一 minifier 别名写法
+
+#### 修复与加固
+- 修复 Windows 安装发现（改为只读注册表 + 本地 app 目录回退）、非 ASCII 安装路径写入失败
+- 修复读取失败时把空串写回 `main.js`/`renderer.js`、替换串中 `$` 未转义导致内容被吞
+- 修复写入失败仍返回 0、异常未统一捕获导致终止、网络请求无超时、交互输入无 EOF 保护
+- 修复自更新命令路径未加引号（路径含空格/中文/`&` 时失败）、下载大小未校验、服务器忽略 Range 时临时文件残留
+- 远程读取与自更新默认开启 HTTPS 证书校验，证书失败时给出一次性可操作提示
+
+#### ⚠️ 升级前必读（行为变更）
+- **默认开启 HTTPS 证书校验**：企业代理或自签证书环境若报证书错误，请先检查系统时间与代理设置，确无法通过时再加 `--insecure-tls`。程序自更新会下载并执行二进制，请勿随意关闭校验。
+- **写入失败改为非零退出码**：此前写入失败仍返回 0（失败不会被发现）。CI / 脚本调用方请按退出码判断结果。
+- **`--rollback` 不再依赖 `localization.json` 与更新检查**：可离线从 `.bak` 备份还原汉化前文件。
+- **Linux 无法检测 Shift 按键**：进入开发者选项请用 `./GitHubDesktop2Chinese_linux_x64 dev -d`。
+- 原有命令行参数全部保留，本次未移除任何参数。
+
 ### 1.2.x 程序修复的bug和更新内容
 
 

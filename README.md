@@ -268,13 +268,21 @@ cl.exe -nologo -std:c++20 -EHsc -O2 -utf-8 "-DFILEVERSION=\"1.3.0\"" \
   GitHubDesktop2Chinese.cpp libssl_x86.lib libcrypto_x86.lib -Fe:GitHubDesktop2Chinese_x86.exe
 ```
 
-需要在 VS 开发者命令行（或手动导出 `INCLUDE`/`LIB`/`PATH`）中执行，详见 `dist/build/README.md`。
+需要在 VS 开发者命令行中执行：用 VS 自带的 `vcvarsall.bat x64` / `vcvarsall.bat x86`
+初始化对应架构的 `INCLUDE`/`LIB`/`PATH`（x86 走 Hostx64/x86 交叉编译器）。
+若已装 CMake + Ninja，更推荐直接使用 `CMakePresets.json` 的 `x64-release` / `x86-release` 预设构建。
 
 ### 版本号约定
 
 - 源码默认 `FILE_VERSION` 为 `0.0.0-Dev.0`，发布时通过 CMake 参数 `-DFILE_VERSION=<tag>` 注入（CI 已自动从 tag 名读取）
 - 程序运行时会打印 `程序架构 / 版本`（`GitHubDesktop2Chinese.cpp:210`），版本号错会导致 json 的 `minversion` 校验告警
 - Release 说明维护在 `ReleaseBody.md`，发布前更新对应版本的更新日志
+- 版本分级（`X.Y.Z`），按**变更性质与兼容性影响**判定，不以时间间隔或提交数量为依据：
+  - `X`（MAJOR）：移除或改变现有命令行参数、映射文件结构不兼容、导致旧版本无法继续使用
+  - `Y`（MINOR）：新增运行平台 / 发布产物、新增命令行参数、默认安全行为收紧等向后兼容的功能扩展
+  - `Z`（PATCH）：问题修复、翻译映射数据更新、文档与 CI 维护
+- 映射文件的 `version` 仅作格式标记，加载器只读取 `minversion` / `select` / `tip`；新增字段若不影响旧加载器解析，无需提高 `minversion`
+- tag 名含 `beta` 时由 `build.yml` 自动标记为预发布
 
 ### 发布后的校验
 
