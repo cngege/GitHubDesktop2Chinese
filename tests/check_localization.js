@@ -5,9 +5,10 @@
 // 无需等 CI、也无须运行完整汉化流程。
 //
 // 用法：
-//   node check_localization.js <localization.json路径> <基准目录>
+//   node check_localization.js <localization.json路径> <基准目录> [--dev]
 //     <基准目录> 为含 main.js / renderer.js 的目录（GitHub Desktop 的 resources/app），
 //     若存在 .bak 备份则优先使用（与 --invalidcheck 行为一致）。
+//     --dev 额外校验 main_dev / renderer_dev；默认不校验开发映射，保持 CI 行为不变。
 //
 // 退出码：
 //   0 = 全部有效；1 = 存在失效项或结构问题；2 = 参数/读文件/JSON 解析错误。
@@ -20,9 +21,10 @@ const fs = require('fs');
 
 const jsonPath = process.argv[2];
 const baseDir = process.argv[3];
+const devMode = process.argv.slice(4).includes('--dev');
 
 if (!jsonPath || !baseDir) {
-  console.error('用法: node check_localization.js <localization.json路径> <基准目录>');
+  console.error('用法: node check_localization.js <localization.json路径> <基准目录> [--dev]');
   process.exit(2);
 }
 
@@ -186,6 +188,14 @@ checkSection('main', mainStr, 'main');
 checkSelect(mainStr, 'main.js', 'select main');
 checkSection('renderer', rendererStr, 'renderer');
 checkSelect(rendererStr, 'renderer.js', 'select renderer');
+
+// 开发映射默认不参与 CI 校验（其中常含只针对本地环境的实验规则），
+// 需要时显式加 --dev，与加载器 dev --devreplace 的 *_dev 段语义对齐。
+if (devMode) {
+  checkSection('main_dev', mainStr, 'main_dev');
+  checkSection('renderer_dev', rendererStr, 'renderer_dev');
+  console.log('校验范围: 含 main_dev / renderer_dev（--dev）');
+}
 
 console.log(`失效项总数: ${total}`);
 if (structureErrors > 0) console.log(`结构问题: ${structureErrors}`);

@@ -19,7 +19,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
     - name: utf8
       # 使用utf8编码环境编译
@@ -27,7 +27,7 @@ jobs:
 
     - name: Get tag
       id: tag
-      uses: devops-actions/action-get-tag@v1.0.2
+      uses: devops-actions/action-get-tag@4e13c4ea459efa2988a10d5ff0f252bb097929ef # v1.0.2
       with:
           default: v0.0.0 # Optional: Default version when tag not found
 
@@ -54,7 +54,7 @@ jobs:
       run: move ${{github.workspace}}/build32/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese.exe ${{github.workspace}}/build32/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese_x86.exe
 
     - name: Upload Release GitHubDesktop2Chinese.exe
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: GitHubDesktop2Chinese
         path: |
@@ -80,11 +80,11 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
     - name: Get tag
       id: tag
-      uses: devops-actions/action-get-tag@v1.0.2
+      uses: devops-actions/action-get-tag@4e13c4ea459efa2988a10d5ff0f252bb097929ef # v1.0.2
       with:
           default: v0.0.0 # Optional: Default version when tag not found
 
@@ -143,7 +143,7 @@ jobs:
       run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
 
     - name: Upload Release GitHubDesktop2Chinese (macOS ${{ matrix.arch }})
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: GitHubDesktop2Chinese_macos_${{ matrix.arch }}
         path: ${{github.workspace}}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
     - name: Install dependencies
       # libssl-dev 提供 OpenSSL 头文件与库（find_package(OpenSSL)）
@@ -162,7 +162,7 @@ jobs:
 
     - name: Get tag
       id: tag
-      uses: devops-actions/action-get-tag@v1.0.2
+      uses: devops-actions/action-get-tag@4e13c4ea459efa2988a10d5ff0f252bb097929ef # v1.0.2
       with:
           default: v0.0.0 # Optional: Default version when tag not found
 
@@ -185,7 +185,7 @@ jobs:
       run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
 
     - name: Upload Release GitHubDesktop2Chinese (Linux)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: GitHubDesktop2Chinese_linux_x64
         path: ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
@@ -198,16 +198,16 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: ${{github.workspace}}/build/
           
       - name: Get tag
         id: tag
-        uses: devops-actions/action-get-tag@v1.0.2
+        uses: devops-actions/action-get-tag@4e13c4ea459efa2988a10d5ff0f252bb097929ef # v1.0.2
         with:
             default: v0.0.0 # Optional: Default version when tag not found
 
@@ -223,7 +223,7 @@ jobs:
             cmd /c tree ./build /F 
       - name: Create release
         #if: github.event.inputs.status != 'stable'
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
         with:
           #prerelease: false # 是否是预览版
           prerelease: ${{ env.isPrerelease }}

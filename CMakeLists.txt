@@ -3,7 +3,7 @@
 #
 # 平台支持：Windows（MSVC / x64 / x86）、macOS（AppleClang / arm64 / x64）
 # 与 Linux（GCC / x86_64 / aarch64）。
-# Windows 分支保持原有行为完全不变（含 openssl-proj 下载流程）。
+# Windows 分支保持原有下载流程与产物不变，仅对下载启用 TLS 证书校验。
 #
 cmake_minimum_required (VERSION 3.30)
 
@@ -47,8 +47,7 @@ elseif(APPLE)
     message("当前是以macOS模式编译")
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
         message("当前是以arm64模式编译")
-        add_definitions(-DCURRENT_PLATFORM_ISX64)
-        set(CURRENT_PLATFORM_ISX64 1)
+        add_definitions(-DCURRENT_PLATFORM_ISARM64)
     elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
         message("当前是以x64模式编译")
         add_definitions(-DCURRENT_PLATFORM_ISX64)
@@ -57,7 +56,7 @@ elseif(APPLE)
         message("当前是以未知架构模式编译: ${CMAKE_SYSTEM_PROCESSOR}")
     endif()
 elseif(LINUX)
-    # Linux 架构标识：x86_64 / aarch64（无 CURRENT_PLATFORM_ISX64 之外的特化需求）
+    # Linux 架构标识：x86_64 / aarch64（分别用 CURRENT_PLATFORM_ISX64 / CURRENT_PLATFORM_ISARM64）
     message("当前是以Linux模式编译")
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
         message("当前是以x64模式编译")
@@ -65,8 +64,7 @@ elseif(LINUX)
         set(CURRENT_PLATFORM_ISX64 1)
     elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
         message("当前是以arm64模式编译")
-        add_definitions(-DCURRENT_PLATFORM_ISX64)
-        set(CURRENT_PLATFORM_ISX64 1)
+        add_definitions(-DCURRENT_PLATFORM_ISARM64)
     else()
         message("当前是以未知架构模式编译: ${CMAKE_SYSTEM_PROCESSOR}")
     endif()
@@ -118,6 +116,8 @@ if(WIN32)
     # 下载libssl.lib
 
     # 设置库远程下载超时时间
+    # 下载的静态库会直接链接进最终可执行文件，必须校验 TLS 证书（见下方 TLS_VERIFY ON），
+    # 避免本地镜像/代理把预编译库替换成被篡改的二进制。
     SET(DOWNLOAD_OPENSSL_TIMEOUT 300 CACHE STRING "Timeout in seconds when downloading openssl_lib.")
     if(NOT EXISTS "openssl-proj/lib")
         file(MAKE_DIRECTORY "openssl-proj/lib")
@@ -152,6 +152,7 @@ if(WIN32)
             ${LOCAL_OPENSSL_LIBRARIES_PATH}/${OPENSSL_SSL_NAME}
             TIMEOUT ${DOWNLOAD_OPENSSL_TIMEOUT}
             STATUS ERR
+            TLS_VERIFY ON
             SHOW_PROGRESS)
         # 判断下载是否存在错误
         IF(ERR EQUAL 0)
@@ -197,6 +198,7 @@ if(WIN32)
             ${LOCAL_OPENSSL_LIBRARIES_PATH}/${OPENSSL_CRYPTO_NAME}
             TIMEOUT ${DOWNLOAD_OPENSSL_TIMEOUT}
             STATUS ERR
+            TLS_VERIFY ON
             SHOW_PROGRESS)
         # 判断下载是否存在错误
         IF(ERR EQUAL 0)
@@ -299,12 +301,9 @@ add_executable(test_platform_logic "tests/test_platform_logic.cpp")
 # （主程序的 CXX_STANDARD 不会传递到该目标，VS 默认按 C++14 编译会报 C2039）
 target_compile_features(test_platform_logic PRIVATE cxx_std_20)
 target_compile_definitions(test_platform_logic PRIVATE FILEVERSION="${FILE_VERSION}")
-if(APPLE)
-    target_link_libraries(test_platform_logic PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-endif()
-if(LINUX)
-    target_link_libraries(test_platform_logic PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-endif()
+# 被测逻辑是纯字符串/版本解析，不引用任何 OpenSSL 符号。
+# macOS 上若链接 Homebrew 的 libssl/libcrypto，运行测试时还需要 dyld 找到这些
+# dylib，会让与 OpenSSL 无关的单元测试无谓地失败；Linux 同样不需要。
 
 # CTest 注册：失败时输出详情
 add_test(

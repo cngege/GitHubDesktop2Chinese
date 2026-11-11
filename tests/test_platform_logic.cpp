@@ -1,7 +1,8 @@
 // 平台无关逻辑的回归测试
 // 覆盖：Version 解析与比较、代理 URL 解析（真实实现 Utils/net_parse.hpp）、
 //       scutil --proxy 文本解析、PlistBuddy 版本输出解析、localization.json 映射数据结构、
-//       #{n} 捕获注入（真实实现 Utils/localization_text.hpp）。
+//       #{n} 捕获注入（真实实现 Utils/localization_text.hpp）、
+//       预览版特性 / 未完成菜单项规则拦截（#48/#49 残留场景）。
 // 设计为纯 C++ 单元测试（不依赖网络/注册表/bundle），Windows 与 macOS 均可运行。
 // 退出码：0 = 全部通过；1 = 存在失败。
 //
@@ -559,6 +560,64 @@ static void test_packagejson_version() {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// 预览版特性 / 未完成菜单项防护（#48 / #49 残留场景）
+//////////////////////////////////////////////////////////////////////////
+
+static void test_unsafe_feature_rule() {
+    std::printf("\n[预览版特性 / 未完成菜单项防护]\n");
+
+    using localization_text::is_unsafe_feature_rule;
+    using localization_text::select_rules_all_blocked;
+    using Rules = std::vector<std::vector<std::string>>;
+
+    // v1.2.4 老 json：main.js 把 ||!1 改成 ||!0
+    const std::string old_main_p = R"(===process\.env\.GITHUB_DESKTOP_PREVIEW_FEATURES\|\|!1)";
+    const std::string old_main_r = "===process.env.GITHUB_DESKTOP_PREVIEW_FEATURES||!0";
+    check(is_unsafe_feature_rule(old_main_p, old_main_r),
+          "老 json 的 main.js 预览规则被禁用");
+
+    // v1.2.4 老 json：renderer.js 把环境变量注释掉并写死 "1"
+    const std::string old_renderer_p = R"(===process\.env\.GITHUB_DESKTOP_PREVIEW_FEATURES\})";
+    const std::string old_renderer_r =
+        std::string("===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/") + "\"1\"}";
+    check(is_unsafe_feature_rule(old_renderer_p, old_renderer_r),
+          "老 json 的 renderer.js 预览规则被禁用");
+
+    // 当前 json 保留的那条（默认 enable:false），手动改回 true 也必须被禁用
+    check(is_unsafe_feature_rule(old_renderer_p, old_renderer_r),
+          "手动 enable:true 的规则同样被禁用(判定与 enable 值无关)");
+
+    // 直接注入未完成菜单 id / 仅匹配串含预览开关
+    check(is_unsafe_feature_rule("MENU_ID", "menu-open-in-copilot-app"),
+          "替换串含 open-in-copilot-app 时被禁用");
+    check(is_unsafe_feature_rule("GITHUB_DESKTOP_PREVIEW_FEATURES", "汉化文本"),
+          "仅匹配串含预览开关也被禁用");
+
+    // 正常规则不能误伤
+    check(!is_unsafe_feature_rule("Pull Origin", "拉取源分支"), "普通翻译规则不受影响");
+    check(!is_unsafe_feature_rule("createElement", "创建元素"), "minifier 别名规则不受影响");
+    check(!is_unsafe_feature_rule("", ""), "空规则不误判");
+    check(!is_unsafe_feature_rule("preview", "预览"), "仅含 preview 单词不误判");
+
+    // 整条 select 的跳过决策
+    check(select_rules_all_blocked({{old_main_p, old_main_r}}),
+          "老 json main.js select 整条跳过");
+    check(select_rules_all_blocked({{old_renderer_p, old_renderer_r}}),
+          "老 json renderer.js select 整条跳过");
+    check(select_rules_all_blocked({{old_main_p, old_main_r}, {old_renderer_p, old_renderer_r}}),
+          "多条预览规则混合时整条跳过");
+    check(!select_rules_all_blocked({{"Pull Origin", "拉取源分支"}}),
+          "正常 select 保持原有询问流程");
+    check(!select_rules_all_blocked({{"Pull Origin", "拉取源分支"}, {old_main_p, old_main_r}}),
+          "混合含一条可用规则时不整条跳过(危险条仍被逐条过滤)");
+    check(!select_rules_all_blocked({{"", ""}}),
+          "老 json 的空 select 条目保持原行为");
+    check(!select_rules_all_blocked(Rules{}), "空 replace 数组不整条跳过");
+    check(!select_rules_all_blocked({{old_main_p}}),
+          "只有匹配串一项的畸形规则不整条跳过");
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 int main() {
     std::printf("=== GitHubDesktop2Chinese 平台无关逻辑回归测试 ===\n");
@@ -573,6 +632,7 @@ int main() {
     test_gsettings();
     test_linux_resource_candidates();
     test_packagejson_version();
+    test_unsafe_feature_rule();
 
     std::printf("\n=== 测试结束 ===\n");
     if(g_failures > 0) {

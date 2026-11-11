@@ -127,10 +127,28 @@ cmake --build build
 - 构建产物为无后缀的可执行文件 `GitHubDesktop2Chinese`，可自行重命名（如加 `_linux_x64` 后缀）。
 - 架构由 `CMAKE_SYSTEM_PROCESSOR` 自动识别（x86_64 / aarch64）。
 
+## 📁项目目录结构
+
+> 目录按「入口 / 平台抽象 / 第三方头文件 / 映射数据 / 测试 / 发布产物 / CI」分层。
+> 所有路径都被 CMake、CI 工作流或本文档引用，移动/重命名时须同步更新这些引用。
+
+| 路径 | 用途 |
+| --- | --- |
+| `GitHubDesktop2Chinese.cpp` / `GitHubDesktop2Chinese.h` | 程序入口：命令行、替换流程、自更新 |
+| `Utils/` | 跨平台抽象（`platform.hpp` + `platform_win/mac/linux.hpp`）、通用工具（`utils.hpp`）、可单测纯逻辑（`net_parse.hpp`、`localization_text.hpp`） |
+| `include/` | 随仓库分发的第三方头文件：spdlog / nlohmann-json / cpp-httplib / WinReg / VersionParse |
+| `openssl-proj/include/`、`openssl-proj/lib/` | Windows 预编译 OpenSSL 头文件与静态库；`lib/` 由 CMake 按需下载，已被 `.gitignore` 忽略 |
+| `json/` | 翻译映射 `localization.json` 与编写注意事项 `localization_notes.md` |
+| `tests/` | 平台无关回归测试（C++ / CTest）与映射失效项复核脚本（Node.js） |
+| `dist/` | 随仓库发布的 Windows x64 / x86 二进制 |
+| `.github/workflows/` | `build.yml`（打 tag 构建全平台并发布）、`check.yml`（PR 与映射变更校验） |
+| `CMakeLists.txt`、`CMakePresets.json` | 构建定义与 Windows/macOS/Linux 预设 |
+| `README.md`、`ReleaseBody.md`、`LICENSE.txt` | 使用文档、Release 说明、许可证 |
+
 ## 👕我怎么帮助完成汉化或者后续更新时如何补充汉化
 
-> 只需要克隆仓库，阅读`json/关于一些注意事项.txt`，注意一些编写时的事项, 然后在`json/localization.json` 文件中参照已经写过的格式补充要汉化的条目即可  
-  将此文件放在程序目录下,确保程序可以读取运行 然后提交PR
+> 只需要克隆仓库，阅读`json/localization_notes.md`，注意一些编写时的事项, 然后在`json/localization.json` 文件中参照已经写过的格式补充要汉化的条目即可。
+> 将此文件放在程序目录下,确保程序可以读取运行 然后提交PR
 > 如果你写了部分翻译条目，可以先将其放在`main_dev`或者`renderer_dev`条目中, 然后按下`shift`运行软件,开启 `仅替换指定映射项，以优化汉化作者替换时间` 进行汉化测试
   完成之后, 将对应条目移动到`main` 或 `renderer` 数组最后, 提交PR
 
@@ -186,6 +204,7 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
 ```
 
 输出 `失效项总数: 0` 即通过；否则会逐条列出失效正则，按上面的规则修正即可。
+需要同时校验开发映射（`main_dev` / `renderer_dev`）时在命令末尾加 `--dev`；CI 默认只校验正式映射。
 
 
 ## 使用环境变量开启GitHubDesktop预览版选项
@@ -204,7 +223,14 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
  > set GITHUB_DESKTOP_PREVIEW_FEATURES=1
  > "GitHub Desktop.lnk"
 ```
- - **或者通过加载器按提示选择自动开启预览版功能**
+ - **加载器不再提供「按提示自动开启预览版功能」**：旧映射文件里的 `select` 规则会改写
+   `GITHUB_DESKTOP_PREVIEW_FEATURES` 并强制置真，GitHub Desktop 3.6.10 起会暴露未完成的
+   `open-in-copilot-app` 等菜单项，renderer 在 `fatal-error.ts` 遇到未知菜单 id 直接崩溃。
+   loader 现无条件跳过这类规则（与 `enable` 值、映射文件版本、资源文件是否匹配关键字都无关），
+   因此手动把 `enable` 改回 `true` 或使用很老的本地 `localization.json` 也不会写入；
+   `--rollback` 还原后重新汉化同样不会重新注入。
+ - 上面的**环境变量方式属于用户主动设置，loader 无法干预**；在 3.6.10 上同样可能触发
+   上述崩溃，不建议开启。
 
 
 ## 🚀发布流程（Release）

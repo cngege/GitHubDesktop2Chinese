@@ -4,6 +4,7 @@
 
 #pragma once
 #include <string>
+#include <cctype>       // std::isdigit
 
 namespace std {
 
@@ -35,7 +36,8 @@ public:
 	}
 
     Version(int major, int minor, int revision, Status status = Status::Release, int betaversion = 0)
-    : major(major), minor(minor), revision(revision), status(status), betaversion(betaversion)
+    // 初始化列表顺序必须与成员声明顺序一致，否则 -Wreorder 且实际初始化次序被误读
+    : major(major), minor(minor), revision(revision), betaversion(betaversion), status(status)
     {
         vaild = true;
     }
@@ -240,7 +242,7 @@ private:
                     v++;
                     continue;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     major = major * 10 + (*v - '0');
                     v++;
                     continue;
@@ -261,7 +263,7 @@ private:
                     v++;
                     continue;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     minor = minor * 10 + (*v - '0');
                     v++;
                     ret = true;
@@ -306,7 +308,7 @@ private:
                     v++;
                     continue;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     revision = revision * 10 + (*v - '0');
                     v++;
                     continue;
@@ -349,7 +351,7 @@ private:
                 if (*v == '.') {
                     break;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     if (status == Status::Release && ((*v - '0') != 0)) status = Status::Beta;
                     betaversion = betaversion * 10 + (*v - '0');
                     v++;

@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <sstream>
 #include <cctype>
+#include <optional>
 
 #include <regex>
 
@@ -80,6 +81,45 @@ bool _debug_dev_setversion = false;				// 开发模式可以指定当前版本
 std::optional<std::string> formatTime(std::string time_str);
 
 namespace {
+
+// 自更新时当前构建对应的 Release 产物名。
+// v1.3.0 起一次 Release 会同时附带 5 个平台的可执行文件与映射文件，
+// assets[0] 不再保证是当前平台产物；必须按名称挑选，找不到就跳过更新，
+// 否则会把其它平台的二进制下载回来替换自身。
+#if defined(PLATFORM_WINDOWS)
+    #if defined(CURRENT_PLATFORM_ISX64)
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese.exe";
+    #else
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_x86.exe";
+    #endif
+#elif defined(PLATFORM_MACOS)
+    #if defined(CURRENT_PLATFORM_ISARM64)
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_macos_arm64";
+    #else
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_macos_x64";
+    #endif
+#elif defined(PLATFORM_LINUX)
+    #if defined(CURRENT_PLATFORM_ISARM64)
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_linux_arm64";
+    #else
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_linux_x64";
+    #endif
+#else
+    constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese.exe";
+#endif
+
+// 单条规则的正则可能来自外部映射文件，构造失败不能让整轮替换中断：
+// 以前一条坏正则抛 regex_error 后会跳出整个循环，随后把「只翻译了一半」的
+// 内容写回 main.js/renderer.js，--invalidcheck 也会漏检其后的所有条目。
+std::optional<std::regex> make_regex(const std::string& pattern, const char* tag) {
+    try {
+        return std::regex(pattern);
+    }
+    catch(const std::regex_error& e) {
+        spdlog::warn("{} 正则表达式无效, 已跳过该条: {} ({})", tag, pattern, e.what());
+        return std::nullopt;
+    }
+}
 
 // 处理单个 js 文件时需要的描述信息与日志标签。
 // 标签逐项给出是为了保持 main.js / renderer.js 两侧原有的日志措辞完全不变
@@ -146,6 +186,7 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
 
     const char* section = _debug_dev_replace ? tags.section_dev : tags.section;
     int out = 0;
+    bool aborted = false;   // 处理中出现非预期异常时绝不写入半成品文件
 
     try {
         // 普通替换项
@@ -159,17 +200,20 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                 if(rege.empty() || rege == "\"\"") {
                     continue;
                 }
-                std::regex pattern(rege);
+                auto pattern = make_regex(rege, tags.item_tag);
+                if(!pattern) {
+                    continue;
+                }
 
                 // 开发者选项 失效检测
                 if(_debug_invalid_check_mode) {
-                    if(!std::regex_search(text, pattern)) {
+                    if(!std::regex_search(text, *pattern)) {
                         spdlog::warn("{} 检测到失效项: {}", tags.item_tag, rege);
                         ++failure_count;
                     }
                     if(item.value().size() >= 3) {
-                        std::regex pattern3(item.value()[2].get<std::string>());
-                        if(!std::regex_search(text, pattern3)) {
+                        auto pattern3 = make_regex(item.value()[2].get<std::string>(), tags.item3_tag);
+                        if(pattern3 && !std::regex_search(text, *pattern3)) {
                             spdlog::warn("{} 检测到失效项: {}", tags.item3_tag, item.value()[2].get<std::string>());
                             ++failure_count;
                         }
@@ -180,8 +224,11 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                 if(item.value().size() >= 3) {
                     // 用数组第三项定位关键字，把捕获组填进 #{n} 占位符
                     const std::string regex_str = item.value()[2].get<std::string>();
-                    std::regex pattern3(regex_str);
-                    std::sregex_iterator it(text.begin(), text.end(), pattern3);
+                    auto pattern3 = make_regex(regex_str, tags.item3_tag);
+                    if(!pattern3) {
+                        continue;
+                    }
+                    std::sregex_iterator it(text.begin(), text.end(), *pattern3);
                     if(it != std::sregex_iterator()) {
                         item.value()[1] = localization_text::substitute_capture_groups(item.value()[1].get<std::string>(), *it);
                     }
@@ -194,8 +241,15 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
 
                 // 先 regex_search 预判：不匹配时 regex_replace 也会整段复制，
                 // 900+ 条规则逐条复制整个文件是本程序最耗时的地方。
-                if(std::regex_search(text, pattern)) {
-                    text = std::regex_replace(text, pattern, item.value()[1].get<std::string>());
+                if(std::regex_search(text, *pattern)) {
+                    // 用「最终替换串」判定（第三项捕获注入可能改写替换串）。
+                    // 与映射文件版本、enable 值无关：绝不写入强制开启预览特性的代码。
+                    const std::string replacement = item.value()[1].get<std::string>();
+                    if(localization_text::is_unsafe_feature_rule(rege, replacement)) {
+                        spdlog::warn("{} 规则会强制开启预览版特性或注入未完成菜单项, 已跳过: {}", tags.item_tag, rege);
+                        continue;
+                    }
+                    text = std::regex_replace(text, *pattern, replacement);
                 }
                 if(tags.error_check_mode) {
                     spdlog::info("{}[out:{}]已经替换:{}->{}", tags.item_tag, out, rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
@@ -235,15 +289,18 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                         if(rege.empty() || rege == "\"\"") {
                             continue;
                         }
-                        std::regex pattern(rege);
-                        if(!std::regex_search(text, pattern)) {
+                        auto pattern = make_regex(rege, tags.select_tag);
+                        if(!pattern) {
+                            continue;
+                        }
+                        if(!std::regex_search(text, *pattern)) {
                             spdlog::warn("{} 检测到失效项: {}", tags.select_tag, rege);
                             ++failure_count;
                         }
                         // 二层数组字符串有三项时，第三项也要检测
                         if(v_item.size() >= 3) {
-                            std::regex pattern3(v_item[2]);
-                            if(!std::regex_search(text, pattern3)) {
+                            auto pattern3 = make_regex(v_item[2], tags.select3_tag);
+                            if(pattern3 && !std::regex_search(text, *pattern3)) {
                                 spdlog::warn("{} 检测到失效项: {}", tags.select3_tag, v_item[2]);
                                 ++failure_count;
                             }
@@ -251,21 +308,33 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                     }
                 }
                 else {
+                    // 整条 select 都是被禁用的规则时直接跳过：不弹确认提示、不写入任何内容。
+                    // 覆盖「手动把 enable 改回 true」与「很老的本地 json（两条预览规则均 enable:true）」。
+                    // 判定与 enable 值、json 版本、js 中是否存在匹配关键字都无关。
+                    if(localization_text::select_rules_all_blocked(replaces)) {
+                        spdlog::warn("{} 该可选项会强制开启预览版特性或注入未完成菜单项, 已整体跳过(与 enable 值无关): {}",
+                                     tags.select_tag, sel.value("tooltip", std::string()));
+                        continue;
+                    }
                     // 询问提示 输出 json 中的提示字符串
                     spdlog::info(">>>>>> {}", sel.value("tooltip", std::string()).c_str());
                     if(utils::ReadUserInput_bool({ "n","y" }, 1)) {
                         for(auto& v_item : replaces) {
-                            if(v_item.empty()) {
+                            // 同时防住只有 [匹配] 一项时访问 v_item[1] 的越界
+                            if(v_item.size() < 2 || v_item[0].empty() || v_item[0] == "\"\"") {
                                 continue;
                             }
                             std::string rege = v_item[0];
-                            if(rege.empty() || rege == "\"\"") {
+                            auto pattern = make_regex(rege, tags.select_tag);
+                            if(!pattern) {
                                 continue;
                             }
-                            std::regex pattern(rege);
                             if(v_item.size() >= 3) {
-                                std::regex pattern3(v_item[2]);
-                                std::sregex_iterator it(text.begin(), text.end(), pattern3);
+                                auto pattern3 = make_regex(v_item[2], tags.select3_tag);
+                                if(!pattern3) {
+                                    continue;
+                                }
+                                std::sregex_iterator it(text.begin(), text.end(), *pattern3);
                                 if(it != std::sregex_iterator()) {
                                     v_item[1] = localization_text::substitute_capture_groups(v_item[1], *it);
                                 }
@@ -274,8 +343,12 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                                     continue;
                                 }
                             }
-                            if(std::regex_search(text, pattern)) {
-                                text = std::regex_replace(text, pattern, v_item[1]);
+                            if(std::regex_search(text, *pattern)) {
+                                if(localization_text::is_unsafe_feature_rule(rege, v_item[1])) {
+                                    spdlog::warn("{} 规则会强制开启预览版特性或注入未完成菜单项, 已跳过: {}", tags.select_tag, rege);
+                                    continue;
+                                }
+                                text = std::regex_replace(text, *pattern, v_item[1]);
                             }
                         }
                     }
@@ -284,11 +357,20 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
         }
     }
     catch(const std::regex_error& re) {
-        spdlog::error("处理{}时匹配正则表达式时出现错误 code:{}, message:{}, LINE: {}", tags.file_name, re.code(), re.what(), __LINE__);
+        spdlog::error("处理{}时匹配正则表达式时出现错误 code:{}, message:{}, LINE: {}", tags.file_name, static_cast<int>(re.code()), re.what(), __LINE__);
+        aborted = true;
     }
     catch(const std::exception& e) {
         // 包含 nlohmann::json 的 type_error/out_of_range（它们不继承 std::runtime_error）
         spdlog::error("处理{}时出现错误 message:{}, LINE: {}", tags.file_name, e.what(), __LINE__);
+        aborted = true;
+    }
+
+    // 异常发生在替换循环中途时，text 只含一部分替换结果；写回去等于把
+    // 半个汉化版 main.js/renderer.js 留在用户机器上，且日志会误报「汉化结束」。
+    if(aborted) {
+        spdlog::error("{} 处理过程中出现异常, 本次不写入, 文件保持原样.", tags.file_name);
+        return false;
     }
 
     if(_debug_invalid_check_mode || _debug_no_replace_res) {
@@ -434,11 +516,13 @@ int main(int argc, char* argv[])
 
 
     // 打印构建平台与版本
-#ifdef CURRENT_PLATFORM_ISX64
+#if defined(CURRENT_PLATFORM_ISARM64)
+    std::string arch_str("arm64");
+#elif defined(CURRENT_PLATFORM_ISX64)
     std::string arch_str("x64");
 #else
     std::string arch_str("x86");
-#endif // CURRENT_PLATFORM_ISX64
+#endif
 
     if(FileVer) {
         spdlog::info("程序架构：- {}  版本: - {}", arch_str,  FileVer.toString(true));
@@ -488,30 +572,46 @@ int main(int argc, char* argv[])
                     else {
                         if(FileVer < remoteVer) {
                             spdlog::info("发现新版本: {}", remoteVer.toString());
-                            std::string browser_download_url = infojson["assets"][0]["browser_download_url"].get<std::string>();
-                            std::string downlink = infojson["assets"][0]["url"].get<std::string>();
-                            int download_count = infojson["assets"][0]["download_count"].get<int>();
-                            size_t max_size = infojson["assets"][0]["size"].get<int64_t>();
-                            spdlog::info("下载链接({}次下载): {}", download_count, browser_download_url);
-                            spdlog::info("是否自动更新:");
-                            bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
-                            if(autoupdate) {
-                                //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
-                                //https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/assets/376558079
-                                std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
-                                std::smatch matches;
-                                if(std::regex_match(downlink, matches, url_regex)) {
-                                    auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy);
-                                    if(!result) {
-                                        spdlog::error("失败 更新过程出现异常");
-                                    }
-                                    else {
-                                        // 立马退出 等待替换
-                                        return 0;
+                            // Release 一次会附带多个平台产物，assets[0] 不再保证是当前平台的可执行文件。
+                            // 按产物名精确匹配，找不到就跳过更新，绝不把其它平台的二进制替换到自身。
+                            const json* self_asset = nullptr;
+                            if(infojson.contains("assets") && infojson["assets"].is_array()) {
+                                for(const auto& asset : infojson["assets"]) {
+                                    if(asset.is_object() && asset.value("name", std::string()) == kSelfAssetName) {
+                                        self_asset = &asset;
+                                        break;
                                     }
                                 }
-                                else {
-                                    spdlog::error("下载地址可能变更, 正则表达式无法捕获");
+                            }
+                            if(self_asset == nullptr) {
+                                spdlog::warn("发布资产中未找到当前平台产物 {}, 已跳过自动更新", kSelfAssetName);
+                            }
+                            else {
+                                std::string browser_download_url = (*self_asset)["browser_download_url"].get<std::string>();
+                                std::string downlink = (*self_asset)["url"].get<std::string>();
+                                int download_count = (*self_asset)["download_count"].get<int>();
+                                size_t max_size = (*self_asset)["size"].get<int64_t>();
+                                spdlog::info("下载链接({}次下载): {}", download_count, browser_download_url);
+                                spdlog::info("是否自动更新:");
+                                bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
+                                if(autoupdate) {
+                                    //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
+                                    //https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/assets/376558079
+                                    std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
+                                    std::smatch matches;
+                                    if(std::regex_match(downlink, matches, url_regex)) {
+                                        auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy);
+                                        if(!result) {
+                                            spdlog::error("失败 更新过程出现异常");
+                                        }
+                                        else {
+                                            // 立马退出 等待替换
+                                            return 0;
+                                        }
+                                    }
+                                    else {
+                                        spdlog::error("下载地址可能变更, 正则表达式无法捕获");
+                                    }
                                 }
                             }
                         }

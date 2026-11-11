@@ -7,7 +7,6 @@
 #include <fstream>
 #include <sstream>
 #include <limits>
-#include <codecvt>
 #include <locale>
 #include <filesystem>
 #include <algorithm>
@@ -17,6 +16,8 @@
 #include <cctype>
 #include <cerrno>
 #include <cstring>
+#include <stdexcept>    // std::runtime_error
+#include <utility>      // std::pair / std::make_pair
 
 //////////////////////////////////////////////////////////////////////////
 // 平台相关头文件
@@ -122,7 +123,7 @@ public:
     static std::optional<std::pair<std::string, int>> GetSystemProxySettings() {
 #if defined(_WIN32) || defined(_WIN64)
         // Windows 实现
-        WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ieProxyConfig = { 0 };
+        WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ieProxyConfig = {};
         std::optional<std::pair<std::string, int>> result;
 
         if(WinHttpGetIEProxyConfigForCurrentUser(&ieProxyConfig)) {
@@ -313,16 +314,37 @@ public:
 #endif
     }
 
+    // UTF-8 <-> UTF-16 转换。
+    // 早先用 std::wstring_convert<std::codecvt_utf8<wchar_t>>，但 <codecvt> 已被弃用，
+    // 新版 AppleClang/libc++ 甚至不再提供该头文件，导致 macOS 构建直接失败。
+    // 这两个函数只在 Windows 分支被调用，这里改用等价的 Win32 API；
+    // 非 Windows 平台保留接口但不再依赖 codecvt。
     inline static auto to_wide_string(const std::string& input)-> std::wstring
     {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-        return converter.from_bytes(input);
+#if defined(_WIN32) || defined(_WIN64)
+        if(input.empty()) return {};
+        const int len = ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), nullptr, 0);
+        if(len <= 0) return {};
+        std::wstring out(static_cast<size_t>(len), L'\0');
+        ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), out.data(), len);
+        return out;
+#else
+        return std::wstring(input.begin(), input.end());
+#endif
     }
 
     inline static auto to_byte_string(const std::wstring& input)->std::string
     {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-        return converter.to_bytes(input);
+#if defined(_WIN32) || defined(_WIN64)
+        if(input.empty()) return {};
+        const int len = ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), nullptr, 0, nullptr, nullptr);
+        if(len <= 0) return {};
+        std::string out(static_cast<size_t>(len), '\0');
+        ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), out.data(), len, nullptr, nullptr);
+        return out;
+#else
+        return std::string(input.begin(), input.end());
+#endif
     }
 
     /**
@@ -398,7 +420,10 @@ public:
      * @param txt 要写入的内容
      * @return 是否写入成功. 失败时会输出确切的系统错误码及可能原因
      */
-    static auto WriteFile(const std::string& filename, std::string& txt) -> bool {
+    // 内容参数统一为 const：若这里写成非 const 引用，在 libc++ 下
+    // fs::path 可隐式转换为 std::string，调用 WriteFile(fs::path, std::string)
+    // 时两个重载会各胜一个参数而判为二义，macOS 编译直接失败。
+    static auto WriteFile(const std::string& filename, const std::string& txt) -> bool {
         return WriteFile(fs::path(filename), txt);
     }
 
@@ -702,7 +727,9 @@ public:
 
     static auto ReadUserInput_bool(std::vector<std::string> input = {"false", "true"}, int defaultval = -1) -> bool {
         if (input.size() != 2) throw std::runtime_error("读取 bool 类型值时 input 数组长度必须为两个");
-        if (defaultval > (int)input.size() - 1 || defaultval < -1) throw std::runtime_error(std::format("defaultval 必须能够指向 input数组，或者为 -1, defaultval:{}" , defaultval));
+        // 不用 std::format：部分 macOS runner 的 libc++ 尚未提供 <format>，
+        // 这里只拼一个错误码字符串，保持错误信息内容不变。
+        if (defaultval > (int)input.size() - 1 || defaultval < -1) throw std::runtime_error(std::string("defaultval 必须能够指向 input数组，或者为 -1, defaultval:") + std::to_string(defaultval));
         while (true)
         {
             // 输出提示
