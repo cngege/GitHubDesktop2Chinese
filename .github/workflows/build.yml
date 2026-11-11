@@ -61,9 +61,138 @@ jobs:
             ${{github.workspace}}/build/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese.exe
             ${{github.workspace}}/build32/${{env.BUILD_TYPE}}/GitHubDesktop2Chinese_x86.exe
 
+  build-macos:
+    # macOS 构建：x64（Intel）与 arm64（Apple Silicon）双架构
+    # 使用本机 Homebrew 提供的 openssl@3，不依赖 openssl-proj 的 Windows 预编译库
+    # 注意：Intel macOS runner（macos-13）长期容量短缺，任务可能数小时排不到 runner，
+    # 因此两个架构都在 macos-latest（arm64）上构建：arm64 原生构建，
+    # x64 通过 CMAKE_OSX_ARCHITECTURES=x86_64 交叉编译（Universal 工具链支持）。
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            cmake-arch: x86_64
+            cross-compile: true
+          - arch: arm64
+            cmake-arch: arm64
+            cross-compile: false
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Get tag
+      id: tag
+      uses: devops-actions/action-get-tag@v1.0.2
+      with:
+          default: v0.0.0 # Optional: Default version when tag not found
+
+    - name: Prepare OpenSSL for target arch (macOS ${{ matrix.arch }})
+      # arm64 runner 上默认只有 arm64 版 openssl；交叉编译 x86_64 时需要 Intel 版库。
+      # macos-latest 镜像没有 Intel Homebrew 前缀（/usr/local/bin/brew 不存在），
+      # 因此从源码交叉编译：用 clang 的 -target x86_64-apple-darwin 生成 Intel 库，
+      # 无需 Rosetta（perl/Configure 与 make 本身在 arm64 下运行即可）。
+      if: matrix.cross-compile
+      run: |
+        OPENSSL_PREFIX="${{github.workspace}}/openssl-x86_64"
+        curl -fsSL -o openssl.tar.gz https://www.openssl.org/source/openssl-3.0.22.tar.gz
+        tar xzf openssl.tar.gz
+        cd openssl-3.0.22
+        ./Configure darwin64-x86_64-cc \
+          --prefix="$OPENSSL_PREFIX" \
+          CC="clang -target x86_64-apple-darwin" \
+          CXX="clang++ -target x86_64-apple-darwin" \
+          no-tests no-shared
+        # 注意：并行 make 会触发 OpenSSL Makefile 的依赖文件竞争
+        # （同一目标被编译两次后 mv: .d.tmp: No such file），单线程约 3-5 分钟；
+        # 只构建并安装库（build_libs + 手动安装头文件与静态库），跳过 apps
+        make build_libs
+        mkdir -p "$OPENSSL_PREFIX/lib" "$OPENSSL_PREFIX/include"
+        cp -r include/openssl "$OPENSSL_PREFIX/include/"
+        cp libssl.a libcrypto.a "$OPENSSL_PREFIX/lib/"
+        echo "OPENSSL_ROOT_DIR=$OPENSSL_PREFIX" >> $GITHUB_ENV
+
+    - name: Configure CMake (macOS ${{ matrix.arch }})
+      # macOS 单配置生成器需显式指定 CMAKE_BUILD_TYPE；openssl@3 由 Homebrew 提供
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DCMAKE_SYSTEM_PROCESSOR=${{matrix.cmake-arch}} \
+          ${{ matrix.cross-compile && '-DCMAKE_OSX_ARCHITECTURES=x86_64' || '' }} \
+          -DGitHubActions=1 \
+          -DFILE_VERSION="${{steps.tag.outputs.tag}}" \
+          -DOPENSSL_ROOT_DIR=${{ env.OPENSSL_ROOT_DIR || '$(brew --prefix openssl@3)' }}
+
+    - name: Build (macOS ${{ matrix.arch }})
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Verify binary architecture (macOS ${{ matrix.arch }})
+      run: |
+        file ${{github.workspace}}/build/GitHubDesktop2Chinese
+        lipo -archs ${{github.workspace}}/build/GitHubDesktop2Chinese || true
+
+    - name: Run platform logic tests (macOS ${{ matrix.arch }})
+      # 运行平台无关逻辑的回归测试（Version 解析 / 代理 URL / scutil / plist 解析）
+      # 交叉编译产物无法在本机直接运行，仅原生构建执行测试
+      if: '!matrix.cross-compile'
+      working-directory: ${{github.workspace}}/build
+      run: ctest -R platform_logic_tests --output-on-failure
+
+    - name: Rename (macOS ${{ matrix.arch }})
+      run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+
+    - name: Upload Release GitHubDesktop2Chinese (macOS ${{ matrix.arch }})
+      uses: actions/upload-artifact@v4
+      with:
+        name: GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+        path: ${{github.workspace}}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+
+  build-linux:
+    # Linux 构建：ubuntu-latest，使用系统 libssl-dev（apt 安装）
+    # Linux 版 GitHub Desktop 为社区 fork（shiftkey/desktop），此处仅构建汉化工具本身
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      # libssl-dev 提供 OpenSSL 头文件与库（find_package(OpenSSL)）
+      run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+    - name: Get tag
+      id: tag
+      uses: devops-actions/action-get-tag@v1.0.2
+      with:
+          default: v0.0.0 # Optional: Default version when tag not found
+
+    - name: Configure CMake (Linux)
+      run: |
+        cmake -B ${{github.workspace}}/build \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DGitHubActions=1 \
+          -DFILE_VERSION="${{steps.tag.outputs.tag}}"
+
+    - name: Build (Linux)
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Run platform logic tests (Linux)
+      # 运行平台无关逻辑的回归测试（Version 解析 / 代理 URL / scutil / gsettings / plist / package.json）
+      working-directory: ${{github.workspace}}/build
+      run: ctest -R platform_logic_tests --output-on-failure
+
+    - name: Rename (Linux)
+      run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
+
+    - name: Upload Release GitHubDesktop2Chinese (Linux)
+      uses: actions/upload-artifact@v4
+      with:
+        name: GitHubDesktop2Chinese_linux_x64
+        path: ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
+
   publish_release:
     name: Publish release
-    needs: build
+    needs: [build, build-macos, build-linux]
     runs-on: windows-latest
     permissions:
       contents: write
@@ -104,6 +233,9 @@ jobs:
           artifacts: |
             ./build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe
             ./build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe
+            ./build/GitHubDesktop2Chinese_macos_x64/GitHubDesktop2Chinese_macos_x64
+            ./build/GitHubDesktop2Chinese_macos_arm64/GitHubDesktop2Chinese_macos_arm64
+            ./build/GitHubDesktop2Chinese_linux_x64/GitHubDesktop2Chinese_linux_x64
             ./json/localization.json
         env:
           GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
