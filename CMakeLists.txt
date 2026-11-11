@@ -17,7 +17,7 @@ if(MSVC)
       set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
     endif()
 
-    #不要放在 if(MSVC) 中
+    # MSVC 需要显式 /utf-8，否则源码中的中文字面量按本地代码页解析
     add_compile_options(/utf-8)
 
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -283,7 +283,9 @@ FetchContent_MakeAvailable(cli11_proj)
 target_link_libraries(GitHubDesktop2Chinese PRIVATE CLI11::CLI11)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET GitHubDesktop2Chinese PROPERTY CXX_STANDARD 20)
+  # 用 target_compile_features 而不是直接改属性：前者会同时参与编译特性推导，
+  # 避免同一目标被不同语言标准重复编译
+  target_compile_features(GitHubDesktop2Chinese PRIVATE cxx_std_20)
 endif()
 
 ########################################################################
@@ -292,12 +294,11 @@ endif()
 enable_testing()
 
 add_executable(test_platform_logic "tests/test_platform_logic.cpp")
-target_link_libraries(test_platform_logic PRIVATE CLI11::CLI11)
-target_compile_definitions(test_platform_logic PRIVATE FILEVERSION="${FILE_VERSION}")
+# 测试不依赖 CLI11（被测逻辑是纯字符串/版本解析），无需链接第三方头文件库
 # 测试用到 std::optional / 结构化绑定等 C++17 特性，必须显式设定标准
 # （主程序的 CXX_STANDARD 不会传递到该目标，VS 默认按 C++14 编译会报 C2039）
-set_property(TARGET test_platform_logic PROPERTY CXX_STANDARD 20)
-set_property(TARGET test_platform_logic PROPERTY CXX_STANDARD_REQUIRED ON)
+target_compile_features(test_platform_logic PRIVATE cxx_std_20)
+target_compile_definitions(test_platform_logic PRIVATE FILEVERSION="${FILE_VERSION}")
 if(APPLE)
     target_link_libraries(test_platform_logic PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 endif()

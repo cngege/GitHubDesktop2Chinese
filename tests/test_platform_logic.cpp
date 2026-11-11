@@ -1,6 +1,7 @@
 // 平台无关逻辑的回归测试
-// 覆盖：Version 解析与比较、代理 URL 解析、scutil --proxy 文本解析、
-//       PlistBuddy 版本输出解析、localization.json 映射数据结构。
+// 覆盖：Version 解析与比较、代理 URL 解析（真实实现 Utils/net_parse.hpp）、
+//       scutil --proxy 文本解析、PlistBuddy 版本输出解析、localization.json 映射数据结构、
+//       #{n} 捕获注入（真实实现 Utils/localization_text.hpp）。
 // 设计为纯 C++ 单元测试（不依赖网络/注册表/bundle），Windows 与 macOS 均可运行。
 // 退出码：0 = 全部通过；1 = 存在失败。
 //
@@ -11,39 +12,18 @@
 #include <utility>
 #include <vector>
 #include <cstdio>
+#include <regex>
 
 #include "VersionParse/Version.hpp"
+#include "Utils/net_parse.hpp"
+#include "Utils/localization_text.hpp"
 
 //////////////////////////////////////////////////////////////////////////
-// 从 Utils/utils.hpp 提取的平台无关解析逻辑
+// 直接测试被测实现：代理地址解析
 //////////////////////////////////////////////////////////////////////////
 
-// 代理 URL 解析（提取自 utils::get_proxy_env 的协议/主机/端口拆分逻辑）
 static std::optional<std::pair<std::string, int>> parse_proxy_url(const std::string& p1) {
-    if(p1.empty()) {
-        return {};
-    }
-    size_t protocolEnd = p1.find("://");
-    std::string addrWithoutProtocol = (protocolEnd != std::string::npos)
-        ? p1.substr(protocolEnd + 3)
-        : p1;
-
-    size_t colonPos = addrWithoutProtocol.find(':');
-    if(colonPos == std::string::npos) {
-        return {};
-    }
-    int port = 0;
-    std::string host = addrWithoutProtocol.substr(0, colonPos);
-    try {
-        port = std::stoi(addrWithoutProtocol.substr(colonPos + 1));
-    }
-    catch(const std::exception&) {
-        return {};
-    }
-    if(port) {
-        return std::make_pair(host, port);
-    }
-    return {};
+    return netparse::parse_proxy_address(p1);
 }
 
 // scutil --proxy 文本解析（提取自 utils::GetSystemProxySettings 的 macOS 分支）
@@ -237,6 +217,88 @@ static void test_proxy_url() {
     // 端口为 0
     auto r7 = parse_proxy_url("http://127.0.0.1:0");
     check(!r7.has_value(), "端口 0 返回 nullopt");
+
+    // Windows 系统代理的按协议格式（曾因取第一个 ':' 而把 "http=127.0.0.1" 当成主机）
+    auto r8 = parse_proxy_url("http=10.0.0.1:8080;https=10.0.0.2:8443");
+    check(r8.has_value(), "解析按协议格式 http=...;https=... 成功");
+    if(r8) {
+        check_eq_str(r8->first, "10.0.0.2", "按协议格式优先取 https 主机");
+        check_eq(r8->second, 8443, "按协议格式优先取 https 端口");
+    }
+
+    // 只有 http= 项时回退到 http
+    auto r9 = parse_proxy_url("http=10.0.0.1:8080");
+    check(r9.has_value(), "仅有 http= 项时解析成功");
+    if(r9) {
+        check_eq_str(r9->first, "10.0.0.1", "回退取 http 主机");
+        check_eq(r9->second, 8080, "回退取 http 端口");
+    }
+
+    // 带认证信息与路径
+    auto r10 = parse_proxy_url("http://user:pass@127.0.0.1:3128/proxy.pac");
+    check(r10.has_value(), "解析带认证与路径的地址成功");
+    if(r10) {
+        check_eq_str(r10->first, "127.0.0.1", "去掉 user:pass@ 与路径后主机正确");
+        check_eq(r10->second, 3128, "去掉 user:pass@ 与路径后端口正确");
+    }
+
+    // IPv6 字面量
+    auto r11 = parse_proxy_url("[::1]:1080");
+    check(r11.has_value(), "解析 IPv6 字面量 [::1]:1080 成功");
+    if(r11) {
+        check_eq_str(r11->first, "::1", "IPv6 主机去掉方括号");
+        check_eq(r11->second, 1080, "IPv6 端口正确");
+    }
+
+    // 端口越界
+    auto r12 = parse_proxy_url("127.0.0.1:70000");
+    check(!r12.has_value(), "端口超过 65535 返回 nullopt");
+
+    // 端口后带垃圾字符
+    auto r13 = parse_proxy_url("127.0.0.1:8080abc");
+    check(!r13.has_value(), "端口后带非数字返回 nullopt");
+}
+
+// ---- 2b) #{n} 捕获组注入 ----
+static void test_capture_substitution() {
+    std::printf("\n[#{n} 捕获组注入]\n");
+
+    auto fmt = [](const std::string& text, const std::string& pattern,
+                  const std::string& tmpl) -> std::string {
+        std::regex re(pattern);
+        std::sregex_iterator it(text.begin(), text.end(), re);
+        if(it == std::sregex_iterator()) {
+            return "<no-match>";
+        }
+        return localization_text::substitute_capture_groups(tmpl, *it);
+    };
+
+    // 基本替换：捕获组填进 #{1}
+    check_eq_str(fmt("click(){ab.shell", "click\\(\\)\\{([A-Za-z$_][\\w$]{0,2})\\.shell", "click(){#{1}.shell"),
+                 "click(){ab.shell", "捕获组填入 #{1}");
+
+    // 无占位符时原样返回
+    check_eq_str(fmt("abc", "a", "xyz"), "xyz", "模板无占位符时原样返回");
+
+    // 占位符索引越界时保持原样
+    check_eq_str(fmt("abc", "(a)", "#{9}"), "#{9}", "占位符索引越界时保持原样");
+
+    // 未闭合的占位符保持原样
+    check_eq_str(fmt("abc", "(a)", "#{1"), "#{1", "未闭合的 #{ 保持原样");
+
+    // 多位索引
+    std::string many = fmt("abcdefghij", "(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)", "#{10}");
+    check_eq_str(many, "j", "两位数索引 #{10} 取第 10 组");
+
+    // 捕获内容含 '$'：必须转义为 "$$"，否则后续 regex_replace 会吞掉内容
+    const std::string tmpl = fmt("CAP$1END", "CAP([$0-9]+)END", "<#{1}>");
+    check_eq_str(tmpl, "<$$1>", "捕获内容中的 $ 被转义为 $$");
+    const std::string applied = std::regex_replace(std::string("TOKEN_X"), std::regex("TOKEN_X"), tmpl);
+    check_eq_str(applied, "<$1>", "转义后经 regex_replace 仍得到字面量 $1");
+
+    // 未转义的反例：确认这正是需要规避的陷阱
+    const std::string naive = std::regex_replace(std::string("TOKEN_X"), std::regex("TOKEN_X"), "<$1>");
+    check_eq_str(naive, "<>", "未转义的 $1 会被 regex_replace 当成反向引用");
 }
 
 // ---- 3) scutil --proxy 文本解析 ----
@@ -504,6 +566,7 @@ int main() {
 
     test_version();
     test_proxy_url();
+    test_capture_substitution();
     test_scutil();
     test_plist_version();
     test_install_struct();

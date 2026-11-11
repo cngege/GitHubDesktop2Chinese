@@ -23,6 +23,20 @@
   第二种方法: 下载或自行构建 GitHubDesktop2Chinese.exe  和 localization.json  放在同一个文件夹。运行程序即可  
   GitHubDesktop每次版本更新都需要运行一次此程序才能完成汉化
 
+### ⌨️ 命令行参数
+
+| 参数 | 说明 |
+| --- | --- |
+| `-g, --githubdesktoppath <目录>` | 指定 GitHub Desktop 的资源目录（`resources/app`，需含 `index.html`） |
+| `-j, --json <文件>` | 指定 `localization.json` 路径 |
+| `-r, --onlyfromremote` | 只从远程仓库读取 `localization.json` |
+| `--rollback` | 用 `.bak` 备份还原汉化前的文件 |
+| `--nopause` | 结束前不再暂停等待（适合脚本 / CI） |
+| `--insecure-tls` | 跳过 HTTPS 证书校验，**仅在**企业中间人代理等确实无法通过校验时使用 |
+
+> 默认开启 HTTPS 证书校验。程序自更新会下载并执行二进制文件，关闭校验等于让链路上的任何人都有机会替换它；
+> 若下载时报证书错误，请先检查系统时间与代理设置，万不得已再加 `--insecure-tls`。
+
 ### 🍏 macOS 使用说明
 
 > macOS 版与 Windows 版功能一致（自动发现 GitHub Desktop、汉化、备份、回滚、开发者选项、失效检测、自动更新）。

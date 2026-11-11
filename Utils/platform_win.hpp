@@ -24,6 +24,7 @@
 #include <system_error>
 
 #include <windows.h>
+#include <conio.h>          // _getch：不经过 cmd.exe 的按键等待
 #include <winhttp.h>        // GetSystemProxySettings 需要（沿用原实现）
 #include <shellapi.h>       // ShellExecuteW
 
@@ -55,11 +56,37 @@ namespace platform {
     }
 
     inline void clear_screen() {
-        system("cls");
+        // 直接用控制台 API 清屏：system("cls") 会额外拉起 cmd.exe（慢，且常被杀软/策略拦截）
+        HANDLE hOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+        if(hOut == INVALID_HANDLE_VALUE || hOut == nullptr) {
+            return;
+        }
+        CONSOLE_SCREEN_BUFFER_INFO info{};
+        if(!::GetConsoleScreenBufferInfo(hOut, &info)) {
+            return;     // 输出被重定向（无控制台缓冲区）时静默跳过
+        }
+        const DWORD cell_count =
+            static_cast<DWORD>(info.dwSize.X) * static_cast<DWORD>(info.dwSize.Y);
+        const COORD home{ 0, 0 };
+        DWORD written = 0;
+        ::FillConsoleOutputCharacterW(hOut, L' ', cell_count, home, &written);
+        ::FillConsoleOutputAttribute(hOut, info.wAttributes, cell_count, home, &written);
+        ::SetConsoleCursorPosition(hOut, home);
     }
 
     inline void pause_any_key() {
-        system("pause >nul");
+        // 直接读控制台（不经过 cmd.exe）。
+        // 注意：_getch 会绕过 stdin 重定向，若在管道/CI 场景下调用会永久阻塞，
+        // 因此 stdin 不是控制台时立即返回（等价于 pause 读到 EOF 的行为）。
+        HANDLE hIn = ::GetStdHandle(STD_INPUT_HANDLE);
+        if(hIn == INVALID_HANDLE_VALUE || hIn == nullptr) {
+            return;
+        }
+        DWORD mode = 0;
+        if(::GetConsoleMode(hIn, &mode) == 0) {
+            return;
+        }
+        ::_getch();
     }
 
     inline bool is_shift_pressed() {

@@ -51,10 +51,7 @@ namespace platform {
     }
 
     inline void pause_any_key() {
-        // termios 关闭回显与行缓冲，读取单个按键
-        std::printf("按任意键继续...");
-        std::fflush(stdout);
-
+        // 提示语由调用方（PAUSE 宏）输出，这里只负责读取单个按键
         struct termios oldt = {};
         struct termios newt = {};
         bool restored = false;
@@ -226,13 +223,14 @@ namespace platform {
         }
 
         if(found_install && !invalid_roots.empty()) {
-            // 全部候选均未找到可用资源目录：抛出让主程序回退为手动输入
+            // 发现了安装根但资源目录不可用：只告警并返回 nullopt，
+            // 由主程序回退为手动输入目录，而不是直接中止流程。
             std::string msg = "发现 GitHub Desktop 安装，但未找到可用的资源目录: ";
             for(size_t i = 0; i < invalid_roots.size(); i++) {
                 if(i > 0) msg += ", ";
                 msg += invalid_roots[i];
             }
-            throw std::runtime_error(msg);
+            spdlog::warn("{}", msg);
         }
 
         if(!found_install) {
