@@ -504,6 +504,8 @@ int main(int argc, char* argv[])
     }
     
     int ret_num = 0;
+    // 是否有文件写入失败(写不进去时界面不会变化, 必须让用户知道并返回非零退出码)
+    bool write_failed = false;
     // 处理 main[_dev].json文件
     {
         spdlog::info("正在处理{}文件,{}请勿关闭...{}", "main.js","\033[33m","\033[0m");
@@ -659,9 +661,18 @@ int main(int argc, char* argv[])
 
         if (!_debug_invalid_check_mode && !_debug_no_replace_res) {
             // 写入
-            utils::WriteFile(fs::path(Base / "main.js").string(), main_str);
+            if (!utils::WriteFile(fs::path(Base / "main.js").string(), main_str)) {
+                write_failed = true;
+                ret_num++;
+                spdlog::error("{} 汉化未完成: 写入失败, 该文件保持原样.", "main.js");
+            }
+            else {
+                spdlog::info("{} 文件汉化结束.", "main.js");
+            }
         }
-        spdlog::info("{} 文件汉化结束.", "main.js");
+        else {
+            spdlog::info("{} 文件汉化结束.", "main.js");
+        }
     }
 
 
@@ -820,9 +831,18 @@ int main(int argc, char* argv[])
 
         if (!_debug_invalid_check_mode && !_debug_no_replace_res) {
             // 写入
-            utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str);
+            if (!utils::WriteFile(fs::path(Base / "renderer.js").string(), renderer_str)) {
+                write_failed = true;
+                ret_num++;
+                spdlog::error("{} 汉化未完成: 写入失败, 该文件保持原样.", "renderer.js");
+            }
+            else {
+                spdlog::info("{} 文件汉化结束.", "renderer.js");
+            }
         }
-        spdlog::info("{} 文件汉化结束.", "renderer.js");
+        else {
+            spdlog::info("{} 文件汉化结束.", "renderer.js");
+        }
     }
 
 
@@ -849,6 +869,15 @@ int main(int argc, char* argv[])
         spdlog::warn("读取解析数据出现异常.");
     }
 
+    // 写入失败必须显式告警: 否则界面仍是原语言, 而日志里却写着"汉化结束"
+    if (write_failed) {
+        spdlog::error("汉化失败: 有文件未能写入, GitHub Desktop 界面不会发生变化.");
+        spdlog::info("排查建议:");
+        spdlog::info("  1) 完全退出 GitHub Desktop(托盘也要退出)后重试");
+        spdlog::info("  2) 把本程序加入杀毒/安全软件的白名单(如火绒的信任区), 或临时关闭其文件保护");
+        spdlog::info("  3) 右键以管理员身份运行本程序");
+        spdlog::info("  4) 确认安装目录可写: {}", fs::path(Base).string());
+    }
 
     PAUSE
     return ret_num;

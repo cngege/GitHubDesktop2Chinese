@@ -12,6 +12,8 @@
 #include <filesystem>
 #include <cstdlib>
 #include <cstdio>
+#include <cerrno>
+#include <cstring>
 
 //////////////////////////////////////////////////////////////////////////
 // 平台相关头文件
@@ -316,13 +318,96 @@ public:
         );
     }
 
-    static auto WriteFile(const std::string& filename, std::string& txt) -> void {
-        std::ofstream override (filename, std::ios::binary);
-        override.write(txt.c_str(), txt.size());
-        if (!override) {
-            spdlog::error("打开并写入目标文件:{} 时失败", filename);
+    /**
+     * @brief 把系统错误码翻译成可读文本, 并对常见错误补充可能原因
+     * @param code 系统错误码(Windows 下为 GetLastError 的返回值, 其他平台为 errno)
+     */
+    static auto SysErrorText(unsigned long code) -> std::string {
+#if defined(_WIN32) || defined(_WIN64)
+        std::string msg;
+        LPSTR buf = nullptr;
+        const DWORD len = ::FormatMessageA(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr, code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            reinterpret_cast<LPSTR>(&buf), 0, nullptr);
+        if (len && buf != nullptr) {
+            msg.assign(buf, len);
         }
-        override.close();
+        if (buf != nullptr) {
+            ::LocalFree(buf);
+        }
+        while (!msg.empty() && (msg.back() == '\r' || msg.back() == '\n' || msg.back() == ' ')) {
+            msg.pop_back();
+        }
+        if (msg.empty()) {
+            msg = "系统未提供描述";
+        }
+
+        const char* hint = "";
+        switch (code) {
+        case 2:   // ERROR_FILE_NOT_FOUND
+        case 3:   hint = "路径不存在, 请确认 GitHub Desktop 安装目录是否正确"; break;
+        case 5:   hint = "权限不足, 或被杀毒/安全软件(如火绒、Defender)拦截"; break;
+        case 19:  hint = "介质写保护"; break;
+        case 32:  hint = "文件被占用, 请完全退出 GitHub Desktop 后重试"; break;
+        case 112: hint = "磁盘空间不足"; break;
+        case 145: hint = "目标目录非空或路径指向了目录"; break;
+        default:  break;
+        }
+        if (hint[0] != '\0') {
+            msg += std::string(" -- ") + hint;
+        }
+        return msg;
+#else
+        return std::string(std::strerror(static_cast<int>(code)));
+#endif
+    }
+
+    /**
+     * @brief 将内容写入文件
+     * @param filename 目标文件路径
+     * @param txt 要写入的内容
+     * @return 是否写入成功. 失败时会输出确切的系统错误码及可能原因
+     */
+    static auto WriteFile(const std::string& filename, std::string& txt) -> bool {
+#if defined(_WIN32) || defined(_WIN64)
+        // 直接使用 Win32 API: 写入失败时才拿得到确切的错误码, 而不是笼统的一句"失败"
+        HANDLE hFile = ::CreateFileW(
+            to_wide_string(filename).c_str(),
+            GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,    // 与原 ofstream 的共享模式保持一致
+            nullptr,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr);
+
+        if (hFile == INVALID_HANDLE_VALUE) {
+            const DWORD err = ::GetLastError();
+            spdlog::error("打开并写入目标文件:{} 时失败 - 错误码 {} ({})", filename, err, SysErrorText(err));
+            return false;
+        }
+
+        DWORD written = 0;
+        const BOOL ok = ::WriteFile(hFile, txt.data(), static_cast<DWORD>(txt.size()), &written, nullptr);
+        const DWORD err = ok ? 0 : ::GetLastError();
+        ::CloseHandle(hFile);
+
+        if (!ok || static_cast<std::size_t>(written) != txt.size()) {
+            spdlog::error("打开并写入目标文件:{} 时失败 - 错误码 {} ({})", filename, err, SysErrorText(err));
+            return false;
+        }
+        return true;
+#else
+        std::ofstream out(filename, std::ios::binary);
+        out.write(txt.data(), static_cast<std::streamsize>(txt.size()));
+        if (!out) {
+            const int err = errno;
+            spdlog::error("打开并写入目标文件:{} 时失败 - 错误码 {} ({})", filename, err, SysErrorText(err));
+            return false;
+        }
+        out.close();
+        return true;
+#endif
     }
 
     /**
