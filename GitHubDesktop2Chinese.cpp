@@ -30,6 +30,7 @@
 
 #include <CLI/CLI.hpp>              // 参数管理器:   https://github.com/CLIUtils/CLI11
 #include "Utils/utils.hpp"
+#include "Utils/elevate.hpp"        // 提权判定等纯逻辑（可单测）
 #include "Utils/localization_text.hpp"
 #include "VersionParse/Version.hpp"
 
@@ -50,7 +51,14 @@ bool no_pause;                                  // 程序在结束前是否暂�
 bool only_read_from_remote;                     // 仅从远程url中读取本地化文件
 bool rollback;                                  // 从备份中还原汉化前的文件
 bool enable_proxy;                              // 使用代理访问
-bool insecure_tls;                              // 跳过 HTTPS 证书校验（仅企业中间人代理等场景）
+bool insecure_tls;                              // 兼容旧脚本的保留参数(HTTPS证书校验现已全局关闭)
+bool _elevated_child;                           // 本进程是否为提权后重新启动的子进程
+std::string _elevated_base;                     // 提权前解析出的资源目录(十六进制编码)
+int _elevated_parent_pid = 0;                   // 提权前父进程的PID(用于接管其控制台)
+std::string _elevated_dev_options;              // 提权前父进程的开发者选项(逗号分隔)
+int _elevated_update = -1;                      // 提权前父进程对'是否自动更新'的选择(-1=未询问 0=不更新)
+bool _elevated_dev = false;                     // 开发者选项的交互已由父进程完成,本进程不用再进菜单
+int _update_decision = -1;                      // 本进程对'是否自动更新'的选择(-1=未询问 0=不更新)
 
 json localization = R"(
                         {
@@ -77,6 +85,28 @@ bool _debug_no_replace_res = false;
 bool _debug_translation_from_bak = false;		// 直接从备份文件中翻译到目标文件中
 bool _debug_dev_replace = false;				// 开发模式替换
 bool _debug_dev_setversion = false;				// 开发模式可以指定当前版本
+
+// 收集当前的开发者选项（提权重启时传给子进程）
+elevate::DevOptions current_dev_options() {
+    elevate::DevOptions o;
+    o.error_check_main     = _debug_error_check_mode_main;
+    o.error_check_renderer = _debug_error_check_mode_renderer;
+    o.invalid_check        = _debug_invalid_check_mode;
+    o.no_replace_res       = _debug_no_replace_res;
+    o.translation_from_bak = _debug_translation_from_bak;
+    o.dev_replace          = _debug_dev_replace;
+    return o;
+}
+
+// 应用父进程传来的开发者选项
+void apply_dev_options(const elevate::DevOptions& o) {
+    _debug_error_check_mode_main     = o.error_check_main;
+    _debug_error_check_mode_renderer = o.error_check_renderer;
+    _debug_invalid_check_mode        = o.invalid_check;
+    _debug_no_replace_res            = o.no_replace_res;
+    _debug_translation_from_bak      = o.translation_from_bak;
+    _debug_dev_replace               = o.dev_replace;
+}
 
 std::optional<std::string> formatTime(std::string time_str);
 
@@ -391,6 +421,16 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
 {
+    // 提权后的子进程：尽早接管父进程的控制台窗口，
+    // 这样输出会继续显示在用户原来那个窗口里，不会弹出第二个黑窗口。
+    // 必须在 console_init 之前完成：代码页/虚拟终端等设置要作用在最终的控制台上。
+    {
+        const int parent_pid = platform::peek_elevated_parent_pid();
+        if(parent_pid > 0) {
+            platform::attach_parent_console(parent_pid);
+        }
+    }
+
     // 初始化控制台（Windows: 设置 UTF-8 代码页与虚拟终端处理；macOS: 默认 UTF-8，无需设置）
     platform::console_init();
 
@@ -422,8 +462,16 @@ int main(int argc, char* argv[])
         app.add_option("-j,--json", LocalizationJSON,               "指定本地化JSON文件的本地路径");
         //app.add_flag("-p,--enableproxy", enable_proxy,              "开启代理访问GitHub");
         app.add_flag("-r,--onlyfromremote", only_read_from_remote,  "仅从远程url中读取本地化文件");
-        app.add_flag("--insecure-tls", insecure_tls,                "跳过HTTPS证书校验(仅在无法通过校验的企业代理环境下使用)");
         app.add_flag("--rollback", rollback,                        "从备份文件中还原汉化前的文件");
+        // 兼容旧脚本：证书校验已全局关闭，该参数不再产生任何效果
+        app.add_flag("--insecure-tls", insecure_tls,                "[已废弃] HTTPS证书校验已默认关闭,该参数不再产生任何效果");
+        // 以下参数由程序自身在提权重启时追加，不面向普通用户：
+        // 分组名置空，--help 里不会显示
+        app.add_flag("--elevated-child", _elevated_child,           "内部参数: 标识当前进程是提权后重启的子进程")->group("");
+        app.add_option("--elevated-base", _elevated_base,           "内部参数: 提权前解析出的资源目录(十六进制编码)")->group("");
+        app.add_option("--elevated-parent-pid", _elevated_parent_pid, "内部参数: 提权前父进程的PID")->group("");
+        app.add_option("--elevated-dev-options", _elevated_dev_options, "内部参数: 提权前父进程的开发者选项(逗号分隔)")->group("");
+        app.add_option("--elevated-update", _elevated_update,       "内部参数: 提权前父进程对'是否自动更新'的选择(-1=未询问 0=不更新)")->group("");
         
         app.callback([&]() {
             // 手动指定了本地化文件目录
@@ -453,13 +501,30 @@ int main(int argc, char* argv[])
         CLI11_PARSE(app, argc, argv);
     }
 
-    // HTTPS 证书校验默认开启（自更新会下载并执行二进制）。
-    // 只有显式指定 --insecure-tls 时才关闭，并留下明确告警。
-    utils::tls_verification_enabled() = !insecure_tls;
-    if(insecure_tls) {
-        spdlog::warn("已跳过 HTTPS 证书校验(--insecure-tls): 传输内容可能被中间人篡改, 请在确认网络环境后使用");
+    // 提权后的子进程：父进程已经定位好资源目录，直接复用，
+    // 既省去重复发现（注册表/目录扫描），也避免再次询问用户目录。
+    if(_elevated_child && !_elevated_base.empty()) {
+        Base = utils::decode_path_hex(_elevated_base);
     }
-    if(platform::is_shift_pressed() || _debug_goto_devoptions) {
+
+    // 提权后的子进程：沿用父进程在"开发者选项"菜单里交互出来的结果。
+    // 这些结果只存在父进程内存里，不传过来就会丢失；
+    // 同时标记 _elevated_dev，提示本进程不用再进一次菜单。
+    if(_elevated_child && !_elevated_dev_options.empty()) {
+        apply_dev_options(elevate::decode_dev_options(_elevated_dev_options));
+        _elevated_dev = true;
+    }
+
+    // HTTPS 证书校验已按需求取消：所有请求都不再验证服务器证书。
+    // --insecure-tls 参数保留仅为兼容既有脚本（已无实际作用）。
+    if(insecure_tls) {
+        spdlog::info("--insecure-tls 参数已无实际作用: HTTPS 证书校验现已默认关闭");
+    }
+
+    // 开发者选项
+    // 提权重启时父进程会把交互结果一并传过来（--elevated-dev-options），
+    // 这种情况下本进程直接沿用即可，不用再进一次菜单。
+    if((platform::is_shift_pressed() || _debug_goto_devoptions) && !_elevated_dev) {
         // 如果Shift按下, 则进入开发者选项
         platform::set_console_title("开发者模式");
         spdlog::info("您已进入开发者模式");
@@ -485,10 +550,10 @@ int main(int argc, char* argv[])
             }
         }
     }
-    
+
     // 注册“关闭窗口前二次确认”处理器
     // Windows: 注册控制台关闭处理器并弹出确认对话框
-    // macOS:   无法拦截窗口关闭，仅注册 SIGINT/SIGTERM 打印提示信息
+    // macOS:   无法拦截窗口关闭，仅注册信号处理打印提示信息
     if(!platform::register_close_confirmation()) {
         spdlog::error("注册关闭二次确认弹窗处理失败！");
     }
@@ -558,7 +623,8 @@ int main(int argc, char* argv[])
     // https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/latest
     {
         // 还原操作不应该被"检查更新/自动更新"打断
-        if(FileVer.status != version_parse::Version::Dev && !rollback) {
+        // 父进程已经问过并给出结论时（提权重启带下来的），不再重复询问
+        if(FileVer.status != version_parse::Version::Dev && !rollback && _elevated_update < 0) {
             spdlog::info("检查更新中..");
             try {
                 std::string repoinfo;
@@ -601,6 +667,11 @@ int main(int argc, char* argv[])
                                 spdlog::info("下载链接({}次下载): {}", download_count, browser_download_url);
                                 spdlog::info("是否自动更新:");
                                 bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
+                                if(!autoupdate) {
+                                    // 用户选择不更新：把结论记下来，
+                                    // 提权重启后由子进程继承，不再重复询问
+                                    _update_decision = 0;
+                                }
                                 if(autoupdate) {
                                     //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
                                     //https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/assets/376558079
@@ -801,6 +872,37 @@ int main(int argc, char* argv[])
             return 1;
         }
     }
+
+
+    // 需要管理员权限时自动申请提权（Windows UAC）
+    // 判定放在资源目录解析之后：只有先知道写入目标是谁，才能判断当前权限够不够。
+    {
+        // 目录都不存在时无从判断权限（用户可能直接中断了目录询问），
+        // 这种情况下不申请提权：没有写入目标，提权也没有意义
+        const bool base_usable = !Base.empty() && fs::is_directory(Base);
+        const bool targets_writable = base_usable && utils::is_dir_writable(Base);
+        if(base_usable && elevate::should_request_elevation(_elevated_child, platform::is_elevated(), targets_writable)) {
+            spdlog::warn("资源目录不可写, 当前权限不足以完成汉化: {}", Base.string());
+            if(platform::supports_auto_elevation()) {
+                platform::ElevationRequest req;
+                req.base_dir = Base;
+                req.parent_pid = platform::current_process_id();
+                // 开发者选项的交互结果只存在内存里，提权重启会丢，必须传给子进程
+                req.dev_options = elevate::encode_dev_options(current_dev_options());
+                // 父进程若已经问过"是否自动更新"，把结论传过去，避免重复询问
+                req.update_decision = _update_decision;
+                spdlog::info("正在申请管理员权限(UAC), 请在弹窗中确认...");
+                auto exit_code = platform::relaunch_elevated(req);
+                if(exit_code) {
+                    // 提权后的子进程已完成全部工作，沿用它的退出码
+                    return *exit_code;
+                }
+                spdlog::error("申请管理员权限失败, 将以当前权限继续, 汉化可能失败");
+            }
+            spdlog::warn("提示: {}", platform::elevation_hint());
+        }
+    }
+
 
     fs::path mainjs = "main.js";
     fs::path mainjsbak = "main.js.bak";

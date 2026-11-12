@@ -4,7 +4,7 @@
 #### 新增功能
 - 新增 macOS（Apple Silicon arm64 / Intel x64）与 Linux x86_64 / arm64 支持，Release 产物由 2 个 Windows 二进制扩展为 6 个平台二进制
 - 新增跨平台安装发现（macOS `/Applications`、Linux deb/rpm 等）与系统代理读取（`scutil --proxy` / `gsettings`）
-- 新增 `--insecure-tls` 参数：仅在企业中间人代理等确无法通过证书校验时显式关闭 HTTPS 校验
+- 新增 Windows UAC 自动提权：资源目录不可写时自动弹 UAC 并以管理员身份重启自身继续汉化，提权后的进程接管原控制台窗口（不额外弹黑窗口），已提权或目录可写时不打扰用户；父进程的开发者选项与"是否自动更新"的选择会一并传给提权后的进程，不会重复询问
 - 新增平台无关逻辑回归测试（`platform_logic_tests`）与映射文件失效项独立复核（`tests/check_localization.js`）
 - 更新映射文件，适配 GitHub Desktop 3.5.11～3.6.10，并统一 minifier 别名写法
 
@@ -13,7 +13,7 @@
 - 修复读取失败时把空串写回 `main.js`/`renderer.js`、替换串中 `$` 未转义导致内容被吞
 - 修复写入失败仍返回 0、异常未统一捕获导致终止、网络请求无超时、交互输入无 EOF 保护
 - 修复自更新命令路径未加引号（路径含空格/中文/`&` 时失败）、下载大小未校验、服务器忽略 Range 时临时文件残留
-- 远程读取与自更新默认开启 HTTPS 证书校验，证书失败时给出一次性可操作提示
+- 远程读取与自更新不再校验 HTTPS 服务器证书（按需求默认关闭，见「升级前必读」）
 - 修复预览版特性残留（#48/#49）：loader 无条件跳过改写 `GITHUB_DESKTOP_PREVIEW_FEATURES` 或注入未完成菜单项的规则，手动 `enable:true`、很老的本地 json、`--rollback` 后重汉化均不再触发 3.6.10 未知菜单 id 崩溃
 - 修复自更新固定取 `assets[0]`：改为按平台/架构产物名精确匹配，找不到当前平台产物时跳过更新并告警，不再下载、执行其它平台的二进制
 - 修复映射文件中单条非法正则导致整轮替换中断并写回「只翻译一半」的 `main.js`/`renderer.js`；处理异常时保持原文件不变并返回非零退出码，`--invalidcheck` 不再漏检其后条目
@@ -29,7 +29,8 @@
 - `dist/` 中的 6 个平台二进制均已用本次源码重新编译（v1.3.0 Release）：Windows x64 / x86、Linux x64 / arm64、macOS x64 / arm64
 
 #### ⚠️ 升级前必读（行为变更）
-- **默认开启 HTTPS 证书校验**：企业代理或自签证书环境若报证书错误，请先检查系统时间与代理设置，确无法通过时再加 `--insecure-tls`。程序自更新会下载并执行二进制，请勿随意关闭校验。
+- **默认关闭 HTTPS 证书校验**：所有请求（含自更新下载）都不再验证服务器证书，企业代理 / 自签证书环境下无需任何额外参数。代价是链路上的中间人可以替换传输内容：自更新下载的文件仍会做 SHA-256 摘要校验，可挡住损坏或截断的文件，但挡不住在传输链路上被同步替换的二进制与摘要。`--insecure-tls` 参数保留仅为兼容旧脚本，已无实际作用。
+- **Windows 自动申请管理员权限**：定位到资源目录后程序会探测其是否可写，不可写时弹 UAC 并以管理员身份重启自身继续汉化；用户取消 UAC 时程序会以当前权限继续（汉化可能失败）。macOS / Linux 无 UAC 等价物，仍需 `sudo` 运行。
 - **写入失败改为非零退出码**：此前写入失败仍返回 0（失败不会被发现）。CI / 脚本调用方请按退出码判断结果。
 - **自更新按平台产物名匹配**：Release 资产中若找不到当前平台/架构对应的产物，会打印告警并跳过自动更新（此前可能误下其它平台二进制）。
 - **`--rollback` 不再依赖 `localization.json` 与更新检查**：可离线从 `.bak` 备份还原汉化前文件。
@@ -68,6 +69,7 @@
 4. `GitHubDesktop2Chinese.exe` 为64位程序
 5. `GitHubDesktop2Chinese_x86.exe` 为32位程序
 6. 如果汉化后主程序无法打开，请更新加载器后执行参数 `GitHubDesktop2Chinese.exe dev --translationfrombak` 或执行 x86.exe程序
+7. 资源目录不可写时程序会自动申请管理员权限（UAC），确认后以管理员身份继续汉化；不想授权可取消，程序会以当前权限继续并提示可能失败
 
 ### macOS 程序说明
 1. `GitHubDesktop2Chinese_macos_arm64` 为 Apple Silicon（M1/M2/M3…）版本，`GitHubDesktop2Chinese_macos_x64` 为 Intel 芯片版本
@@ -76,6 +78,7 @@
 4. 程序会自动发现 `/Applications` 与 `~/Applications` 下的 `GitHub Desktop.app`（读取其版本号并定位 `Contents/Resources/app/` 下的资源文件），无需手动指定目录
 5. 移除汉化：执行 `./GitHubDesktop2Chinese_macos_* --rollback` 从备份还原
 6. 代理：自动读取 `HTTPS_PROXY`/`https_proxy` 环境变量与系统代理（`scutil --proxy`）
+7. macOS 无 UAC 等价物，程序无法自动提权：资源目录不可写时请用 `sudo` 运行
 
 ### Linux 程序说明
 1. `GitHubDesktop2Chinese_linux_x64` 为 Linux x86_64 版本
@@ -85,3 +88,4 @@
 5. Linux 上无法检测 Shift 按键，进入开发者选项请用：`./GitHubDesktop2Chinese_linux_x64 dev -d`
 6. 移除汉化：执行 `./GitHubDesktop2Chinese_linux_x64 --rollback` 从备份还原
 7. 代理：自动读取 `HTTPS_PROXY`/`https_proxy` 环境变量与 GNOME 系统代理（`gsettings`）
+8. Linux 无 UAC 等价物，程序无法自动提权：资源目录不可写时请用 `sudo` 运行

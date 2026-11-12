@@ -32,10 +32,27 @@
 | `-r, --onlyfromremote` | 只从远程仓库读取 `localization.json` |
 | `--rollback` | 用 `.bak` 备份还原汉化前的文件 |
 | `--nopause` | 结束前不再暂停等待（适合脚本 / CI） |
-| `--insecure-tls` | 跳过 HTTPS 证书校验，**仅在**企业中间人代理等确实无法通过校验时使用 |
+| `--insecure-tls` | **已废弃**（保留仅为兼容旧脚本）：HTTPS 证书校验现已默认关闭，该参数不再产生任何效果 |
 
-> 默认开启 HTTPS 证书校验。程序自更新会下载并执行二进制文件，关闭校验等于让链路上的任何人都有机会替换它；
-> 若下载时报证书错误，请先检查系统时间与代理设置，万不得已再加 `--insecure-tls`。
+> **HTTPS 证书校验已默认关闭**，所有请求（含自更新下载）都不再验证服务器证书。
+> 好处：企业中间人代理 / 自签证书环境下无需额外参数即可使用。
+> 代价：链路上的中间人可以替换传输内容。自更新下载的文件仍会做 SHA-256 摘要校验，可挡住损坏或截断的文件，
+> 但挡不住在传输链路上被同步替换的二进制与摘要。
+
+### 🔐 管理员权限（Windows 自动提权）
+
+> Windows 下程序会**自动申请管理员权限**：当 GitHub Desktop 的资源目录不可写时，
+> 程序会弹出 UAC 确认框，并以管理员身份重新启动自身继续完成汉化。
+
+- **触发条件**：定位到要写入的资源目录后，程序会实际创建并删除一个临时文件来探测该目录是否可写；
+  目录可写时不打扰用户，不可写时才申请提权。
+- **不会重复弹窗**：已经以管理员身份运行时不再申请；提权后的子进程也不会再次申请（避免无限重启）。
+- **只有一个窗口**：提权后的进程会接管原进程的控制台窗口，输出仍显示在原来的黑窗口里，不会多弹一个。
+- **状态会传递**：提权后的进程是新进程，父进程内存里的交互结果（开发者选项的选择、"是否自动更新"的选择）
+  会一并传过去，不会让你重新选一遍。
+- **提权失败**：用户取消 UAC 时程序会给出提示并以当前权限继续，此时汉化可能失败。
+- **macOS / Linux**：没有 UAC 等价物（`sudo` 需要交互输入密码），程序无法自动提权；
+  资源目录不可写时会提示改用 `sudo` 运行。
 
 ### 🍏 macOS 使用说明
 
@@ -83,6 +100,37 @@
 ## 🎏怎么编译源代码
 
 > 下载克隆项目 本地使用VS2022 使用CMAKE打开（直接用vs2022打开项目文件夹），即可构建
+
+### Windows 构建踩坑：STL1001（编译器与头文件来自不同版本）
+
+本机装了多个 MSVC 工具集时，CMake 缓存里的编译器路径可能与 `INCLUDE` 里的头文件来自不同版本，
+编译会报 `error C2338: static_assert failed: 'error STL1001: Unexpected compiler version ...'`：
+
+```text
+C:\...\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe   <- 编译器（旧）
+C:\...\VC\Tools\MSVC\14.51.36231\include\yvals_core.h      <- 头文件（新）
+```
+
+原因：`vcvars64.bat` 默认启用最新工具集，而旧的构建目录里 `build.ninja` 仍指向旧的 `cl.exe`。
+解决办法（二选一）：
+
+- **重新探测编译器**（推荐，自动对齐当前工具集）：
+
+  ```bat
+  del "%BUILD%\CMakeFiles\*\CMakeCXXCompiler.cmake"
+  del "%BUILD%\CMakeFiles\*\CMakeCCompiler.cmake"
+  cmake -S . -B %BUILD%   :: 重新 configure
+  cmake --build %BUILD%
+  ```
+
+- **退到稳定版工具集**（让编译器与头文件都来自同一版本）：
+
+  ```bat
+  call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" -vcvars_ver=14.44
+  cmake --build %BUILD%
+  ```
+
+> 根本原因是 CMake 把 `cl.exe` 的绝对路径写进了缓存；VS 升级后工具集目录变了，缓存不会自动跟着变。
 
 ### macOS 构建说明
 
@@ -313,6 +361,7 @@ cl.exe -nologo -std:c++20 -EHsc -O2 -utf-8 "-DFILEVERSION=\"1.3.0\"" \
   - `X`（MAJOR）：移除或改变现有命令行参数、映射文件结构不兼容、导致旧版本无法继续使用
   - `Y`（MINOR）：新增运行平台 / 发布产物、新增命令行参数、默认安全行为收紧等向后兼容的功能扩展
   - `Z`（PATCH）：问题修复、翻译映射数据更新、文档与 CI 维护
+  - 例外：默认安全行为**放宽**（如关闭 HTTPS 证书校验）属于行为变更，按 `Y` 发布并在 Release 说明中显著标注
 - 映射文件的 `version` 仅作格式标记，加载器只读取 `minversion` / `select` / `tip`；新增字段若不影响旧加载器解析，无需提高 `minversion`
 - tag 名含 `beta` 时由 `build.yml` 自动标记为预发布
 

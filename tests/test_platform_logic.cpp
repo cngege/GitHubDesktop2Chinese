@@ -2,7 +2,8 @@
 // 覆盖：Version 解析与比较、代理 URL 解析（真实实现 Utils/net_parse.hpp）、
 //       scutil --proxy 文本解析、PlistBuddy 版本输出解析、localization.json 映射数据结构、
 //       #{n} 捕获注入（真实实现 Utils/localization_text.hpp）、
-//       预览版特性 / 未完成菜单项规则拦截（#48/#49 残留场景）。
+//       预览版特性 / 未完成菜单项规则拦截（#48/#49 残留场景）、
+//       UAC 自动提权判定与跨进程参数编码（真实实现 Utils/elevate.hpp）。
 // 设计为纯 C++ 单元测试（不依赖网络/注册表/bundle），Windows 与 macOS 均可运行。
 // 退出码：0 = 全部通过；1 = 存在失败。
 //
@@ -19,6 +20,7 @@
 #include "Utils/net_parse.hpp"
 #include "Utils/localization_text.hpp"
 #include "Utils/sha256.hpp"
+#include "Utils/elevate.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 // 直接测试被测实现：代理地址解析
@@ -662,6 +664,90 @@ static void test_sha256() {
     }
 }
 
+//////////////////////////////////////////////////////////////////////////
+
+// UAC 自动提权相关纯逻辑：
+//   - 提权判定（要不要弹 UAC）
+//   - 命令行参数转义（拼给提权子进程）
+//   - 十六进制编解码（跨进程传中文路径）
+static void test_elevation() {
+    std::printf("\n[UAC 提权逻辑]\n");
+
+    // ---- 提权判定 ----
+    check(elevate::should_request_elevation(false, false, false),
+          "目标不可写且未提权时申请提权");
+    check(!elevate::should_request_elevation(false, false, true),
+          "目标可写时不申请提权");
+    check(!elevate::should_request_elevation(false, true, false),
+          "已经是管理员时不再申请提权");
+    check(!elevate::should_request_elevation(true, false, false),
+          "提权子进程不再重复申请（避免无限重启）");
+
+    // ---- 命令行参数转义（规则与 CommandLineToArgvW 对应）----
+    check_eq_str(elevate::quote_windows_arg(std::string("")), R"("")",
+                 "空参数转义");
+    check_eq_str(elevate::quote_windows_arg(std::string("abc")), R"("abc")",
+                 "普通参数加引号");
+    check_eq_str(elevate::quote_windows_arg(std::string("a b")), R"("a b")",
+                 "含空格的参数加引号");
+    check_eq_str(elevate::quote_windows_arg(std::string("a\"b")), R"("a\"b")",
+                 "参数内的双引号被转义");
+    check_eq_str(elevate::quote_windows_arg(std::string("C:\\dir\\")), R"("C:\dir\\")",
+                 "结尾反斜杠成对转义");
+    check(elevate::quote_windows_arg(std::wstring(L"a b")) == std::wstring(L"\"a b\""),
+          "宽字符参数同样加引号");
+
+    // ---- 十六进制编解码（用于跨进程传递中文路径）----
+    check_eq_str(elevate::encode_hex(""), "", "空串编码为空");
+    check_eq_str(elevate::encode_hex("abc"), "616263", "ASCII 编码");
+    check_eq_str(elevate::decode_hex("616263"), "abc", "ASCII 解码");
+    check_eq_str(elevate::encode_hex("\xe6\xb1\x89\xe5\x8c\x96"),
+                 "e6b189e58c96", "中文 UTF-8 字节编码为纯 ASCII");
+    check_eq_str(elevate::decode_hex("e6b189e58c96"), "\xe6\xb1\x89\xe5\x8c\x96",
+                 "中文 UTF-8 字节解码还原");
+
+    // 往返一致（路径里带中文 UTF-8 字节）
+    {
+        const std::string raw = "C:\\Users\\\xe6\xb1\x89\xe5\x8c\x96\\app-3.6.8\\resources\\app";
+        check_eq_str(elevate::decode_hex(elevate::encode_hex(raw)), raw,
+                     "编解码往返一致");
+    }
+
+    // 非法字符不抛异常：已解出的部分照常返回
+    check_eq_str(elevate::decode_hex("61zz"), "a", "非法字符处停止解码");
+    check_eq_str(elevate::decode_hex("616"), "a", "奇数长度丢弃末尾半个字节");
+    check_eq_str(elevate::decode_hex(""), "", "空串解码为空");
+
+    // ---- 开发者选项编解码（提权重启时传给子进程）----
+    {
+        elevate::DevOptions empty;
+        check_eq_str(elevate::encode_dev_options(empty), "", "全未开启时编码为空");
+
+        elevate::DevOptions o;
+        o.invalid_check = true;
+        o.no_replace_res = true;
+        check_eq_str(elevate::encode_dev_options(o), "invalidcheck,noreplaceres",
+                     "多个选项按固定顺序编码");
+
+        const auto back = elevate::decode_dev_options(elevate::encode_dev_options(o));
+        check(back.invalid_check && back.no_replace_res, "编解码往返一致");
+        check(!back.error_check_main && !back.error_check_renderer
+              && !back.translation_from_bak && !back.dev_replace,
+              "未开启的选项不会被误还原");
+
+        // 未知项忽略，不抛异常
+        const auto partial = elevate::decode_dev_options("invalidcheck,unknownitem,devreplace");
+        check(partial.invalid_check && partial.dev_replace, "未知项被忽略且不影响其它项");
+        check(!partial.no_replace_res, "未知项不会误开其它选项");
+
+        // 单项与空串
+        elevate::DevOptions one;
+        one.dev_replace = true;
+        check_eq_str(elevate::encode_dev_options(one), "devreplace", "单项编码");
+        check(!elevate::decode_dev_options("").invalid_check, "空串解码得到全未开启");
+    }
+}
+
 int main() {
     std::printf("=== GitHubDesktop2Chinese 平台无关逻辑回归测试 ===\n");
     std::printf("FILEVERSION = %s\n", FILEVERSION);
@@ -677,6 +763,7 @@ int main() {
     test_packagejson_version();
     test_unsafe_feature_rule();
     test_sha256();
+    test_elevation();
 
     std::printf("\n=== 测试结束 ===\n");
     if(g_failures > 0) {

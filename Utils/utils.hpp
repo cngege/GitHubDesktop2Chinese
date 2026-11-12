@@ -47,6 +47,7 @@
 #include "http/httplib.h"
 #include "Utils/net_parse.hpp"      // 代理地址解析（纯字符串，便于单测）
 #include "Utils/sha256.hpp"         // 自更新下载完整性校验用的 SHA-256 实现
+#include "Utils/elevate.hpp"        // 提权相关的纯逻辑（十六进制编码等）
 #include <spdlog/spdlog.h>
 
 namespace fs = std::filesystem;
@@ -54,14 +55,15 @@ namespace fs = std::filesystem;
 class utils {
 public:
     //////////////////////////////////////////////////////////////////////////
-    // HTTPS 证书校验开关
-    // 默认开启。自更新流程会下载并执行可执行文件，关闭校验等于把执行权交给
-    // 链路上的任何人；只有在企业中间人代理等确实无法通过校验的环境下，
-    // 才由 --insecure-tls 显式关闭。
+    // HTTPS 证书校验
+    // 已按需求取消：所有 HTTPS 请求不再校验服务器证书。
+    // 好处：企业中间人代理 / 自签证书环境下无需额外参数即可使用。
+    // 代价：链路上的中间人可以替换传输内容（含自更新下载的二进制）。
+    // 自更新下载的文件仍会做 SHA-256 摘要校验，可挡住损坏/截断的文件，
+    // 但无法挡住在传输链路上被同步替换的二进制与摘要。
     //////////////////////////////////////////////////////////////////////////
-    static bool& tls_verification_enabled() {
-        static bool enabled = true;
-        return enabled;
+    static bool tls_verification_enabled() {
+        return false;
     }
 
     // 代理解析的实现在 Utils/net_parse.hpp（纯字符串逻辑，便于单测），这里只做转发
@@ -70,21 +72,34 @@ public:
     }
 
     /**
-     * @brief 证书校验失败时给出一次性的可操作提示
+     * @brief 目录在当前权限下是否可写
      *
-     * 校验失败最常见的原因是链路上存在中间人证书（企业代理/自签证书/抓包工具）。
-     * 只在第一次失败时提示，避免每次请求都刷屏。
+     * 实现方式为"实际创建一个临时文件再删掉"：
+     * 只看 ACL 位或只读属性都不准（目录可写但文件只读、或反之都会误判），
+     * 而汉化流程本身就是"在同目录写临时文件再原子替换"，用同样的方式探测最贴合实际。
+     *
+     * 目录不存在时返回 false（无法写入）。
      */
-    static void hint_if_certificate_failed(httplib::Error err) {
-        if (err != httplib::Error::SSLServerVerification) {
-            return;
+    static bool is_dir_writable(const fs::path& dir) {
+        std::error_code ec;
+        if(dir.empty() || !fs::is_directory(dir, ec) || ec) {
+            return false;
         }
-        static bool hinted = false;
-        if (hinted) {
-            return;
+#if defined(_WIN32) || defined(_WIN64)
+        const fs::path probe = dir / (L".gd2c_write_test_"
+                                     + std::to_wstring(::GetCurrentProcessId()) + L".tmp");
+        HANDLE h = ::CreateFileW(probe.c_str(), GENERIC_WRITE,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, nullptr);
+        if(h == INVALID_HANDLE_VALUE) {
+            return false;
         }
-        hinted = true;
-        spdlog::warn("HTTPS 证书校验失败(常见于企业代理或自签证书)。确认网络可信后可加 --insecure-tls 重试");
+        ::CloseHandle(h);
+        ::DeleteFileW(probe.c_str());
+        return true;
+#else
+        return ::access(dir.c_str(), W_OK) == 0;
+#endif
     }
 
     static std::string GetEnvVar(const std::string& varName) {
@@ -350,6 +365,40 @@ public:
     }
 
     /**
+     * @brief 把路径编码成可安全经命令行传递的十六进制文本
+     *
+     * 提权重启时需要把"父进程已解析出的资源目录"传给子进程。
+     * 命令行参数会经过系统的 ANSI 代码页转换（中文路径会被破坏），
+     * 因此改用纯 ASCII 的十六进制文本传递。
+     */
+    static std::string encode_path_hex(const fs::path& dir) {
+#if defined(_WIN32) || defined(_WIN64)
+        // Windows: 宽字符 -> UTF-8 字节
+        return elevate::encode_hex(utils::to_byte_string(dir.wstring()));
+#else
+        // POSIX: 路径本身就是原始字节(通常为 UTF-8)
+        return elevate::encode_hex(dir.string());
+#endif
+    }
+
+    /**
+     * @brief encode_path_hex 的逆操作；无法还原时返回空路径
+     */
+    static fs::path decode_path_hex(const std::string& hex) {
+        const std::string bytes = elevate::decode_hex(hex);
+        if(bytes.empty()) {
+            return {};
+        }
+#if defined(_WIN32) || defined(_WIN64)
+        // Windows: UTF-8 字节 -> 宽字符
+        return fs::path(utils::to_wide_string(bytes));
+#else
+        // POSIX: 原始字节直接构造路径
+        return fs::path(bytes);
+#endif
+    }
+
+    /**
      * @brief 读取文件全部内容（二进制）
      * @param filename 目标文件路径
      * @param ok 可选输出：是否成功打开并完整读取。失败时返回空串，
@@ -564,7 +613,7 @@ public:
         if(proxy.second) {
             cli.set_proxy(proxy.first, proxy.second);
         }
-        // 证书校验默认开启；仅 --insecure-tls 显式关闭（见 tls_verification_enabled）
+        // 证书校验已按需求取消（见 tls_verification_enabled 的说明）
         cli.enable_server_certificate_verification(tls_verification_enabled());
         // 显式设置超时：httplib 默认连接/读取超时是 300 秒，断网时界面会像卡死
         cli.set_connection_timeout(10, 0);
@@ -579,7 +628,6 @@ public:
         }
         if (!res) {
             spdlog::debug("请求 {} 失败: {}", params, httplib::to_string(res.error()));
-            hint_if_certificate_failed(res.error());
             return false;
         }
         if (res->status == httplib::StatusCode::OK_200) {
@@ -677,7 +725,6 @@ public:
 
             if(!res) {
                 spdlog::error("网络请求失败:{}", httplib::to_string(res.error()));
-                hint_if_certificate_failed(res.error());
                 return false;
             }
             // 请求了断点续传却收到 200（服务器不支持 Range）：此时文件已被追加了整份内容，

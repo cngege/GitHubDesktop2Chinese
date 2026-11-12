@@ -235,6 +235,41 @@ namespace platform {
         return std::nullopt;
     }
 
+    ////////////////////////////////////////////////////////////////////
+    // 管理员提权
+    ////////////////////////////////////////////////////////////////////
+
+    inline bool is_elevated() {
+        // macOS 没有 UAC；以 root 身份运行视为已提权
+        return ::geteuid() == 0;
+    }
+
+    inline bool supports_auto_elevation() {
+        // macOS 无 UAC 等价物：sudo 需要交互输入密码，无法在程序内自动完成
+        return false;
+    }
+
+    inline std::optional<int> relaunch_elevated(const ElevationRequest&) {
+        return std::nullopt;
+    }
+
+    inline void attach_parent_console(int) {
+        // POSIX 下子进程天然继承父进程的控制台，无需处理
+    }
+
+    inline int peek_elevated_parent_pid() {
+        // 其它平台不支持自动提权，不存在提权子进程
+        return 0;
+    }
+
+    inline int current_process_id() {
+        return static_cast<int>(::getpid());
+    }
+
+    inline std::string elevation_hint() {
+        return "使用 sudo 运行本程序（例如：sudo ./GitHubDesktop2Chinese_macos_*）";
+    }
+
 } // namespace platform
 
 #endif // UTILS_PLATFORM_MAC_HPP
