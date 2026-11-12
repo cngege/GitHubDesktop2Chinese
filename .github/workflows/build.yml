@@ -149,9 +149,17 @@ jobs:
         path: ${{github.workspace}}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
 
   build-linux:
-    # Linux 构建：ubuntu-latest，使用系统 libssl-dev（apt 安装）
+    # Linux 构建：ubuntu-latest(x64) 与 ubuntu-24.04-arm(arm64) 双架构，使用系统 libssl-dev（apt 安装）
     # Linux 版 GitHub Desktop 为社区 fork（shiftkey/desktop），此处仅构建汉化工具本身
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
 
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -166,29 +174,32 @@ jobs:
       with:
           default: v0.0.0 # Optional: Default version when tag not found
 
-    - name: Configure CMake (Linux)
+    - name: Configure CMake (Linux ${{ matrix.arch }})
       run: |
         cmake -B ${{github.workspace}}/build \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
           -DGitHubActions=1 \
           -DFILE_VERSION="${{steps.tag.outputs.tag}}"
 
-    - name: Build (Linux)
+    - name: Build (Linux ${{ matrix.arch }})
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Run platform logic tests (Linux)
+    - name: Run platform logic tests (Linux ${{ matrix.arch }})
       # 运行平台无关逻辑的回归测试（Version 解析 / 代理 URL / scutil / gsettings / plist / package.json）
       working-directory: ${{github.workspace}}/build
       run: ctest -R platform_logic_tests --output-on-failure
 
-    - name: Rename (Linux)
-      run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
+    - name: Verify binary architecture (Linux ${{ matrix.arch }})
+      run: file ${{github.workspace}}/build/GitHubDesktop2Chinese
 
-    - name: Upload Release GitHubDesktop2Chinese (Linux)
+    - name: Rename (Linux ${{ matrix.arch }})
+      run: mv ${{github.workspace}}/build/GitHubDesktop2Chinese ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+
+    - name: Upload Release GitHubDesktop2Chinese (Linux ${{ matrix.arch }})
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
-        name: GitHubDesktop2Chinese_linux_x64
-        path: ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64
+        name: GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+        path: ${{github.workspace}}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}
 
   publish_release:
     name: Publish release
@@ -204,7 +215,30 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: ${{github.workspace}}/build/
-          
+
+      - name: Generate SHA-256 checksum files
+        # 为每个产物生成 <产物名>.sha256，使自更新 SHA-256 校验生效。
+        # 哈希取自本次真实构建产物（非本地计算），避免不同构建环境字节差异导致校验失败。
+        shell: pwsh
+        run: |
+          $bins = @(
+            "${{github.workspace}}/build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe",
+            "${{github.workspace}}/build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe",
+            "${{github.workspace}}/build/GitHubDesktop2Chinese_macos_x64/GitHubDesktop2Chinese_macos_x64",
+            "${{github.workspace}}/build/GitHubDesktop2Chinese_macos_arm64/GitHubDesktop2Chinese_macos_arm64",
+            "${{github.workspace}}/build/GitHubDesktop2Chinese_linux_x64/GitHubDesktop2Chinese_linux_x64",
+            "${{github.workspace}}/build/GitHubDesktop2Chinese_linux_arm64/GitHubDesktop2Chinese_linux_arm64"
+          )
+          foreach ($b in $bins) {
+            if (Test-Path $b) {
+              $h = (Get-FileHash -Algorithm SHA256 -Path $b).Hash.ToLower()
+              Set-Content -Path "$b.sha256" -Value "$h  $(Split-Path $b -Leaf)"
+              Write-Host "Wrote $b.sha256 -> $h"
+            } else {
+              Write-Warning "Missing binary: $b"
+            }
+          }
+
       - name: Get tag
         id: tag
         uses: devops-actions/action-get-tag@4e13c4ea459efa2988a10d5ff0f252bb097929ef # v1.0.2
@@ -232,10 +266,17 @@ jobs:
           #name: 0
           artifacts: |
             ./build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe
+            ./build/GitHubDesktop2Chinese/build/Release/GitHubDesktop2Chinese.exe.sha256
             ./build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe
+            ./build/GitHubDesktop2Chinese/build32/Release/GitHubDesktop2Chinese_x86.exe.sha256
             ./build/GitHubDesktop2Chinese_macos_x64/GitHubDesktop2Chinese_macos_x64
+            ./build/GitHubDesktop2Chinese_macos_x64/GitHubDesktop2Chinese_macos_x64.sha256
             ./build/GitHubDesktop2Chinese_macos_arm64/GitHubDesktop2Chinese_macos_arm64
+            ./build/GitHubDesktop2Chinese_macos_arm64/GitHubDesktop2Chinese_macos_arm64.sha256
             ./build/GitHubDesktop2Chinese_linux_x64/GitHubDesktop2Chinese_linux_x64
+            ./build/GitHubDesktop2Chinese_linux_x64/GitHubDesktop2Chinese_linux_x64.sha256
+            ./build/GitHubDesktop2Chinese_linux_arm64/GitHubDesktop2Chinese_linux_arm64
+            ./build/GitHubDesktop2Chinese_linux_arm64/GitHubDesktop2Chinese_linux_arm64.sha256
             ./json/localization.json
         env:
           GITHUB_REPOSITORY: CNGEGE/GitHubDesktop2Chinese
