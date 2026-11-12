@@ -37,4 +37,21 @@ $：匹配输入字符串的结束位置。
     所有可以利用正则模糊匹配这两个字符，使其适应性更强：如 Ee.createElement\\((..),null,this.props.repositoryName
     替换的时候使用$1表示第一个使用正则捕获到的内容 如：Ee.createElement\\($1,null,this.props.repositoryName
 
-8. 待补充..
+8. 规则可以带第 3、4 项（均可省略）：
+   - 第 3 项是「关键字定位串」：先在文件里找到它，再用它捕获到的内容填充替换串里的 `#{n}` 占位符；
+     找不到就跳过这条规则（避免把错误的字符插进文件导致程序打不开）。
+   - 第 4 项是「平台限定」：`"windows"` / `"macos"` / `"linux"`，也可用逗号分隔多个，如 `"windows,linux"`；
+     留空表示所有平台。
+     同一段文案在 Windows 与 macOS 上措辞不同（如 `File > Options.` 与 `GitHub Desktop > Settings.`），
+     用平台限定写两条：非当前平台的规则既不会替换，也不会被算成失效项（不会让 CI 变红）。
+
+   例（macOS 专用的一条规则，第 3 项留空）：
+
+   ```json
+   ["\"Retry Clone\"","\"重试克隆\"","","macos"]
+   ```
+
+   > 校验脚本默认按当前机器的平台判断；可用环境变量 `GD2C_PLATFORM=macos` 强制按 macOS 校验，
+   > 这样在 Windows 上也能检查 macOS/Linux 的映射是否失效。
+
+9. 待补充..

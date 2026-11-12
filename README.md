@@ -225,6 +225,13 @@ cmake --build build
 - 主节点 - renderer(array): 存储用于替换GitHubDesktop的renderer.js的映射
 - 主节点 - renderer_dev(array): 存储用于替换GitHubDesktop的renderer.js的映射,区别于开发时快速替换
 
+> 每条规则形如 `[匹配正则, 替换文本]`，还可以带两个可选项：
+> 第 3 项是「关键字定位串」（用它捕获的内容填充替换串里的 `#{n}` 占位符），
+> 第 4 项是「平台限定」（`"windows"` / `"macos"` / `"linux"`，可用逗号分隔多个）。
+> 同一段文案在 Windows 与 macOS 上措辞不同（如 `File > Options.` 与 `GitHub Desktop > Settings.`），
+> 用平台限定写两条即可；非当前平台的规则不会被替换，也不会被算成失效项。
+> 详见 [json/localization_notes.md](json/localization_notes.md)。
+
 ## ⚠️minifier 敏感条目维护说明
 > GitHub Desktop 的 `main.js`/`renderer.js` 是**压缩后**的产物，变量名由压缩器分配（如 `Ae`、`xe`、`EH`、`ZB`），  
   且不同版本/不同打包轮次可能采用**不同的压缩形态**。这是大部分"失效项"的根源，编写正则时务必注意。

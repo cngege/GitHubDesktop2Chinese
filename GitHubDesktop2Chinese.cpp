@@ -151,6 +151,33 @@ std::optional<std::regex> make_regex(const std::string& pattern, const char* tag
     }
 }
 
+// 规则的平台限定（映射文件规则的第 4 项）。
+// 可写单个平台名，也可用逗号分隔多个（如 "windows,linux"）。
+// 同一段文案在 Windows 与 macOS 上措辞不同（"File > Options." 与
+// "GitHub Desktop > Settings."），限定平台后，另一个平台既不会替换，
+// 也不会被算成失效项。
+bool platform_matches(const std::string& tag) {
+    if(tag.empty() || tag == "any") {
+        return true;
+    }
+    const std::string current = platform::name();
+    size_t pos = 0;
+    while(pos <= tag.size()) {
+        const size_t end = tag.find(',', pos);
+        const std::string one = tag.substr(pos, end == std::string::npos ? std::string::npos : end - pos);
+        const size_t b = one.find_first_not_of(" \t");
+        const size_t e = one.find_last_not_of(" \t");
+        if(b != std::string::npos && one.substr(b, e - b + 1) == current) {
+            return true;
+        }
+        if(end == std::string::npos) {
+            break;
+        }
+        pos = end + 1;
+    }
+    return false;
+}
+
 // 处理单个 js 文件时需要的描述信息与日志标签。
 // 标签逐项给出是为了保持 main.js / renderer.js 两侧原有的日志措辞完全不变
 // （历史上 renderer 侧的第三项检测就写作 "[renderer]" 而不是 "[renderer 3]"）。
@@ -230,6 +257,15 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                 if(rege.empty() || rege == "\"\"") {
                     continue;
                 }
+
+                // 可选的第四项：平台限定（"windows" / "macos" / "linux"，
+                // 可用逗号分隔多个，如 "windows,linux"）。
+                if(item.value().size() >= 4) {
+                    if(!platform_matches(item.value()[3].get<std::string>())) {
+                        continue;
+                    }
+                }
+
                 auto pattern = make_regex(rege, tags.item_tag);
                 if(!pattern) {
                     continue;
@@ -251,7 +287,7 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                     continue;
                 }
 
-                if(item.value().size() >= 3) {
+                if(item.value().size() >= 3 && !item.value()[2].get<std::string>().empty()) {
                     // 用数组第三项定位关键字，把捕获组填进 #{n} 占位符
                     const std::string regex_str = item.value()[2].get<std::string>();
                     auto pattern3 = make_regex(regex_str, tags.item3_tag);

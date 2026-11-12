@@ -125,12 +125,44 @@ const lintReplacement = (where, s) => {
 // cpp 中空字符串或字面量 '""' 都会跳过
 const skip = (s) => !s || s === '""';
 
+// 规则的第 4 项是平台限定（"windows" / "macos" / "linux"）。
+// 同一段文案在 Windows 与 macOS 上措辞不同，限定平台后，
+// 另一个平台既不会替换，也不会被算成失效项（与 loader 的处理保持一致）。
+//
+// 平台默认按当前机器推断；可用环境变量 GD2C_PLATFORM 覆盖，
+// 这样在 Windows 上也能校验 macOS/Linux 的映射：
+//   $env:GD2C_PLATFORM = "macos"; node check_localization.js ...
+const detectPlatform = () => {
+  const forced = (process.env.GD2C_PLATFORM || '').trim().toLowerCase();
+  if (forced) return forced;
+  if (process.platform === 'win32') return 'windows';
+  if (process.platform === 'darwin') return 'macos';
+  if (process.platform === 'linux') return 'linux';
+  return 'any';
+};
+
+const currentPlatform = detectPlatform();
+
+const platformMatches = (tag) => {
+  if (!tag || tag === 'any') return true;
+  // 可用逗号分隔多个平台（如 "windows,linux"）
+  return tag
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .includes(currentPlatform);
+};
+
+// 第 3 项是关键字定位串，留空表示没有关键字
+const hasKeyword = (item) =>
+  Array.isArray(item) && item.length >= 3 && typeof item[2] === 'string' && item[2] !== '';
+
 // JS 正则与 std::regex(ECMAScript 语法) 在本场景下语义一致，
 // 但 std::regex 不支持 lookbehind(?<=) 等新增语法，新增规则请避免使用。
 const checkSection = (section, text, tag) => {
   if (!Array.isArray(d[section])) return;
   for (const it of d[section]) {
     if (!Array.isArray(it) || skip(it[0])) continue;
+    if (!platformMatches(it[3])) continue; // 平台限定：非当前平台的规则跳过
     lintReplacement(`${tag} ${it[0]}`, it[1]);
     try {
       if (new RegExp(it[0]).test(text)) continue;
@@ -140,7 +172,7 @@ const checkSection = (section, text, tag) => {
       console.log(`[${tag}] 无效正则(${e.message}): ${it[0]}`);
       total++;
     }
-    if (it.length >= 3 && !skip(it[2])) {
+    if (hasKeyword(it)) {
       try {
         if (new RegExp(it[2]).test(text)) continue;
         console.log(`[${tag} third] ${it[2]}`);

@@ -44,6 +44,26 @@ namespace fs = std::filesystem;
 namespace platform {
 
     //////////////////////////////////////////////////////////////////////
+    // 平台标识
+    //////////////////////////////////////////////////////////////////////
+
+    // 当前平台的标识名（"windows" / "macos" / "linux"）。
+    // 用于映射文件按平台区分规则：同一段文案在 Windows 与 macOS 上措辞不同
+    // （如 "File > Options." 与 "GitHub Desktop > Settings."），
+    // 限定平台后，另一个平台既不会替换，也不会被算成失效项。
+    inline const char* name() {
+    #if defined(PLATFORM_WINDOWS)
+        return "windows";
+    #elif defined(PLATFORM_MACOS)
+        return "macos";
+    #elif defined(PLATFORM_LINUX)
+        return "linux";
+    #else
+        return "any";
+    #endif
+    }
+
+    //////////////////////////////////////////////////////////////////////
     // 控制台
     //////////////////////////////////////////////////////////////////////
 
