@@ -1,7 +1,9 @@
 // 平台无关逻辑的回归测试
 // 覆盖：Version 解析与比较、代理 URL 解析（真实实现 Utils/net_parse.hpp）、
 //       scutil --proxy 文本解析、PlistBuddy 版本输出解析、localization.json 映射数据结构、
-//       #{n} 捕获注入（真实实现 Utils/localization_text.hpp）。
+//       #{n} 捕获注入（真实实现 Utils/localization_text.hpp）、
+//       预览版特性 / 未完成菜单项规则拦截（#48/#49 残留场景）、
+//       UAC 自动提权判定与跨进程参数编码（真实实现 Utils/elevate.hpp）。
 // 设计为纯 C++ 单元测试（不依赖网络/注册表/bundle），Windows 与 macOS 均可运行。
 // 退出码：0 = 全部通过；1 = 存在失败。
 //
@@ -17,6 +19,8 @@
 #include "VersionParse/Version.hpp"
 #include "Utils/net_parse.hpp"
 #include "Utils/localization_text.hpp"
+#include "Utils/sha256.hpp"
+#include "Utils/elevate.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 // 直接测试被测实现：代理地址解析
@@ -132,44 +136,44 @@ static void test_version() {
     std::printf("\n[Version 解析与比较]\n");
 
     // 基本版本号解析
-    std::Version v1("1.2.3");
+    version_parse::Version v1("1.2.3");
     check((bool)v1, "解析 \"1.2.3\" 有效");
     check_eq(v1.major, 1, "major=1");
     check_eq(v1.minor, 2, "minor=2");
     check_eq(v1.revision, 3, "revision=3");
 
     // v 前缀
-    std::Version v2("v1.2.3");
+    version_parse::Version v2("v1.2.3");
     check((bool)v2, "解析 \"v1.2.3\" 有效（v 前缀兼容）");
 
     // 两段版本号
-    std::Version v3("1.40");
+    version_parse::Version v3("1.40");
     check((bool)v3, "解析 \"1.40\" 有效（两位版本号）");
 
     // 无效输入
-    std::Version v4("not-a-version");
+    version_parse::Version v4("not-a-version");
     check(!(bool)v4, "解析 \"not-a-version\" 无效");
 
-    std::Version v5("");
+    version_parse::Version v5("");
     check(!(bool)v5, "解析空字符串无效");
 
     // 比较
-    std::Version a("1.2.3");
-    std::Version b("1.2.4");
+    version_parse::Version a("1.2.3");
+    version_parse::Version b("1.2.4");
     check(a < b, "1.2.3 < 1.2.4");
     check(b > a, "1.2.4 > 1.2.3");
     check(a != b, "1.2.3 != 1.2.4");
 
-    std::Version c("1.2.3");
+    version_parse::Version c("1.2.3");
     check(a == c, "1.2.3 == 1.2.3");
     check(!(a < c), "1.2.3 不小于自身");
 
     // 跨大版本比较
-    std::Version d("2.0.0");
+    version_parse::Version d("2.0.0");
     check(a < d, "1.2.3 < 2.0.0（跨大版本）");
 
     // 程序内置版本（FILEVERSION 由 CMake 注入）
-    std::Version fileVer(FILEVERSION);
+    version_parse::Version fileVer(FILEVERSION);
     check((bool)fileVer || std::string(FILEVERSION) == "0.0.0-Dev.0",
           "FILEVERSION 宏已定义且可解析（或为开发占位版本）");
 }
@@ -559,6 +563,190 @@ static void test_packagejson_version() {
 }
 
 //////////////////////////////////////////////////////////////////////////
+// 预览版特性 / 未完成菜单项防护（#48 / #49 残留场景）
+//////////////////////////////////////////////////////////////////////////
+
+static void test_unsafe_feature_rule() {
+    std::printf("\n[预览版特性 / 未完成菜单项防护]\n");
+
+    using localization_text::is_unsafe_feature_rule;
+    using localization_text::select_rules_all_blocked;
+    using Rules = std::vector<std::vector<std::string>>;
+
+    // v1.2.4 老 json：main.js 把 ||!1 改成 ||!0
+    const std::string old_main_p = R"(===process\.env\.GITHUB_DESKTOP_PREVIEW_FEATURES\|\|!1)";
+    const std::string old_main_r = "===process.env.GITHUB_DESKTOP_PREVIEW_FEATURES||!0";
+    check(is_unsafe_feature_rule(old_main_p, old_main_r),
+          "老 json 的 main.js 预览规则被禁用");
+
+    // v1.2.4 老 json：renderer.js 把环境变量注释掉并写死 "1"
+    const std::string old_renderer_p = R"(===process\.env\.GITHUB_DESKTOP_PREVIEW_FEATURES\})";
+    const std::string old_renderer_r =
+        std::string("===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/") + "\"1\"}";
+    check(is_unsafe_feature_rule(old_renderer_p, old_renderer_r),
+          "老 json 的 renderer.js 预览规则被禁用");
+
+    // 当前 json 保留的那条（默认 enable:false），手动改回 true 也必须被禁用
+    check(is_unsafe_feature_rule(old_renderer_p, old_renderer_r),
+          "手动 enable:true 的规则同样被禁用(判定与 enable 值无关)");
+
+    // 直接注入未完成菜单 id / 仅匹配串含预览开关
+    check(is_unsafe_feature_rule("MENU_ID", "menu-open-in-copilot-app"),
+          "替换串含 open-in-copilot-app 时被禁用");
+    check(is_unsafe_feature_rule("GITHUB_DESKTOP_PREVIEW_FEATURES", "汉化文本"),
+          "仅匹配串含预览开关也被禁用");
+
+    // 正常规则不能误伤
+    check(!is_unsafe_feature_rule("Pull Origin", "拉取源分支"), "普通翻译规则不受影响");
+    check(!is_unsafe_feature_rule("createElement", "创建元素"), "minifier 别名规则不受影响");
+    check(!is_unsafe_feature_rule("", ""), "空规则不误判");
+    check(!is_unsafe_feature_rule("preview", "预览"), "仅含 preview 单词不误判");
+
+    // 整条 select 的跳过决策
+    check(select_rules_all_blocked({{old_main_p, old_main_r}}),
+          "老 json main.js select 整条跳过");
+    check(select_rules_all_blocked({{old_renderer_p, old_renderer_r}}),
+          "老 json renderer.js select 整条跳过");
+    check(select_rules_all_blocked({{old_main_p, old_main_r}, {old_renderer_p, old_renderer_r}}),
+          "多条预览规则混合时整条跳过");
+    check(!select_rules_all_blocked({{"Pull Origin", "拉取源分支"}}),
+          "正常 select 保持原有询问流程");
+    check(!select_rules_all_blocked({{"Pull Origin", "拉取源分支"}, {old_main_p, old_main_r}}),
+          "混合含一条可用规则时不整条跳过(危险条仍被逐条过滤)");
+    check(!select_rules_all_blocked({{"", ""}}),
+          "老 json 的空 select 条目保持原行为");
+    check(!select_rules_all_blocked(Rules{}), "空 replace 数组不整条跳过");
+    check(!select_rules_all_blocked({{old_main_p}}),
+          "只有匹配串一项的畸形规则不整条跳过");
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// SHA-256 实现自检：用 NIST/FIPS 180-4 标准测试向量，
+// 保证自更新下载校验用的摘要算法在三个平台上行为一致。
+static void test_sha256() {
+    std::printf("\n[SHA-256 实现自检]\n");
+
+    check_eq_str(sha256::hex(""),
+                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                 "空串摘要");
+    check_eq_str(sha256::hex("abc"),
+                 "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+                 "\"abc\" 摘要");
+    check_eq_str(sha256::hex("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"),
+                 "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+                 "448bit 标准向量");
+    check_eq_str(sha256::hex(std::string(1000000, 'a')),
+                 "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
+                 "100 万个 'a'");
+
+    // 分块喂入必须与一次性喂入结果一致
+    {
+        sha256::Sha256 h;
+        const std::string data(5000, 'x');
+        for (int i = 0; i < 5000; i += 137) {
+            const std::size_t n = std::min<std::size_t>(137, data.size() - i);
+            h.update(reinterpret_cast<const unsigned char*>(data.data() + i), n);
+        }
+        check_eq_str(h.final_hex(), sha256::hex(data), "分块喂入与一次性喂入结果一致");
+    }
+
+    // sha256sum 风格文本解析
+    {
+        std::string out;
+        check(sha256::extract_hash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  file.bin", out)
+              && out == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+              "解析 sha256sum 风格文本");
+        check(sha256::extract_hash("SHA256 (file) = BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", out)
+              && out == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+              "解析带前缀文本并统一为小写");
+        check(!sha256::extract_hash("not a hash", out), "非法文本解析失败");
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// UAC 自动提权相关纯逻辑：
+//   - 提权判定（要不要弹 UAC）
+//   - 命令行参数转义（拼给提权子进程）
+//   - 十六进制编解码（跨进程传中文路径）
+static void test_elevation() {
+    std::printf("\n[UAC 提权逻辑]\n");
+
+    // ---- 提权判定 ----
+    check(elevate::should_request_elevation(false, false, false),
+          "目标不可写且未提权时申请提权");
+    check(!elevate::should_request_elevation(false, false, true),
+          "目标可写时不申请提权");
+    check(!elevate::should_request_elevation(false, true, false),
+          "已经是管理员时不再申请提权");
+    check(!elevate::should_request_elevation(true, false, false),
+          "提权子进程不再重复申请（避免无限重启）");
+
+    // ---- 命令行参数转义（规则与 CommandLineToArgvW 对应）----
+    check_eq_str(elevate::quote_windows_arg(std::string("")), R"("")",
+                 "空参数转义");
+    check_eq_str(elevate::quote_windows_arg(std::string("abc")), R"("abc")",
+                 "普通参数加引号");
+    check_eq_str(elevate::quote_windows_arg(std::string("a b")), R"("a b")",
+                 "含空格的参数加引号");
+    check_eq_str(elevate::quote_windows_arg(std::string("a\"b")), R"("a\"b")",
+                 "参数内的双引号被转义");
+    check_eq_str(elevate::quote_windows_arg(std::string("C:\\dir\\")), R"("C:\dir\\")",
+                 "结尾反斜杠成对转义");
+    check(elevate::quote_windows_arg(std::wstring(L"a b")) == std::wstring(L"\"a b\""),
+          "宽字符参数同样加引号");
+
+    // ---- 十六进制编解码（用于跨进程传递中文路径）----
+    check_eq_str(elevate::encode_hex(""), "", "空串编码为空");
+    check_eq_str(elevate::encode_hex("abc"), "616263", "ASCII 编码");
+    check_eq_str(elevate::decode_hex("616263"), "abc", "ASCII 解码");
+    check_eq_str(elevate::encode_hex("\xe6\xb1\x89\xe5\x8c\x96"),
+                 "e6b189e58c96", "中文 UTF-8 字节编码为纯 ASCII");
+    check_eq_str(elevate::decode_hex("e6b189e58c96"), "\xe6\xb1\x89\xe5\x8c\x96",
+                 "中文 UTF-8 字节解码还原");
+
+    // 往返一致（路径里带中文 UTF-8 字节）
+    {
+        const std::string raw = "C:\\Users\\\xe6\xb1\x89\xe5\x8c\x96\\app-3.6.8\\resources\\app";
+        check_eq_str(elevate::decode_hex(elevate::encode_hex(raw)), raw,
+                     "编解码往返一致");
+    }
+
+    // 非法字符不抛异常：已解出的部分照常返回
+    check_eq_str(elevate::decode_hex("61zz"), "a", "非法字符处停止解码");
+    check_eq_str(elevate::decode_hex("616"), "a", "奇数长度丢弃末尾半个字节");
+    check_eq_str(elevate::decode_hex(""), "", "空串解码为空");
+
+    // ---- 开发者选项编解码（提权重启时传给子进程）----
+    {
+        elevate::DevOptions empty;
+        check_eq_str(elevate::encode_dev_options(empty), "", "全未开启时编码为空");
+
+        elevate::DevOptions o;
+        o.invalid_check = true;
+        o.no_replace_res = true;
+        check_eq_str(elevate::encode_dev_options(o), "invalidcheck,noreplaceres",
+                     "多个选项按固定顺序编码");
+
+        const auto back = elevate::decode_dev_options(elevate::encode_dev_options(o));
+        check(back.invalid_check && back.no_replace_res, "编解码往返一致");
+        check(!back.error_check_main && !back.error_check_renderer
+              && !back.translation_from_bak && !back.dev_replace,
+              "未开启的选项不会被误还原");
+
+        // 未知项忽略，不抛异常
+        const auto partial = elevate::decode_dev_options("invalidcheck,unknownitem,devreplace");
+        check(partial.invalid_check && partial.dev_replace, "未知项被忽略且不影响其它项");
+        check(!partial.no_replace_res, "未知项不会误开其它选项");
+
+        // 单项与空串
+        elevate::DevOptions one;
+        one.dev_replace = true;
+        check_eq_str(elevate::encode_dev_options(one), "devreplace", "单项编码");
+        check(!elevate::decode_dev_options("").invalid_check, "空串解码得到全未开启");
+    }
+}
 
 int main() {
     std::printf("=== GitHubDesktop2Chinese 平台无关逻辑回归测试 ===\n");
@@ -573,6 +761,9 @@ int main() {
     test_gsettings();
     test_linux_resource_candidates();
     test_packagejson_version();
+    test_unsafe_feature_rule();
+    test_sha256();
+    test_elevation();
 
     std::printf("\n=== 测试结束 ===\n");
     if(g_failures > 0) {

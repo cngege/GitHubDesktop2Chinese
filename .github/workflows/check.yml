@@ -1,5 +1,4 @@
-# XXXXXXXX
-
+# PR / 映射文件变更时的失效项校验：exe --invalidcheck + node 独立复核
 name: Check Pull Request
 on:
   pull_request:
@@ -17,7 +16,7 @@ jobs:
       pull-requests: write
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
     - name: utf8
       # 使用utf8编码环境编译
@@ -68,7 +67,3 @@ jobs:
       shell: pwsh
       run: |
         node "tests/check_localization.js" "json/localization.json" "${{github.workspace}}\GitHubDesktopFull\lib\net45\resources\app"
-
-    #- name: Test Tree
-    #  shell: pwsh
-    #  run: tree . /A /F

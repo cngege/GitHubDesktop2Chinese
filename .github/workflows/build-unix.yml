@@ -1,0 +1,202 @@
+# Linux / macOS 构建验证工作流（常驻 main）：不构建 Windows、不创建 Release。
+# 通过手动 workflow_dispatch 触发；构建成功后把产物回写到 ci-bin-* 分支，
+# 便于在本机用 git fetch 取回（无需下载 artifact 的额外 token）。
+name: Build Linux and macOS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  BUILD_TYPE: Release
+  FILE_VERSION: v1.3.0
+
+jobs:
+  build-linux:
+    name: Linux ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev
+
+      - name: Configure CMake (Linux ${{ matrix.arch }})
+        run: |
+          cmake -B ${{ github.workspace }}/build \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DGitHubActions=1 \
+            -DFILE_VERSION=${{ env.FILE_VERSION }}
+
+      - name: Build (Linux ${{ matrix.arch }})
+        run: |
+          set +e
+          set -o pipefail
+          cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }} 2>&1 | tee /tmp/unix-build.log
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            grep -aE 'fatal error:|error:|FAILED:|Error [0-9]+' /tmp/unix-build.log | head -12 | sed 's/^/::error::/'
+          fi
+          exit "$rc"
+
+      - name: Run platform logic tests (Linux ${{ matrix.arch }})
+        working-directory: ${{ github.workspace }}/build
+        run: |
+          set +e
+          set -o pipefail
+          ctest -R platform_logic_tests --output-on-failure 2>&1 | tee /tmp/ctest.log
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            grep -aE '^FAIL|FAILED|dyld|Library not loaded|No such file|error:' /tmp/ctest.log | head -15 | sed 's/^/::error::/'
+          fi
+          exit "$rc"
+
+      - name: Locate and stage binary (Linux ${{ matrix.arch }})
+        run: |
+          set -e
+          bin=$(find ${{ github.workspace }}/build -type f -name 'GitHubDesktop2Chinese' | head -1)
+          if [ -z "$bin" ]; then echo "::error::built binary not found under build/"; exit 1; fi
+          echo "::notice::built binary: $bin"
+          file "$bin"
+          cp "$bin" "${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}"
+
+      - name: Upload artifact (Linux ${{ matrix.arch }})
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+          path: ${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+
+      - name: Publish binary to ci-bin branch (Linux ${{ matrix.arch }})
+        shell: bash
+        env:
+          BIN: ${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+          BRANCH: ci-bin-linux-${{ matrix.arch }}
+        run: |
+          set -e
+          cd "${{ github.workspace }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          IDX=$(mktemp)
+          export GIT_INDEX_FILE="$IDX"
+          git read-tree --empty
+          git add -f "$BIN"
+          tree=$(git write-tree)
+          if git rev-parse -q --verify "origin/$BRANCH" >/dev/null; then parent="-p origin/$BRANCH"; else parent=""; fi
+          commit=$(git commit-tree "$tree" $parent -m "ci: $BRANCH @ ${{ github.sha }}")
+          git push origin "$commit:refs/heads/$BRANCH" --force
+          unset GIT_INDEX_FILE
+
+  build-macos:
+    name: macOS ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            cmake-arch: x86_64
+            cross-compile: true
+          - arch: arm64
+            cmake-arch: arm64
+            cross-compile: false
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Prepare OpenSSL for target arch (macOS ${{ matrix.arch }})
+        if: matrix.cross-compile
+        run: |
+          OPENSSL_PREFIX="${{ github.workspace }}/openssl-x86_64"
+          curl -fsSL -o openssl.tar.gz https://www.openssl.org/source/openssl-3.0.22.tar.gz
+          tar xzf openssl.tar.gz
+          cd openssl-3.0.22
+          ./Configure darwin64-x86_64-cc \
+            --prefix="$OPENSSL_PREFIX" \
+            CC="clang -target x86_64-apple-darwin" \
+            CXX="clang++ -target x86_64-apple-darwin" \
+            no-tests no-shared
+          make build_libs
+          mkdir -p "$OPENSSL_PREFIX/lib" "$OPENSSL_PREFIX/include"
+          cp -r include/openssl "$OPENSSL_PREFIX/include/"
+          cp libssl.a libcrypto.a "$OPENSSL_PREFIX/lib/"
+          echo "OPENSSL_ROOT_DIR=$OPENSSL_PREFIX" >> $GITHUB_ENV
+
+      - name: Configure CMake (macOS ${{ matrix.arch }})
+        run: |
+          cmake -B ${{ github.workspace }}/build \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake-arch }} \
+            ${{ matrix.cross-compile && '-DCMAKE_OSX_ARCHITECTURES=x86_64' || '' }} \
+            -DGitHubActions=1 \
+            -DFILE_VERSION=${{ env.FILE_VERSION }} \
+            -DOPENSSL_ROOT_DIR=${{ env.OPENSSL_ROOT_DIR || '$(brew --prefix openssl@3)' }}
+
+      - name: Build (macOS ${{ matrix.arch }})
+        # 把编译错误同时写到 job annotations，便于在无法下载 Actions 日志时定位问题
+        run: |
+          set +e
+          set -o pipefail
+          cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }} 2>&1 | tee /tmp/unix-build.log
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            grep -aE 'fatal error:|error:|FAILED:|Error [0-9]+' /tmp/unix-build.log | head -12 | sed 's/^/::error::/'
+          fi
+          exit "$rc"
+
+      - name: Locate and stage binary (macOS ${{ matrix.arch }})
+        # macOS 下可执行文件可能落在子目录或 app bundle 内，按名字查找后复制；
+        # 找不到时把候选项、build 顶层内容和构建日志尾部写成 annotations 便于定位
+        run: |
+          set -e
+          matches=$(find ${{ github.workspace }}/build -maxdepth 5 -name 'GitHubDesktop2Chinese*' | head -40)
+          if [ -n "$matches" ]; then echo "$matches" | sed 's/^/::notice::/'; fi
+          bin=""
+          while IFS= read -r p; do
+            if [ -f "$p" ] && [ -x "$p" ]; then bin="$p"; break; fi
+          done <<< "$matches"
+          if [ -z "$bin" ]; then
+            echo "::error::built executable not found under build/"
+            find ${{ github.workspace }}/build -maxdepth 1 | sed 's/^/::notice::/'
+            tail -25 /tmp/unix-build.log | sed 's/^/::notice::/'
+            exit 1
+          fi
+          echo "::notice::using binary: $bin"
+          file "$bin"
+          lipo -archs "$bin" || true
+          cp "$bin" "${{ github.workspace }}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}"
+
+      - name: Upload artifact (macOS ${{ matrix.arch }})
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+          path: ${{ github.workspace }}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+
+      - name: Publish binary to ci-bin branch (macOS ${{ matrix.arch }})
+        shell: bash
+        env:
+          BIN: ${{ github.workspace }}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+          BRANCH: ci-bin-macos-${{ matrix.arch }}
+        run: |
+          set -e
+          cd "${{ github.workspace }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          IDX=$(mktemp)
+          export GIT_INDEX_FILE="$IDX"
+          git read-tree --empty
+          git add -f "$BIN"
+          tree=$(git write-tree)
+          if git rev-parse -q --verify "origin/$BRANCH" >/dev/null; then parent="-p origin/$BRANCH"; else parent=""; fi
+          commit=$(git commit-tree "$tree" $parent -m "ci: $BRANCH @ ${{ github.sha }}")
+          git push origin "$commit:refs/heads/$BRANCH" --force
+          unset GIT_INDEX_FILE

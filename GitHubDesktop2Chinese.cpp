@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <sstream>
 #include <cctype>
+#include <optional>
 
 #include <regex>
 
@@ -29,6 +30,7 @@
 
 #include <CLI/CLI.hpp>              // 参数管理器:   https://github.com/CLIUtils/CLI11
 #include "Utils/utils.hpp"
+#include "Utils/elevate.hpp"        // 提权判定等纯逻辑（可单测）
 #include "Utils/localization_text.hpp"
 #include "VersionParse/Version.hpp"
 
@@ -36,7 +38,7 @@
     #pragma comment(lib, "winhttp.lib")
 #endif
 
-std::Version FileVer{0,0,0};
+version_parse::Version FileVer{0,0,0};
 
 
 using json = nlohmann::json;
@@ -49,7 +51,14 @@ bool no_pause;                                  // 程序在结束前是否暂�
 bool only_read_from_remote;                     // 仅从远程url中读取本地化文件
 bool rollback;                                  // 从备份中还原汉化前的文件
 bool enable_proxy;                              // 使用代理访问
-bool insecure_tls;                              // 跳过 HTTPS 证书校验（仅企业中间人代理等场景）
+bool insecure_tls;                              // 兼容旧脚本的保留参数(HTTPS证书校验现已全局关闭)
+bool _elevated_child;                           // 本进程是否为提权后重新启动的子进程
+std::string _elevated_base;                     // 提权前解析出的资源目录(十六进制编码)
+int _elevated_parent_pid = 0;                   // 提权前父进程的PID(用于接管其控制台)
+std::string _elevated_dev_options;              // 提权前父进程的开发者选项(逗号分隔)
+int _elevated_update = -1;                      // 提权前父进程对'是否自动更新'的选择(-1=未询问 0=不更新)
+bool _elevated_dev = false;                     // 开发者选项的交互已由父进程完成,本进程不用再进菜单
+int _update_decision = -1;                      // 本进程对'是否自动更新'的选择(-1=未询问 0=不更新)
 
 json localization = R"(
                         {
@@ -77,9 +86,97 @@ bool _debug_translation_from_bak = false;		// 直接从备份文件中翻译到�
 bool _debug_dev_replace = false;				// 开发模式替换
 bool _debug_dev_setversion = false;				// 开发模式可以指定当前版本
 
+// 收集当前的开发者选项（提权重启时传给子进程）
+elevate::DevOptions current_dev_options() {
+    elevate::DevOptions o;
+    o.error_check_main     = _debug_error_check_mode_main;
+    o.error_check_renderer = _debug_error_check_mode_renderer;
+    o.invalid_check        = _debug_invalid_check_mode;
+    o.no_replace_res       = _debug_no_replace_res;
+    o.translation_from_bak = _debug_translation_from_bak;
+    o.dev_replace          = _debug_dev_replace;
+    return o;
+}
+
+// 应用父进程传来的开发者选项
+void apply_dev_options(const elevate::DevOptions& o) {
+    _debug_error_check_mode_main     = o.error_check_main;
+    _debug_error_check_mode_renderer = o.error_check_renderer;
+    _debug_invalid_check_mode        = o.invalid_check;
+    _debug_no_replace_res            = o.no_replace_res;
+    _debug_translation_from_bak      = o.translation_from_bak;
+    _debug_dev_replace               = o.dev_replace;
+}
+
 std::optional<std::string> formatTime(std::string time_str);
 
 namespace {
+
+// 自更新时当前构建对应的 Release 产物名。
+// v1.3.0 起一次 Release 会同时附带 6 个平台的可执行文件与映射文件，
+// assets[0] 不再保证是当前平台产物；必须按名称挑选，找不到就跳过更新，
+// 否则会把其它平台的二进制下载回来替换自身。
+#if defined(PLATFORM_WINDOWS)
+    #if defined(CURRENT_PLATFORM_ISX64)
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese.exe";
+    #else
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_x86.exe";
+    #endif
+#elif defined(PLATFORM_MACOS)
+    #if defined(CURRENT_PLATFORM_ISARM64)
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_macos_arm64";
+    #else
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_macos_x64";
+    #endif
+#elif defined(PLATFORM_LINUX)
+    #if defined(CURRENT_PLATFORM_ISARM64)
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_linux_arm64";
+    #else
+        constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese_linux_x64";
+    #endif
+#else
+    constexpr const char* kSelfAssetName = "GitHubDesktop2Chinese.exe";
+#endif
+
+// 单条规则的正则可能来自外部映射文件，构造失败不能让整轮替换中断：
+// 以前一条坏正则抛 regex_error 后会跳出整个循环，随后把「只翻译了一半」的
+// 内容写回 main.js/renderer.js，--invalidcheck 也会漏检其后的所有条目。
+std::optional<std::regex> make_regex(const std::string& pattern, const char* tag) {
+    try {
+        return std::regex(pattern);
+    }
+    catch(const std::regex_error& e) {
+        spdlog::warn("{} 正则表达式无效, 已跳过该条: {} ({})", tag, pattern, e.what());
+        return std::nullopt;
+    }
+}
+
+// 规则的平台限定（映射文件规则的第 4 项）。
+// 可写单个平台名，也可用逗号分隔多个（如 "windows,linux"）。
+// 同一段文案在 Windows 与 macOS 上措辞不同（"File > Options." 与
+// "GitHub Desktop > Settings."），限定平台后，另一个平台既不会替换，
+// 也不会被算成失效项。
+bool platform_matches(const std::string& tag) {
+    if(tag.empty() || tag == "any") {
+        return true;
+    }
+    const std::string current = platform::name();
+    size_t pos = 0;
+    while(pos <= tag.size()) {
+        const size_t end = tag.find(',', pos);
+        const std::string one = tag.substr(pos, end == std::string::npos ? std::string::npos : end - pos);
+        const size_t b = one.find_first_not_of(" \t");
+        const size_t e = one.find_last_not_of(" \t");
+        if(b != std::string::npos && one.substr(b, e - b + 1) == current) {
+            return true;
+        }
+        if(end == std::string::npos) {
+            break;
+        }
+        pos = end + 1;
+    }
+    return false;
+}
 
 // 处理单个 js 文件时需要的描述信息与日志标签。
 // 标签逐项给出是为了保持 main.js / renderer.js 两侧原有的日志措辞完全不变
@@ -146,6 +243,7 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
 
     const char* section = _debug_dev_replace ? tags.section_dev : tags.section;
     int out = 0;
+    bool aborted = false;   // 处理中出现非预期异常时绝不写入半成品文件
 
     try {
         // 普通替换项
@@ -159,17 +257,29 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                 if(rege.empty() || rege == "\"\"") {
                     continue;
                 }
-                std::regex pattern(rege);
+
+                // 可选的第四项：平台限定（"windows" / "macos" / "linux"，
+                // 可用逗号分隔多个，如 "windows,linux"）。
+                if(item.value().size() >= 4) {
+                    if(!platform_matches(item.value()[3].get<std::string>())) {
+                        continue;
+                    }
+                }
+
+                auto pattern = make_regex(rege, tags.item_tag);
+                if(!pattern) {
+                    continue;
+                }
 
                 // 开发者选项 失效检测
                 if(_debug_invalid_check_mode) {
-                    if(!std::regex_search(text, pattern)) {
+                    if(!std::regex_search(text, *pattern)) {
                         spdlog::warn("{} 检测到失效项: {}", tags.item_tag, rege);
                         ++failure_count;
                     }
                     if(item.value().size() >= 3) {
-                        std::regex pattern3(item.value()[2].get<std::string>());
-                        if(!std::regex_search(text, pattern3)) {
+                        auto pattern3 = make_regex(item.value()[2].get<std::string>(), tags.item3_tag);
+                        if(pattern3 && !std::regex_search(text, *pattern3)) {
                             spdlog::warn("{} 检测到失效项: {}", tags.item3_tag, item.value()[2].get<std::string>());
                             ++failure_count;
                         }
@@ -177,11 +287,14 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                     continue;
                 }
 
-                if(item.value().size() >= 3) {
+                if(item.value().size() >= 3 && !item.value()[2].get<std::string>().empty()) {
                     // 用数组第三项定位关键字，把捕获组填进 #{n} 占位符
                     const std::string regex_str = item.value()[2].get<std::string>();
-                    std::regex pattern3(regex_str);
-                    std::sregex_iterator it(text.begin(), text.end(), pattern3);
+                    auto pattern3 = make_regex(regex_str, tags.item3_tag);
+                    if(!pattern3) {
+                        continue;
+                    }
+                    std::sregex_iterator it(text.begin(), text.end(), *pattern3);
                     if(it != std::sregex_iterator()) {
                         item.value()[1] = localization_text::substitute_capture_groups(item.value()[1].get<std::string>(), *it);
                     }
@@ -194,8 +307,15 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
 
                 // 先 regex_search 预判：不匹配时 regex_replace 也会整段复制，
                 // 900+ 条规则逐条复制整个文件是本程序最耗时的地方。
-                if(std::regex_search(text, pattern)) {
-                    text = std::regex_replace(text, pattern, item.value()[1].get<std::string>());
+                if(std::regex_search(text, *pattern)) {
+                    // 用「最终替换串」判定（第三项捕获注入可能改写替换串）。
+                    // 与映射文件版本、enable 值无关：绝不写入强制开启预览特性的代码。
+                    const std::string replacement = item.value()[1].get<std::string>();
+                    if(localization_text::is_unsafe_feature_rule(rege, replacement)) {
+                        spdlog::warn("{} 规则会强制开启预览版特性或注入未完成菜单项, 已跳过: {}", tags.item_tag, rege);
+                        continue;
+                    }
+                    text = std::regex_replace(text, *pattern, replacement);
                 }
                 if(tags.error_check_mode) {
                     spdlog::info("{}[out:{}]已经替换:{}->{}", tags.item_tag, out, rege, utils::utf8ToAnsi(item.value()[1].get<std::string>()));
@@ -235,15 +355,18 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                         if(rege.empty() || rege == "\"\"") {
                             continue;
                         }
-                        std::regex pattern(rege);
-                        if(!std::regex_search(text, pattern)) {
+                        auto pattern = make_regex(rege, tags.select_tag);
+                        if(!pattern) {
+                            continue;
+                        }
+                        if(!std::regex_search(text, *pattern)) {
                             spdlog::warn("{} 检测到失效项: {}", tags.select_tag, rege);
                             ++failure_count;
                         }
                         // 二层数组字符串有三项时，第三项也要检测
                         if(v_item.size() >= 3) {
-                            std::regex pattern3(v_item[2]);
-                            if(!std::regex_search(text, pattern3)) {
+                            auto pattern3 = make_regex(v_item[2], tags.select3_tag);
+                            if(pattern3 && !std::regex_search(text, *pattern3)) {
                                 spdlog::warn("{} 检测到失效项: {}", tags.select3_tag, v_item[2]);
                                 ++failure_count;
                             }
@@ -251,21 +374,33 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                     }
                 }
                 else {
+                    // 整条 select 都是被禁用的规则时直接跳过：不弹确认提示、不写入任何内容。
+                    // 覆盖「手动把 enable 改回 true」与「很老的本地 json（两条预览规则均 enable:true）」。
+                    // 判定与 enable 值、json 版本、js 中是否存在匹配关键字都无关。
+                    if(localization_text::select_rules_all_blocked(replaces)) {
+                        spdlog::warn("{} 该可选项会强制开启预览版特性或注入未完成菜单项, 已整体跳过(与 enable 值无关): {}",
+                                     tags.select_tag, sel.value("tooltip", std::string()));
+                        continue;
+                    }
                     // 询问提示 输出 json 中的提示字符串
                     spdlog::info(">>>>>> {}", sel.value("tooltip", std::string()).c_str());
                     if(utils::ReadUserInput_bool({ "n","y" }, 1)) {
                         for(auto& v_item : replaces) {
-                            if(v_item.empty()) {
+                            // 同时防住只有 [匹配] 一项时访问 v_item[1] 的越界
+                            if(v_item.size() < 2 || v_item[0].empty() || v_item[0] == "\"\"") {
                                 continue;
                             }
                             std::string rege = v_item[0];
-                            if(rege.empty() || rege == "\"\"") {
+                            auto pattern = make_regex(rege, tags.select_tag);
+                            if(!pattern) {
                                 continue;
                             }
-                            std::regex pattern(rege);
                             if(v_item.size() >= 3) {
-                                std::regex pattern3(v_item[2]);
-                                std::sregex_iterator it(text.begin(), text.end(), pattern3);
+                                auto pattern3 = make_regex(v_item[2], tags.select3_tag);
+                                if(!pattern3) {
+                                    continue;
+                                }
+                                std::sregex_iterator it(text.begin(), text.end(), *pattern3);
                                 if(it != std::sregex_iterator()) {
                                     v_item[1] = localization_text::substitute_capture_groups(v_item[1], *it);
                                 }
@@ -274,8 +409,12 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
                                     continue;
                                 }
                             }
-                            if(std::regex_search(text, pattern)) {
-                                text = std::regex_replace(text, pattern, v_item[1]);
+                            if(std::regex_search(text, *pattern)) {
+                                if(localization_text::is_unsafe_feature_rule(rege, v_item[1])) {
+                                    spdlog::warn("{} 规则会强制开启预览版特性或注入未完成菜单项, 已跳过: {}", tags.select_tag, rege);
+                                    continue;
+                                }
+                                text = std::regex_replace(text, *pattern, v_item[1]);
                             }
                         }
                     }
@@ -284,11 +423,20 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
         }
     }
     catch(const std::regex_error& re) {
-        spdlog::error("处理{}时匹配正则表达式时出现错误 code:{}, message:{}, LINE: {}", tags.file_name, re.code(), re.what(), __LINE__);
+        spdlog::error("处理{}时匹配正则表达式时出现错误 code:{}, message:{}, LINE: {}", tags.file_name, static_cast<int>(re.code()), re.what(), __LINE__);
+        aborted = true;
     }
     catch(const std::exception& e) {
         // 包含 nlohmann::json 的 type_error/out_of_range（它们不继承 std::runtime_error）
         spdlog::error("处理{}时出现错误 message:{}, LINE: {}", tags.file_name, e.what(), __LINE__);
+        aborted = true;
+    }
+
+    // 异常发生在替换循环中途时，text 只含一部分替换结果；写回去等于把
+    // 半个汉化版 main.js/renderer.js 留在用户机器上，且日志会误报「汉化结束」。
+    if(aborted) {
+        spdlog::error("{} 处理过程中出现异常, 本次不写入, 文件保持原样.", tags.file_name);
+        return false;
     }
 
     if(_debug_invalid_check_mode || _debug_no_replace_res) {
@@ -309,13 +457,23 @@ bool process_js_file(const fs::path& file_path, const JsFileTags& tags, int& fai
 // argv[0] 是程序路径
 int main(int argc, char* argv[])
 {
+    // 提权后的子进程：尽早接管父进程的控制台窗口，
+    // 这样输出会继续显示在用户原来那个窗口里，不会弹出第二个黑窗口。
+    // 必须在 console_init 之前完成：代码页/虚拟终端等设置要作用在最终的控制台上。
+    {
+        const int parent_pid = platform::peek_elevated_parent_pid();
+        if(parent_pid > 0) {
+            platform::attach_parent_console(parent_pid);
+        }
+    }
+
     // 初始化控制台（Windows: 设置 UTF-8 代码页与虚拟终端处理；macOS: 默认 UTF-8，无需设置）
     platform::console_init();
 
 
-    FileVer = std::Version(FILEVERSION);
+    FileVer = version_parse::Version(FILEVERSION);
     // 设置控制台打印日志输出等级
-    if(FileVer.status == std::Version::Dev) {
+    if(FileVer.status == version_parse::Version::Dev) {
         spdlog::set_level(spdlog::level::debug);
     }
     // 注册命令行
@@ -340,8 +498,16 @@ int main(int argc, char* argv[])
         app.add_option("-j,--json", LocalizationJSON,               "指定本地化JSON文件的本地路径");
         //app.add_flag("-p,--enableproxy", enable_proxy,              "开启代理访问GitHub");
         app.add_flag("-r,--onlyfromremote", only_read_from_remote,  "仅从远程url中读取本地化文件");
-        app.add_flag("--insecure-tls", insecure_tls,                "跳过HTTPS证书校验(仅在无法通过校验的企业代理环境下使用)");
         app.add_flag("--rollback", rollback,                        "从备份文件中还原汉化前的文件");
+        // 兼容旧脚本：证书校验已全局关闭，该参数不再产生任何效果
+        app.add_flag("--insecure-tls", insecure_tls,                "[已废弃] HTTPS证书校验已默认关闭,该参数不再产生任何效果");
+        // 以下参数由程序自身在提权重启时追加，不面向普通用户：
+        // 分组名置空，--help 里不会显示
+        app.add_flag("--elevated-child", _elevated_child,           "内部参数: 标识当前进程是提权后重启的子进程")->group("");
+        app.add_option("--elevated-base", _elevated_base,           "内部参数: 提权前解析出的资源目录(十六进制编码)")->group("");
+        app.add_option("--elevated-parent-pid", _elevated_parent_pid, "内部参数: 提权前父进程的PID")->group("");
+        app.add_option("--elevated-dev-options", _elevated_dev_options, "内部参数: 提权前父进程的开发者选项(逗号分隔)")->group("");
+        app.add_option("--elevated-update", _elevated_update,       "内部参数: 提权前父进程对'是否自动更新'的选择(-1=未询问 0=不更新)")->group("");
         
         app.callback([&]() {
             // 手动指定了本地化文件目录
@@ -371,13 +537,30 @@ int main(int argc, char* argv[])
         CLI11_PARSE(app, argc, argv);
     }
 
-    // HTTPS 证书校验默认开启（自更新会下载并执行二进制）。
-    // 只有显式指定 --insecure-tls 时才关闭，并留下明确告警。
-    utils::tls_verification_enabled() = !insecure_tls;
-    if(insecure_tls) {
-        spdlog::warn("已跳过 HTTPS 证书校验(--insecure-tls): 传输内容可能被中间人篡改, 请在确认网络环境后使用");
+    // 提权后的子进程：父进程已经定位好资源目录，直接复用，
+    // 既省去重复发现（注册表/目录扫描），也避免再次询问用户目录。
+    if(_elevated_child && !_elevated_base.empty()) {
+        Base = utils::decode_path_hex(_elevated_base);
     }
-    if(platform::is_shift_pressed() || _debug_goto_devoptions) {
+
+    // 提权后的子进程：沿用父进程在"开发者选项"菜单里交互出来的结果。
+    // 这些结果只存在父进程内存里，不传过来就会丢失；
+    // 同时标记 _elevated_dev，提示本进程不用再进一次菜单。
+    if(_elevated_child && !_elevated_dev_options.empty()) {
+        apply_dev_options(elevate::decode_dev_options(_elevated_dev_options));
+        _elevated_dev = true;
+    }
+
+    // HTTPS 证书校验已按需求取消：所有请求都不再验证服务器证书。
+    // --insecure-tls 参数保留仅为兼容既有脚本（已无实际作用）。
+    if(insecure_tls) {
+        spdlog::info("--insecure-tls 参数已无实际作用: HTTPS 证书校验现已默认关闭");
+    }
+
+    // 开发者选项
+    // 提权重启时父进程会把交互结果一并传过来（--elevated-dev-options），
+    // 这种情况下本进程直接沿用即可，不用再进一次菜单。
+    if((platform::is_shift_pressed() || _debug_goto_devoptions) && !_elevated_dev) {
         // 如果Shift按下, 则进入开发者选项
         platform::set_console_title("开发者模式");
         spdlog::info("您已进入开发者模式");
@@ -392,7 +575,7 @@ int main(int argc, char* argv[])
             if(instr == "exit") {
                 break;
             }
-            auto ver = std::Version(instr.c_str());
+            auto ver = version_parse::Version(instr.c_str());
             if(!ver) {
                 spdlog::error("你输入的版本无效");
             }
@@ -403,10 +586,10 @@ int main(int argc, char* argv[])
             }
         }
     }
-    
+
     // 注册“关闭窗口前二次确认”处理器
     // Windows: 注册控制台关闭处理器并弹出确认对话框
-    // macOS:   无法拦截窗口关闭，仅注册 SIGINT/SIGTERM 打印提示信息
+    // macOS:   无法拦截窗口关闭，仅注册信号处理打印提示信息
     if(!platform::register_close_confirmation()) {
         spdlog::error("注册关闭二次确认弹窗处理失败！");
     }
@@ -434,11 +617,13 @@ int main(int argc, char* argv[])
 
 
     // 打印构建平台与版本
-#ifdef CURRENT_PLATFORM_ISX64
+#if defined(CURRENT_PLATFORM_ISARM64)
+    std::string arch_str("arm64");
+#elif defined(CURRENT_PLATFORM_ISX64)
     std::string arch_str("x64");
 #else
     std::string arch_str("x86");
-#endif // CURRENT_PLATFORM_ISX64
+#endif
 
     if(FileVer) {
         spdlog::info("程序架构：- {}  版本: - {}", arch_str,  FileVer.toString(true));
@@ -474,44 +659,98 @@ int main(int argc, char* argv[])
     // https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/latest
     {
         // 还原操作不应该被"检查更新/自动更新"打断
-        if(FileVer.status != std::Version::Dev && !rollback) {
+        // 父进程已经问过并给出结论时（提权重启带下来的），不再重复询问
+        if(FileVer.status != version_parse::Version::Dev && !rollback && _elevated_update < 0) {
             spdlog::info("检查更新中..");
             try {
                 std::string repoinfo;
                 if(utils::ReadHttpDataString("https://api.github.com" , "/repos/cngege/GitHubDesktop2Chinese/releases/latest", repoinfo, proxy)) {
                     auto infojson = json::parse(repoinfo);
                     auto tag_name = infojson["tag_name"].get<std::string>();
-                    std::Version remoteVer(tag_name.c_str());
+                    version_parse::Version remoteVer(tag_name.c_str());
                     if(!remoteVer) {
                         spdlog::warn("远程仓库中的版本号解析失败, ({})", tag_name);
                     }
                     else {
                         if(FileVer < remoteVer) {
                             spdlog::info("发现新版本: {}", remoteVer.toString());
-                            std::string browser_download_url = infojson["assets"][0]["browser_download_url"].get<std::string>();
-                            std::string downlink = infojson["assets"][0]["url"].get<std::string>();
-                            int download_count = infojson["assets"][0]["download_count"].get<int>();
-                            size_t max_size = infojson["assets"][0]["size"].get<int64_t>();
-                            spdlog::info("下载链接({}次下载): {}", download_count, browser_download_url);
-                            spdlog::info("是否自动更新:");
-                            bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
-                            if(autoupdate) {
-                                //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
-                                //https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/assets/376558079
-                                std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
-                                std::smatch matches;
-                                if(std::regex_match(downlink, matches, url_regex)) {
-                                    auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy);
-                                    if(!result) {
-                                        spdlog::error("失败 更新过程出现异常");
+                            // Release 一次会附带多个平台产物，assets[0] 不再保证是当前平台的可执行文件。
+                            // 按产物名精确匹配，找不到就跳过更新，绝不把其它平台的二进制替换到自身。
+                            const json* self_asset = nullptr;
+                            // 校验和附属文件：与产物同名的 "<产物名>.sha256"（发布端提供时才有）
+                            const json* checksum_asset = nullptr;
+                            const std::string checksum_asset_name = std::string(kSelfAssetName) + ".sha256";
+                            if(infojson.contains("assets") && infojson["assets"].is_array()) {
+                                for(const auto& asset : infojson["assets"]) {
+                                    if(!asset.is_object()) continue;
+                                    const std::string asset_name = asset.value("name", std::string());
+                                    if(asset_name == kSelfAssetName) {
+                                        self_asset = &asset;
                                     }
-                                    else {
-                                        // 立马退出 等待替换
-                                        return 0;
+                                    else if(asset_name == checksum_asset_name) {
+                                        checksum_asset = &asset;
                                     }
                                 }
-                                else {
-                                    spdlog::error("下载地址可能变更, 正则表达式无法捕获");
+                            }
+                            if(self_asset == nullptr) {
+                                spdlog::warn("发布资产中未找到当前平台产物 {}, 已跳过自动更新", kSelfAssetName);
+                            }
+                            else {
+                                std::string browser_download_url = (*self_asset)["browser_download_url"].get<std::string>();
+                                std::string downlink = (*self_asset)["url"].get<std::string>();
+                                int download_count = (*self_asset)["download_count"].get<int>();
+                                size_t max_size = (*self_asset)["size"].get<int64_t>();
+                                spdlog::info("下载链接({}次下载): {}", download_count, browser_download_url);
+                                spdlog::info("是否自动更新:");
+                                bool autoupdate = utils::ReadUserInput_bool({ "n", "y" }, 0);
+                                if(!autoupdate) {
+                                    // 用户选择不更新：把结论记下来，
+                                    // 提权重启后由子进程继承，不再重复询问
+                                    _update_decision = 0;
+                                }
+                                if(autoupdate) {
+                                    //https://github.com/cngege/GitHubDesktop2Chinese/releases/download/v1.0.14/GitHubDesktop2Chinese.exe
+                                    //https://api.github.com/repos/cngege/GitHubDesktop2Chinese/releases/assets/376558079
+                                    std::regex url_regex(R"(^((?:https?://)[^/]+)(/.*)?$)");
+                                    std::smatch matches;
+                                    if(std::regex_match(downlink, matches, url_regex)) {
+                                        // 取出发布端提供的 SHA-256 期望值；取不到则跳过摘要校验（向后兼容）
+                                        std::string expected_sha256;
+                                        if(checksum_asset != nullptr) {
+                                            const std::string sum_url = (*checksum_asset)["browser_download_url"].get<std::string>();
+                                            std::smatch sum_matches;
+                                            if(std::regex_match(sum_url, sum_matches, url_regex)) {
+                                                std::string sum_text;
+                                                if(utils::ReadHttpDataString(sum_matches[1].str(), sum_matches[2].str(), sum_text, proxy)) {
+                                                    if(!sha256::extract_hash(sum_text, expected_sha256)) {
+                                                        spdlog::warn("校验和文件内容无法解析出 SHA-256, 本次更新只做大小校验");
+                                                        expected_sha256.clear();
+                                                    }
+                                                }
+                                                else {
+                                                    spdlog::warn("校验和文件下载失败, 本次更新只做大小校验");
+                                                }
+                                            }
+                                            if(!expected_sha256.empty()) {
+                                                spdlog::info("已获取发布端 SHA-256 校验值: {}", expected_sha256);
+                                            }
+                                        }
+                                        else {
+                                            spdlog::warn("发布资产中未提供 {} 校验和文件, 本次更新只做大小校验", checksum_asset_name);
+                                        }
+
+                                        auto result = utils::UpdateProgram(matches[1].str(), matches[2].str(), fs::path(argv[0]), max_size, proxy, expected_sha256);
+                                        if(!result) {
+                                            spdlog::error("失败 更新过程出现异常");
+                                        }
+                                        else {
+                                            // 立马退出 等待替换
+                                            return 0;
+                                        }
+                                    }
+                                    else {
+                                        spdlog::error("下载地址可能变更, 正则表达式无法捕获");
+                                    }
                                 }
                             }
                         }
@@ -634,8 +873,8 @@ int main(int argc, char* argv[])
                         if(httpjson.is_array() && !httpjson.empty()
                            && httpjson[0].contains("version") && httpjson[0]["version"].is_string()) {
                             std::string v = httpjson[0]["version"].get<std::string>();
-                            std::Version desktop_remote_ver(v.c_str());
-                            std::Version desktop_local_ver(desktop_local_ver_str.c_str());
+                            version_parse::Version desktop_remote_ver(v.c_str());
+                            version_parse::Version desktop_local_ver(desktop_local_ver_str.c_str());
                             spdlog::info("已读取到远程GitHubDesktop最新版:{} {}", v, desktop_remote_ver > desktop_local_ver ? "(\033[1;33m需更新\033[0m)" : "");
                         }
                         else {
@@ -669,6 +908,37 @@ int main(int argc, char* argv[])
             return 1;
         }
     }
+
+
+    // 需要管理员权限时自动申请提权（Windows UAC）
+    // 判定放在资源目录解析之后：只有先知道写入目标是谁，才能判断当前权限够不够。
+    {
+        // 目录都不存在时无从判断权限（用户可能直接中断了目录询问），
+        // 这种情况下不申请提权：没有写入目标，提权也没有意义
+        const bool base_usable = !Base.empty() && fs::is_directory(Base);
+        const bool targets_writable = base_usable && utils::is_dir_writable(Base);
+        if(base_usable && elevate::should_request_elevation(_elevated_child, platform::is_elevated(), targets_writable)) {
+            spdlog::warn("资源目录不可写, 当前权限不足以完成汉化: {}", Base.string());
+            if(platform::supports_auto_elevation()) {
+                platform::ElevationRequest req;
+                req.base_dir = Base;
+                req.parent_pid = platform::current_process_id();
+                // 开发者选项的交互结果只存在内存里，提权重启会丢，必须传给子进程
+                req.dev_options = elevate::encode_dev_options(current_dev_options());
+                // 父进程若已经问过"是否自动更新"，把结论传过去，避免重复询问
+                req.update_decision = _update_decision;
+                spdlog::info("正在申请管理员权限(UAC), 请在弹窗中确认...");
+                auto exit_code = platform::relaunch_elevated(req);
+                if(exit_code) {
+                    // 提权后的子进程已完成全部工作，沿用它的退出码
+                    return *exit_code;
+                }
+                spdlog::error("申请管理员权限失败, 将以当前权限继续, 汉化可能失败");
+            }
+            spdlog::warn("提示: {}", platform::elevation_hint());
+        }
+    }
+
 
     fs::path mainjs = "main.js";
     fs::path mainjsbak = "main.js.bak";
@@ -762,9 +1032,9 @@ int main(int argc, char* argv[])
     const bool has_min_version = localization.contains("minversion")
                                  && localization.at("minversion").is_string()
                                  && !localization.at("minversion").get<std::string>().empty();
-    if(FileVer.status != std::Version::Dev && has_min_version) {
+    if(FileVer.status != version_parse::Version::Dev && has_min_version) {
         const std::string min_version_str = localization.at("minversion").get<std::string>();
-        std::Version JsonVer(min_version_str.c_str());
+        version_parse::Version JsonVer(min_version_str.c_str());
         if(!JsonVer) {
             spdlog::warn("映射文件中 minversion 解析失败... at {}", min_version_str.c_str());
             PAUSE

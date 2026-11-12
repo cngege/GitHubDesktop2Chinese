@@ -3,7 +3,7 @@
 #
 # 平台支持：Windows（MSVC / x64 / x86）、macOS（AppleClang / arm64 / x64）
 # 与 Linux（GCC / x86_64 / aarch64）。
-# Windows 分支保持原有行为完全不变（含 openssl-proj 下载流程）。
+# Windows 分支保持原有下载流程与产物不变，仅对下载启用 TLS 证书校验。
 #
 cmake_minimum_required (VERSION 3.30)
 
@@ -47,8 +47,7 @@ elseif(APPLE)
     message("当前是以macOS模式编译")
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
         message("当前是以arm64模式编译")
-        add_definitions(-DCURRENT_PLATFORM_ISX64)
-        set(CURRENT_PLATFORM_ISX64 1)
+        add_definitions(-DCURRENT_PLATFORM_ISARM64)
     elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
         message("当前是以x64模式编译")
         add_definitions(-DCURRENT_PLATFORM_ISX64)
@@ -57,7 +56,7 @@ elseif(APPLE)
         message("当前是以未知架构模式编译: ${CMAKE_SYSTEM_PROCESSOR}")
     endif()
 elseif(LINUX)
-    # Linux 架构标识：x86_64 / aarch64（无 CURRENT_PLATFORM_ISX64 之外的特化需求）
+    # Linux 架构标识：x86_64 / aarch64（分别用 CURRENT_PLATFORM_ISX64 / CURRENT_PLATFORM_ISARM64）
     message("当前是以Linux模式编译")
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
         message("当前是以x64模式编译")
@@ -65,8 +64,7 @@ elseif(LINUX)
         set(CURRENT_PLATFORM_ISX64 1)
     elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
         message("当前是以arm64模式编译")
-        add_definitions(-DCURRENT_PLATFORM_ISX64)
-        set(CURRENT_PLATFORM_ISX64 1)
+        add_definitions(-DCURRENT_PLATFORM_ISARM64)
     else()
         message("当前是以未知架构模式编译: ${CMAKE_SYSTEM_PROCESSOR}")
     endif()
@@ -118,6 +116,8 @@ if(WIN32)
     # 下载libssl.lib
 
     # 设置库远程下载超时时间
+    # 下载的静态库会直接链接进最终可执行文件，必须校验 TLS 证书（见下方 TLS_VERIFY ON），
+    # 避免本地镜像/代理把预编译库替换成被篡改的二进制。
     SET(DOWNLOAD_OPENSSL_TIMEOUT 300 CACHE STRING "Timeout in seconds when downloading openssl_lib.")
     if(NOT EXISTS "openssl-proj/lib")
         file(MAKE_DIRECTORY "openssl-proj/lib")
@@ -126,6 +126,34 @@ if(WIN32)
     # 无论目录是否已存在（x64 与 x86 两次配置共享同一目录），都必须给出有效下载路径，
     # 否则第二次配置时 LOCAL_OPENSSL_LIBRARIES_PATH 为空，库会下载到源码根目录导致链接失败
     SET(LOCAL_OPENSSL_LIBRARIES_PATH "openssl-proj/lib")
+
+    # /////////////////////////////////////预编译库完整性校验////////////////////////////////////////////////
+    # 预编译库会直接链接进最终可执行文件。TLS 证书校验只能阻止中间人替换下载内容，
+    # 无法防上游产物本身被替换或本地缓存被篡改，因此固定各文件的 SHA256 期望值：
+    # 下载后、以及复用本地已有文件时都做一次校验，不一致直接中止配置。
+    # 期望值来源：cngege/cngege.github.io 的 v0.1-beta.1 发布产物（已重新下载并逐字节比对确认）。
+    set(OPENSSL_EXPECTED_SHA256_libssl.lib        "80c92c42796d4cde173916debae464c9e7e428fed07ee313b64ff1845c08736f")
+    set(OPENSSL_EXPECTED_SHA256_libcrypto.lib     "1e32b094bf4d9c5d9eb62c46b3b258c23bf6078e25f48b3cc869b86fed33d87c")
+    set(OPENSSL_EXPECTED_SHA256_libssl_x86.lib    "8f206901be6fa6e636d3643e200c0b3323a4441457c171fc5bd4fa7a27acc0a7")
+    set(OPENSSL_EXPECTED_SHA256_libcrypto_x86.lib "27904a21887be0fc258a9e79a9552c209400031153ba9375b9bfd8547215878e")
+
+    # 校验单个预编译库的 SHA256；不一致则中止配置并给出可操作的处理方式
+    function(verify_openssl_lib lib_path lib_name expected_sha256)
+        if(NOT EXISTS "${lib_path}")
+            MESSAGE(FATAL_ERROR "OpenSSL 预编译库不存在: ${lib_path}")
+        endif()
+        file(SHA256 "${lib_path}" actual_sha256)
+        if(NOT actual_sha256 STREQUAL expected_sha256)
+            MESSAGE(FATAL_ERROR
+                "OpenSSL 预编译库完整性校验失败: ${lib_name}\n"
+                "  期望 SHA256: ${expected_sha256}\n"
+                "  实际 SHA256: ${actual_sha256}\n"
+                "  该文件会被直接链接进最终可执行文件，可能已被篡改。\n"
+                "  请删除 ${lib_path} 后重新配置以重新下载；\n"
+                "  若上游确实更新了产物，请同步更新 CMakeLists.txt 中对应的 OPENSSL_EXPECTED_SHA256_* 期望值。")
+        endif()
+        MESSAGE(STATUS "SHA256 OK: ${lib_name} (${actual_sha256})")
+    endfunction()
 
     # /////////////////////////////////////ssl库lib名称////////////////////////////////////////////////
     if(DEFINED CURRENT_PLATFORM_ISX64)
@@ -152,6 +180,7 @@ if(WIN32)
             ${LOCAL_OPENSSL_LIBRARIES_PATH}/${OPENSSL_SSL_NAME}
             TIMEOUT ${DOWNLOAD_OPENSSL_TIMEOUT}
             STATUS ERR
+            TLS_VERIFY ON
             SHOW_PROGRESS)
         # 判断下载是否存在错误
         IF(ERR EQUAL 0)
@@ -170,6 +199,7 @@ if(WIN32)
     # 如果路径下存在文件
     IF(LOCAL_OPENSSL_SSL_LIB)
         MESSAGE(STATUS "Checking the direction of ${LOCAL_OPENSSL_LIBRARIES_PATH}/${OPENSSL_SSL_NAME}")
+        verify_openssl_lib("${LOCAL_OPENSSL_SSL_LIB}" "${OPENSSL_SSL_NAME}" "${OPENSSL_EXPECTED_SHA256_${OPENSSL_SSL_NAME}}")
     ENDIF()
 
 
@@ -197,6 +227,7 @@ if(WIN32)
             ${LOCAL_OPENSSL_LIBRARIES_PATH}/${OPENSSL_CRYPTO_NAME}
             TIMEOUT ${DOWNLOAD_OPENSSL_TIMEOUT}
             STATUS ERR
+            TLS_VERIFY ON
             SHOW_PROGRESS)
         # 判断下载是否存在错误
         IF(ERR EQUAL 0)
@@ -215,6 +246,7 @@ if(WIN32)
     # 如果路径下存在压缩文件
     IF(LOCAL_OPENSSL_CRYPTO_LIB)
         MESSAGE(STATUS "Checking the direction of ${LOCAL_OPENSSL_LIBRARIES_PATH}/${OPENSSL_CRYPTO_NAME}")
+        verify_openssl_lib("${LOCAL_OPENSSL_CRYPTO_LIB}" "${OPENSSL_CRYPTO_NAME}" "${OPENSSL_EXPECTED_SHA256_${OPENSSL_CRYPTO_NAME}}")
     ENDIF()
 
     # 包含 openssl 的头文件
@@ -299,12 +331,9 @@ add_executable(test_platform_logic "tests/test_platform_logic.cpp")
 # （主程序的 CXX_STANDARD 不会传递到该目标，VS 默认按 C++14 编译会报 C2039）
 target_compile_features(test_platform_logic PRIVATE cxx_std_20)
 target_compile_definitions(test_platform_logic PRIVATE FILEVERSION="${FILE_VERSION}")
-if(APPLE)
-    target_link_libraries(test_platform_logic PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-endif()
-if(LINUX)
-    target_link_libraries(test_platform_logic PRIVATE OpenSSL::SSL OpenSSL::Crypto)
-endif()
+# 被测逻辑是纯字符串/版本解析，不引用任何 OpenSSL 符号。
+# macOS 上若链接 Homebrew 的 libssl/libcrypto，运行测试时还需要 dyld 找到这些
+# dylib，会让与 OpenSSL 无关的单元测试无谓地失败；Linux 同样不需要。
 
 # CTest 注册：失败时输出详情
 add_test(

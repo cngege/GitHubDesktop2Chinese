@@ -30,6 +30,7 @@
 
 #include "WinReg/WinReg.hpp"        // 注册表操作库（Windows 安装发现需要）
 #include "Utils/utils.hpp"  // GetSystemProxySettings / GetEnvVar 等（Windows 侧）
+#include "Utils/elevate.hpp" // 提权相关的纯逻辑（命令行参数转义）
 
 namespace platform {
 
@@ -269,6 +270,245 @@ namespace platform {
             return scanned;
         }
         return std::nullopt;
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    // 管理员提权（UAC）
+    ////////////////////////////////////////////////////////////////////
+
+    namespace detail {
+
+        // 当前进程令牌是否已提升（UAC 提升后的管理员令牌）。
+        // 用 TokenElevation 而不是 CheckTokenMembership：
+        // 后者在"管理员用户但未提升"（UAC 过滤后的令牌）时同样返回 TRUE，
+        // 会把"已提权"误判成"没提权"，从而反复弹 UAC。
+        inline bool token_is_elevated() {
+            HANDLE token = nullptr;
+            if(!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
+                return false;
+            }
+            TOKEN_ELEVATION elevation{};
+            DWORD returned = 0;
+            const BOOL ok = ::GetTokenInformation(token, TokenElevation, &elevation,
+                                                  sizeof(elevation), &returned);
+            ::CloseHandle(token);
+            return ok && elevation.TokenIsElevated != 0;
+        }
+
+        // 当前可执行文件的完整路径（宽字符）
+        inline std::wstring current_module_path() {
+            std::vector<wchar_t> buf(MAX_PATH, L'\0');
+            for(;;) {
+                const DWORD len = ::GetModuleFileNameW(nullptr, buf.data(),
+                                                      static_cast<DWORD>(buf.size()));
+                if(len == 0) {
+                    return {};
+                }
+                if(len < buf.size()) {
+                    return std::wstring(buf.data(), len);
+                }
+                // 路径超出当前缓冲区：扩容后重试（最长 32767）
+                if(buf.size() >= 32768) {
+                    return {};
+                }
+                buf.resize(buf.size() * 2);
+            }
+        }
+
+        // 当前工作目录（宽字符）
+        inline std::wstring current_working_directory() {
+            std::vector<wchar_t> buf(MAX_PATH, L'\0');
+            for(;;) {
+                const DWORD len = ::GetCurrentDirectoryW(static_cast<DWORD>(buf.size()), buf.data());
+                if(len == 0) {
+                    return {};
+                }
+                if(len < buf.size()) {
+                    return std::wstring(buf.data(), len);
+                }
+                if(buf.size() >= 32768) {
+                    return {};
+                }
+                buf.resize(buf.size() * 2);
+            }
+        }
+
+        // 把原始命令行中的参数（不含 argv[0]）逐个转义后重新拼接。
+        // 用 CommandLineToArgvW 而不是手工截取字符串：手工截取无法正确处理
+        // 参数里的引号/反斜杠组合，会把用户传入的路径改坏。
+        inline std::vector<std::wstring> original_arguments() {
+            std::vector<std::wstring> args;
+            int argc = 0;
+            LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+            if(argv == nullptr) {
+                return args;
+            }
+            for(int i = 1; i < argc; ++i) {
+                args.emplace_back(argv[i]);
+            }
+            ::LocalFree(argv);
+            return args;
+        }
+
+        // 从原始命令行中取出 "--elevated-parent-pid <pid>" 的值。
+        // 提权子进程需要在初始化控制台之前就接管父进程的控制台，
+        // 那时 CLI11 还没解析参数，只能自己扫一遍原始命令行。
+        inline int peek_elevated_parent_pid() {
+            const auto args = detail::original_arguments();
+            for(std::size_t i = 0; i + 1 < args.size(); ++i) {
+                if(args[i] != L"--elevated-parent-pid") {
+                    continue;
+                }
+                try {
+                    const int pid = std::stoi(args[i + 1]);
+                    return (pid > 0) ? pid : 0;
+                }
+                catch(...) {
+                    return 0;
+                }
+            }
+            return 0;
+        }
+
+        // 以 "runas" 触发 UAC 提权重新启动自身，并等待子进程结束
+        inline std::optional<int> run_as_admin(const ElevationRequest& req) {
+            const std::wstring exe_path = detail::current_module_path();
+            if(exe_path.empty()) {
+                spdlog::error("无法获取当前程序路径, 提权失败");
+                return std::nullopt;
+            }
+
+            // 提权相关参数放在最前面：CLI11 中子命令之后的参数会被子命令吞掉，
+            // 放在前面才能保证根级参数被子进程正确解析。
+            std::vector<std::wstring> params;
+            // 标记这是提权后的子进程：避免再次尝试提权造成无限重启
+            params.push_back(L"--elevated-child");
+            // 把父进程已解析出的资源目录传给子进程，省去重复发现/重复询问
+            // 路径走十六进制编码：命令行参数会经过 ANSI 代码页转换，中文路径会被破坏
+            if(!req.base_dir.empty()) {
+                params.push_back(L"--elevated-base");
+                // 十六进制文本是纯 ASCII，转宽字符不会丢信息
+                params.push_back(utils::to_wide_string(utils::encode_path_hex(req.base_dir)));
+            }
+            // 父进程 PID：子进程据此接管父进程的控制台窗口
+            if(req.parent_pid > 0) {
+                params.push_back(L"--elevated-parent-pid");
+                params.push_back(std::to_wstring(req.parent_pid));
+            }
+            // 父进程在"开发者选项"菜单里交互出来的结果只存在内存中，
+            // 提权重启会丢失，因此编码后传给子进程直接沿用
+            if(!req.dev_options.empty()) {
+                params.push_back(L"--elevated-dev-options");
+                params.push_back(utils::to_wide_string(req.dev_options));
+            }
+            // 父进程对"是否自动更新"的选择：子进程不再重复询问
+            if(req.update_decision >= 0) {
+                params.push_back(L"--elevated-update");
+                params.push_back(std::to_wstring(req.update_decision));
+            }
+            // 其余原始参数原样保留（--nopause / -g / -j / dev 子命令等）
+            for(const auto& arg : detail::original_arguments()) {
+                params.push_back(arg);
+            }
+
+            std::wstring cmdline;
+            for(const auto& p : params) {
+                if(!cmdline.empty()) {
+                    cmdline += L' ';
+                }
+                cmdline += elevate::quote_windows_arg(p);
+            }
+
+            const std::wstring work_dir = detail::current_working_directory();
+
+            SHELLEXECUTEINFOW sei{};
+            sei.cbSize = sizeof(sei);
+            // NOCLOSEPROCESS: 需要等待提权后的进程结束并取回退出码
+            sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+            sei.lpVerb = L"runas";
+            sei.lpFile = exe_path.c_str();
+            sei.lpParameters = cmdline.empty() ? nullptr : cmdline.c_str();
+            // 保持工作目录不变：localization.json 等相对路径的查找依赖它
+            sei.lpDirectory = work_dir.empty() ? nullptr : work_dir.c_str();
+            // 隐藏子进程自己那个控制台窗口：它随后会 FreeConsole 并接管父进程的控制台，
+            // 避免用户看到一闪而过的第二个黑窗口（接管失败时会重新分配可见控制台）
+            sei.nShow = SW_HIDE;
+
+            if(!::ShellExecuteExW(&sei)) {
+                const DWORD err = ::GetLastError();
+                if(err == ERROR_CANCELLED) {
+                    spdlog::warn("用户取消了管理员权限请求(UAC)");
+                }
+                else {
+                    spdlog::error("以管理员身份重新启动失败, 错误码 {} ({})",
+                                   err, utils::SysErrorText(err));
+                }
+                return std::nullopt;
+            }
+
+            if(sei.hProcess == nullptr) {
+                return std::nullopt;
+            }
+
+            // 等待提权后的进程执行完毕，把它的退出码带回给调用方
+            ::WaitForSingleObject(sei.hProcess, INFINITE);
+            DWORD exit_code = 0;
+            const BOOL got_code = ::GetExitCodeProcess(sei.hProcess, &exit_code);
+            ::CloseHandle(sei.hProcess);
+            if(!got_code) {
+                return std::nullopt;
+            }
+            return static_cast<int>(exit_code);
+        }
+
+    } // namespace detail
+
+    inline bool is_elevated() {
+        return detail::token_is_elevated();
+    }
+
+    inline bool supports_auto_elevation() {
+        return true;
+    }
+
+    inline std::optional<int> relaunch_elevated(const ElevationRequest& req) {
+        return detail::run_as_admin(req);
+    }
+
+    inline void attach_parent_console(int parent_pid) {
+        if(parent_pid <= 0) {
+            return;
+        }
+        // 提权子进程默认会被分配一个新的控制台窗口（父进程是 AppInfo 服务，不带控制台）。
+        // 直接 AttachConsole 会因"进程已附着在控制台上"而失败，
+        // 因此失败时先释放自己的控制台再接管父进程的，避免用户看到两个黑窗口。
+        if(!::AttachConsole(static_cast<DWORD>(parent_pid))) {
+            ::FreeConsole();
+            if(!::AttachConsole(static_cast<DWORD>(parent_pid))) {
+                // 父进程可能已经退出：重新申请一个控制台，保证输出不丢失
+                if(::AllocConsole()) {
+                    ::ShowWindow(::GetConsoleWindow(), SW_SHOW);
+                }
+                return;
+            }
+        }
+        // 接管后需要重新绑定标准流到该控制台，否则仍写到原来的管道/重定向
+        FILE* dummy = nullptr;
+        ::freopen_s(&dummy, "CONOUT$", "w", stdout);
+        ::freopen_s(&dummy, "CONOUT$", "w", stderr);
+        ::freopen_s(&dummy, "CONIN$", "r", stdin);
+    }
+
+    inline int peek_elevated_parent_pid() {
+        return detail::peek_elevated_parent_pid();
+    }
+
+    inline int current_process_id() {
+        return static_cast<int>(::GetCurrentProcessId());
+    }
+
+    inline std::string elevation_hint() {
+        return "右键以管理员身份运行本程序（或允许 UAC 提权请求）";
     }
 
 } // namespace platform

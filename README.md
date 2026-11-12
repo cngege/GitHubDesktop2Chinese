@@ -32,10 +32,27 @@
 | `-r, --onlyfromremote` | 只从远程仓库读取 `localization.json` |
 | `--rollback` | 用 `.bak` 备份还原汉化前的文件 |
 | `--nopause` | 结束前不再暂停等待（适合脚本 / CI） |
-| `--insecure-tls` | 跳过 HTTPS 证书校验，**仅在**企业中间人代理等确实无法通过校验时使用 |
+| `--insecure-tls` | **已废弃**（保留仅为兼容旧脚本）：HTTPS 证书校验现已默认关闭，该参数不再产生任何效果 |
 
-> 默认开启 HTTPS 证书校验。程序自更新会下载并执行二进制文件，关闭校验等于让链路上的任何人都有机会替换它；
-> 若下载时报证书错误，请先检查系统时间与代理设置，万不得已再加 `--insecure-tls`。
+> **HTTPS 证书校验已默认关闭**，所有请求（含自更新下载）都不再验证服务器证书。
+> 好处：企业中间人代理 / 自签证书环境下无需额外参数即可使用。
+> 代价：链路上的中间人可以替换传输内容。自更新下载的文件仍会做 SHA-256 摘要校验，可挡住损坏或截断的文件，
+> 但挡不住在传输链路上被同步替换的二进制与摘要。
+
+### 🔐 管理员权限（Windows 自动提权）
+
+> Windows 下程序会**自动申请管理员权限**：当 GitHub Desktop 的资源目录不可写时，
+> 程序会弹出 UAC 确认框，并以管理员身份重新启动自身继续完成汉化。
+
+- **触发条件**：定位到要写入的资源目录后，程序会实际创建并删除一个临时文件来探测该目录是否可写；
+  目录可写时不打扰用户，不可写时才申请提权。
+- **不会重复弹窗**：已经以管理员身份运行时不再申请；提权后的子进程也不会再次申请（避免无限重启）。
+- **只有一个窗口**：提权后的进程会接管原进程的控制台窗口，输出仍显示在原来的黑窗口里，不会多弹一个。
+- **状态会传递**：提权后的进程是新进程，父进程内存里的交互结果（开发者选项的选择、"是否自动更新"的选择）
+  会一并传过去，不会让你重新选一遍。
+- **提权失败**：用户取消 UAC 时程序会给出提示并以当前权限继续，此时汉化可能失败。
+- **macOS / Linux**：没有 UAC 等价物（`sudo` 需要交互输入密码），程序无法自动提权；
+  资源目录不可写时会提示改用 `sudo` 运行。
 
 ### 🍏 macOS 使用说明
 
@@ -84,6 +101,37 @@
 
 > 下载克隆项目 本地使用VS2022 使用CMAKE打开（直接用vs2022打开项目文件夹），即可构建
 
+### Windows 构建踩坑：STL1001（编译器与头文件来自不同版本）
+
+本机装了多个 MSVC 工具集时，CMake 缓存里的编译器路径可能与 `INCLUDE` 里的头文件来自不同版本，
+编译会报 `error C2338: static_assert failed: 'error STL1001: Unexpected compiler version ...'`：
+
+```text
+C:\...\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe   <- 编译器（旧）
+C:\...\VC\Tools\MSVC\14.51.36231\include\yvals_core.h      <- 头文件（新）
+```
+
+原因：`vcvars64.bat` 默认启用最新工具集，而旧的构建目录里 `build.ninja` 仍指向旧的 `cl.exe`。
+解决办法（二选一）：
+
+- **重新探测编译器**（推荐，自动对齐当前工具集）：
+
+  ```bat
+  del "%BUILD%\CMakeFiles\*\CMakeCXXCompiler.cmake"
+  del "%BUILD%\CMakeFiles\*\CMakeCCompiler.cmake"
+  cmake -S . -B %BUILD%   :: 重新 configure
+  cmake --build %BUILD%
+  ```
+
+- **退到稳定版工具集**（让编译器与头文件都来自同一版本）：
+
+  ```bat
+  call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" -vcvars_ver=14.44
+  cmake --build %BUILD%
+  ```
+
+> 根本原因是 CMake 把 `cl.exe` 的绝对路径写进了缓存；VS 升级后工具集目录变了，缓存不会自动跟着变。
+
 ### macOS 构建说明
 
 > 需要通过 [Homebrew](https://brew.sh/) 安装 `openssl@3`：`brew install openssl@3`
@@ -127,10 +175,33 @@ cmake --build build
 - 构建产物为无后缀的可执行文件 `GitHubDesktop2Chinese`，可自行重命名（如加 `_linux_x64` 后缀）。
 - 架构由 `CMAKE_SYSTEM_PROCESSOR` 自动识别（x86_64 / aarch64）。
 
+## 📁项目目录结构
+
+> 目录按「入口 / 平台抽象 / 第三方头文件 / 映射数据 / 测试 / 发布产物 / CI」分层。
+> 所有路径都被 CMake、CI 工作流或本文档引用，移动/重命名时须同步更新这些引用。
+
+| 路径 | 用途 |
+| --- | --- |
+| `GitHubDesktop2Chinese.cpp` / `GitHubDesktop2Chinese.h` | 程序入口：命令行、替换流程、自更新 |
+| `Utils/` | 跨平台抽象（`platform.hpp` + `platform_win/mac/linux.hpp`）、通用工具（`utils.hpp`）、可单测纯逻辑（`net_parse.hpp`、`localization_text.hpp`、`sha256.hpp`） |
+| `include/` | 随仓库分发的第三方头文件：spdlog / nlohmann-json / cpp-httplib / WinReg / VersionParse |
+| `openssl-proj/include/`、`openssl-proj/lib/` | Windows 预编译 OpenSSL 头文件与静态库；`lib/` 由 CMake 按需下载（下载后校验 SHA256），已被 `.gitignore` 忽略 |
+| `json/` | 翻译映射 `localization.json` 与编写注意事项 `localization_notes.md` |
+| `tests/` | 平台无关回归测试（C++ / CTest）与映射失效项复核脚本（Node.js） |
+| `dist/` | 随仓库发布的 6 个平台二进制：Windows x64 / x86、Linux x64 / arm64、macOS x64 / arm64 |
+| `.github/workflows/` | `build.yml`（打 tag 构建全平台并发布）、`check.yml`（PR 与映射变更校验）、`build-unix.yml`（手动触发，交叉验证 Linux/macOS 构建） |
+| `CMakeLists.txt`、`CMakePresets.json` | 构建定义与 Windows/macOS/Linux 预设 |
+| `README.md`、`ReleaseBody.md`、`LICENSE.txt` | 使用文档、Release 说明、许可证 |
+
+> **CI 工作流里的第三方 action 已固定到完整 commit SHA**（形如 `owner/repo@<40 位 SHA>  # v1.2.3`），
+> 避免可变 tag 被篡改后自动执行恶意代码。升级某个 action 时需同时更新 SHA 与后面的版本注释：
+> 用 `git ls-remote https://github.com/<owner>/<repo>.git refs/tags/<tag>` 取该 tag 指向的 commit，
+> 再用 GitHub API `/repos/<owner>/<repo>/commits/<sha>` 确认其 `object.type` 为 `commit`。
+
 ## 👕我怎么帮助完成汉化或者后续更新时如何补充汉化
 
-> 只需要克隆仓库，阅读`json/关于一些注意事项.txt`，注意一些编写时的事项, 然后在`json/localization.json` 文件中参照已经写过的格式补充要汉化的条目即可  
-  将此文件放在程序目录下,确保程序可以读取运行 然后提交PR
+> 只需要克隆仓库，阅读`json/localization_notes.md`，注意一些编写时的事项, 然后在`json/localization.json` 文件中参照已经写过的格式补充要汉化的条目即可。
+> 将此文件放在程序目录下,确保程序可以读取运行 然后提交PR
 > 如果你写了部分翻译条目，可以先将其放在`main_dev`或者`renderer_dev`条目中, 然后按下`shift`运行软件,开启 `仅替换指定映射项，以优化汉化作者替换时间` 进行汉化测试
   完成之后, 将对应条目移动到`main` 或 `renderer` 数组最后, 提交PR
 
@@ -153,6 +224,13 @@ cmake --build build
 - 主节点 - main_dev(array): 存储用于替换GitHubDesktop的main.js的映射,区别于开发时快速替换
 - 主节点 - renderer(array): 存储用于替换GitHubDesktop的renderer.js的映射
 - 主节点 - renderer_dev(array): 存储用于替换GitHubDesktop的renderer.js的映射,区别于开发时快速替换
+
+> 每条规则形如 `[匹配正则, 替换文本]`，还可以带两个可选项：
+> 第 3 项是「关键字定位串」（用它捕获的内容填充替换串里的 `#{n}` 占位符），
+> 第 4 项是「平台限定」（`"windows"` / `"macos"` / `"linux"`，可用逗号分隔多个）。
+> 同一段文案在 Windows 与 macOS 上措辞不同（如 `File > Options.` 与 `GitHub Desktop > Settings.`），
+> 用平台限定写两条即可；非当前平台的规则不会被替换，也不会被算成失效项。
+> 详见 [json/localization_notes.md](json/localization_notes.md)。
 
 ## ⚠️minifier 敏感条目维护说明
 > GitHub Desktop 的 `main.js`/`renderer.js` 是**压缩后**的产物，变量名由压缩器分配（如 `Ae`、`xe`、`EH`、`ZB`），  
@@ -186,6 +264,7 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
 ```
 
 输出 `失效项总数: 0` 即通过；否则会逐条列出失效正则，按上面的规则修正即可。
+需要同时校验开发映射（`main_dev` / `renderer_dev`）时在命令末尾加 `--dev`；CI 默认只校验正式映射。
 
 
 ## 使用环境变量开启GitHubDesktop预览版选项
@@ -204,7 +283,14 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
  > set GITHUB_DESKTOP_PREVIEW_FEATURES=1
  > "GitHub Desktop.lnk"
 ```
- - **或者通过加载器按提示选择自动开启预览版功能**
+ - **加载器不再提供「按提示自动开启预览版功能」**：旧映射文件里的 `select` 规则会改写
+   `GITHUB_DESKTOP_PREVIEW_FEATURES` 并强制置真，GitHub Desktop 3.6.10 起会暴露未完成的
+   `open-in-copilot-app` 等菜单项，renderer 在 `fatal-error.ts` 遇到未知菜单 id 直接崩溃。
+   loader 现无条件跳过这类规则（与 `enable` 值、映射文件版本、资源文件是否匹配关键字都无关），
+   因此手动把 `enable` 改回 `true` 或使用很老的本地 `localization.json` 也不会写入；
+   `--rollback` 还原后重新汉化同样不会重新注入。
+ - 上面的**环境变量方式属于用户主动设置，loader 无法干预**；在 3.6.10 上同样可能触发
+   上述崩溃，不建议开启。
 
 
 ## 🚀发布流程（Release）
@@ -220,7 +306,8 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
 | `GitHubDesktop2Chinese_x86.exe` | Windows x86 | 同上（`-A Win32`） |
 | `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（macos-latest 原生构建） |
 | `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（macos-latest 上交叉编译，见下文说明） |
-| `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux` |
+| `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux`（ubuntu-latest） |
+| `GitHubDesktop2Chinese_linux_arm64` | Linux AArch64 | `build.yml` 的 `build-linux`（ubuntu-24.04-arm 原生构建） |
 | `json/localization.json` | 映射文件 | 随 Release 一并发布 |
 
 ### 方式一：打 tag 触发 CI（推荐，出全平台）
@@ -240,7 +327,7 @@ CI 流程（`build.yml`）会依次完成：
    `CMAKE_OSX_ARCHITECTURES=x86_64` 在同一 runner 上交叉编译（Intel 版 OpenSSL 3.0.22
    亦从源码交叉编译，因 runner 镜像无 Intel Homebrew 前缀）。跑 `platform_logic_tests`
    （仅原生构建，交叉编译产物无法在本机执行），按架构加 `_macos_arm64` / `_macos_x64` 后缀
-3. **Linux**：ubuntu-latest + 系统 `libssl-dev` 构建，跑 `platform_logic_tests`，加 `_linux_x64` 后缀
+3. **Linux**：矩阵 `ubuntu-latest`（x64）/ `ubuntu-24.04-arm`（arm64）+ 系统 `libssl-dev` 构建，跑 `platform_logic_tests`，分别加 `_linux_x64` / `_linux_arm64` 后缀
 4. **发布**：`publish_release` 任务汇总全部产物 + `json/localization.json`，用 `ReleaseBody.md` 作为 Release 说明创建 GitHub Release（tag 含 `beta` 时自动标记为预发布）
 
 > [!note]
@@ -268,13 +355,22 @@ cl.exe -nologo -std:c++20 -EHsc -O2 -utf-8 "-DFILEVERSION=\"1.3.0\"" \
   GitHubDesktop2Chinese.cpp libssl_x86.lib libcrypto_x86.lib -Fe:GitHubDesktop2Chinese_x86.exe
 ```
 
-需要在 VS 开发者命令行（或手动导出 `INCLUDE`/`LIB`/`PATH`）中执行，详见 `dist/build/README.md`。
+需要在 VS 开发者命令行中执行：用 VS 自带的 `vcvarsall.bat x64` / `vcvarsall.bat x86`
+初始化对应架构的 `INCLUDE`/`LIB`/`PATH`（x86 走 Hostx64/x86 交叉编译器）。
+若已装 CMake + Ninja，更推荐直接使用 `CMakePresets.json` 的 `x64-release` / `x86-release` 预设构建。
 
 ### 版本号约定
 
 - 源码默认 `FILE_VERSION` 为 `0.0.0-Dev.0`，发布时通过 CMake 参数 `-DFILE_VERSION=<tag>` 注入（CI 已自动从 tag 名读取）
 - 程序运行时会打印 `程序架构 / 版本`（`GitHubDesktop2Chinese.cpp:210`），版本号错会导致 json 的 `minversion` 校验告警
 - Release 说明维护在 `ReleaseBody.md`，发布前更新对应版本的更新日志
+- 版本分级（`X.Y.Z`），按**变更性质与兼容性影响**判定，不以时间间隔或提交数量为依据：
+  - `X`（MAJOR）：移除或改变现有命令行参数、映射文件结构不兼容、导致旧版本无法继续使用
+  - `Y`（MINOR）：新增运行平台 / 发布产物、新增命令行参数、默认安全行为收紧等向后兼容的功能扩展
+  - `Z`（PATCH）：问题修复、翻译映射数据更新、文档与 CI 维护
+  - 例外：默认安全行为**放宽**（如关闭 HTTPS 证书校验）属于行为变更，按 `Y` 发布并在 Release 说明中显著标注
+- 映射文件的 `version` 仅作格式标记，加载器只读取 `minversion` / `select` / `tip`；新增字段若不影响旧加载器解析，无需提高 `minversion`
+- tag 名含 `beta` 时由 `build.yml` 自动标记为预发布
 
 ### 发布后的校验
 

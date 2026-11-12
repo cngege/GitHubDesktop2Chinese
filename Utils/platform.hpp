@@ -14,6 +14,7 @@
 #include <string>
 #include <optional>
 #include <filesystem>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -41,6 +42,26 @@ namespace fs = std::filesystem;
 #endif
 
 namespace platform {
+
+    //////////////////////////////////////////////////////////////////////
+    // 平台标识
+    //////////////////////////////////////////////////////////////////////
+
+    // 当前平台的标识名（"windows" / "macos" / "linux"）。
+    // 用于映射文件按平台区分规则：同一段文案在 Windows 与 macOS 上措辞不同
+    // （如 "File > Options." 与 "GitHub Desktop > Settings."），
+    // 限定平台后，另一个平台既不会替换，也不会被算成失效项。
+    inline const char* name() {
+    #if defined(PLATFORM_WINDOWS)
+        return "windows";
+    #elif defined(PLATFORM_MACOS)
+        return "macos";
+    #elif defined(PLATFORM_LINUX)
+        return "linux";
+    #else
+        return "any";
+    #endif
+    }
 
     //////////////////////////////////////////////////////////////////////
     // 控制台
@@ -86,6 +107,47 @@ namespace platform {
     //  - 抛出 std::runtime_error：仅表示"发现了安装条目但读取其信息失败"这类
     //    致命错误（例如 Windows 注册表键缺少必要值），主程序应中止。
     std::optional<GitHubDesktopInstall> find_github_desktop();
+
+    //////////////////////////////////////////////////////////////////////
+    // 管理员提权（Windows UAC）
+    //////////////////////////////////////////////////////////////////////
+
+    // 提权重启时需要传递给子进程的信息
+    struct ElevationRequest {
+        fs::path base_dir;         // 已解析出的资源目录，透传给子进程，避免重复发现/重复询问
+        int parent_pid = 0;        // 父进程 PID：子进程据此复用父进程的控制台窗口
+        std::string dev_options;   // 父进程的开发者选项(逗号分隔)，子进程直接沿用，不再进一次菜单
+        int update_decision = -1;  // 父进程对"是否自动更新"的选择(-1=未询问 0=不更新)
+    };
+
+    // 当前进程是否已经以管理员（提升）身份运行。
+    // Windows: 进程令牌已提升（TokenElevation），管理员用户但未提升时为 false；
+    // macOS/Linux: euid == 0。
+    bool is_elevated();
+
+    // 当前平台是否支持程序内自动提权。
+    // Windows: 支持（UAC 弹窗，用户确认即可）；macOS/Linux: 不支持（需要 sudo 手动执行）。
+    bool supports_auto_elevation();
+
+    // 以管理员身份重新启动当前程序：
+    //   - 保留原始命令行参数，并追加提权相关参数；
+    //   - 等待提权后的进程执行完毕，返回它的退出码；
+    //   - 无法提权（平台不支持 / 用户取消 UAC）时返回 std::nullopt。
+    std::optional<int> relaunch_elevated(const ElevationRequest& req);
+
+    // 让提权后的子进程接管父进程的控制台（仅 Windows 有意义，其它平台为空实现）。
+    // 接管后子进程的输出会显示在父进程的原窗口中，不会弹出第二个黑窗口。
+    void attach_parent_console(int parent_pid);
+
+    // 在解析命令行之前，从原始命令行中提前取出父进程 PID。
+    // 提权子进程需要在初始化控制台之前就接管控制台，因此不能只依赖 CLI 解析结果。
+    int peek_elevated_parent_pid();
+
+    // 当前进程 PID
+    int current_process_id();
+
+    // 提权失败时给用户的操作提示（各平台措辞不同）。
+    std::string elevation_hint();
 
 } // namespace platform
 

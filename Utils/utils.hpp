@@ -7,7 +7,6 @@
 #include <fstream>
 #include <sstream>
 #include <limits>
-#include <codecvt>
 #include <locale>
 #include <filesystem>
 #include <algorithm>
@@ -17,6 +16,9 @@
 #include <cctype>
 #include <cerrno>
 #include <cstring>
+#include <stdexcept>    // std::runtime_error
+#include <utility>      // std::pair / std::make_pair
+#include <atomic>       // std::atomic（WriteFile 临时文件序号）
 
 //////////////////////////////////////////////////////////////////////////
 // 平台相关头文件
@@ -44,6 +46,8 @@
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "http/httplib.h"
 #include "Utils/net_parse.hpp"      // 代理地址解析（纯字符串，便于单测）
+#include "Utils/sha256.hpp"         // 自更新下载完整性校验用的 SHA-256 实现
+#include "Utils/elevate.hpp"        // 提权相关的纯逻辑（十六进制编码等）
 #include <spdlog/spdlog.h>
 
 namespace fs = std::filesystem;
@@ -51,14 +55,15 @@ namespace fs = std::filesystem;
 class utils {
 public:
     //////////////////////////////////////////////////////////////////////////
-    // HTTPS 证书校验开关
-    // 默认开启。自更新流程会下载并执行可执行文件，关闭校验等于把执行权交给
-    // 链路上的任何人；只有在企业中间人代理等确实无法通过校验的环境下，
-    // 才由 --insecure-tls 显式关闭。
+    // HTTPS 证书校验
+    // 已按需求取消：所有 HTTPS 请求不再校验服务器证书。
+    // 好处：企业中间人代理 / 自签证书环境下无需额外参数即可使用。
+    // 代价：链路上的中间人可以替换传输内容（含自更新下载的二进制）。
+    // 自更新下载的文件仍会做 SHA-256 摘要校验，可挡住损坏/截断的文件，
+    // 但无法挡住在传输链路上被同步替换的二进制与摘要。
     //////////////////////////////////////////////////////////////////////////
-    static bool& tls_verification_enabled() {
-        static bool enabled = true;
-        return enabled;
+    static bool tls_verification_enabled() {
+        return false;
     }
 
     // 代理解析的实现在 Utils/net_parse.hpp（纯字符串逻辑，便于单测），这里只做转发
@@ -67,21 +72,34 @@ public:
     }
 
     /**
-     * @brief 证书校验失败时给出一次性的可操作提示
+     * @brief 目录在当前权限下是否可写
      *
-     * 校验失败最常见的原因是链路上存在中间人证书（企业代理/自签证书/抓包工具）。
-     * 只在第一次失败时提示，避免每次请求都刷屏。
+     * 实现方式为"实际创建一个临时文件再删掉"：
+     * 只看 ACL 位或只读属性都不准（目录可写但文件只读、或反之都会误判），
+     * 而汉化流程本身就是"在同目录写临时文件再原子替换"，用同样的方式探测最贴合实际。
+     *
+     * 目录不存在时返回 false（无法写入）。
      */
-    static void hint_if_certificate_failed(httplib::Error err) {
-        if (err != httplib::Error::SSLServerVerification) {
-            return;
+    static bool is_dir_writable(const fs::path& dir) {
+        std::error_code ec;
+        if(dir.empty() || !fs::is_directory(dir, ec) || ec) {
+            return false;
         }
-        static bool hinted = false;
-        if (hinted) {
-            return;
+#if defined(_WIN32) || defined(_WIN64)
+        const fs::path probe = dir / (L".gd2c_write_test_"
+                                     + std::to_wstring(::GetCurrentProcessId()) + L".tmp");
+        HANDLE h = ::CreateFileW(probe.c_str(), GENERIC_WRITE,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, nullptr);
+        if(h == INVALID_HANDLE_VALUE) {
+            return false;
         }
-        hinted = true;
-        spdlog::warn("HTTPS 证书校验失败(常见于企业代理或自签证书)。确认网络可信后可加 --insecure-tls 重试");
+        ::CloseHandle(h);
+        ::DeleteFileW(probe.c_str());
+        return true;
+#else
+        return ::access(dir.c_str(), W_OK) == 0;
+#endif
     }
 
     static std::string GetEnvVar(const std::string& varName) {
@@ -122,7 +140,7 @@ public:
     static std::optional<std::pair<std::string, int>> GetSystemProxySettings() {
 #if defined(_WIN32) || defined(_WIN64)
         // Windows 实现
-        WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ieProxyConfig = { 0 };
+        WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ieProxyConfig = {};
         std::optional<std::pair<std::string, int>> result;
 
         if(WinHttpGetIEProxyConfigForCurrentUser(&ieProxyConfig)) {
@@ -313,16 +331,71 @@ public:
 #endif
     }
 
+    // UTF-8 <-> UTF-16 转换。
+    // 早先用 std::wstring_convert<std::codecvt_utf8<wchar_t>>，但 <codecvt> 已被弃用，
+    // 新版 AppleClang/libc++ 甚至不再提供该头文件，导致 macOS 构建直接失败。
+    // 这两个函数只在 Windows 分支被调用，这里改用等价的 Win32 API；
+    // 非 Windows 平台保留接口但不再依赖 codecvt。
     inline static auto to_wide_string(const std::string& input)-> std::wstring
     {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-        return converter.from_bytes(input);
+#if defined(_WIN32) || defined(_WIN64)
+        if(input.empty()) return {};
+        const int len = ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), nullptr, 0);
+        if(len <= 0) return {};
+        std::wstring out(static_cast<size_t>(len), L'\0');
+        ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), out.data(), len);
+        return out;
+#else
+        return std::wstring(input.begin(), input.end());
+#endif
     }
 
     inline static auto to_byte_string(const std::wstring& input)->std::string
     {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-        return converter.to_bytes(input);
+#if defined(_WIN32) || defined(_WIN64)
+        if(input.empty()) return {};
+        const int len = ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), nullptr, 0, nullptr, nullptr);
+        if(len <= 0) return {};
+        std::string out(static_cast<size_t>(len), '\0');
+        ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), static_cast<int>(input.size()), out.data(), len, nullptr, nullptr);
+        return out;
+#else
+        return std::string(input.begin(), input.end());
+#endif
+    }
+
+    /**
+     * @brief 把路径编码成可安全经命令行传递的十六进制文本
+     *
+     * 提权重启时需要把"父进程已解析出的资源目录"传给子进程。
+     * 命令行参数会经过系统的 ANSI 代码页转换（中文路径会被破坏），
+     * 因此改用纯 ASCII 的十六进制文本传递。
+     */
+    static std::string encode_path_hex(const fs::path& dir) {
+#if defined(_WIN32) || defined(_WIN64)
+        // Windows: 宽字符 -> UTF-8 字节
+        return elevate::encode_hex(utils::to_byte_string(dir.wstring()));
+#else
+        // POSIX: 路径本身就是原始字节(通常为 UTF-8)
+        return elevate::encode_hex(dir.string());
+#endif
+    }
+
+    /**
+     * @brief encode_path_hex 的逆操作；无法还原时返回空路径
+     */
+    static fs::path decode_path_hex(const std::string& hex) {
+        const std::string bytes = elevate::decode_hex(hex);
+        if(bytes.empty()) {
+            return {};
+        }
+#if defined(_WIN32) || defined(_WIN64)
+        // Windows: UTF-8 字节 -> 宽字符
+        return fs::path(utils::to_wide_string(bytes));
+#else
+        // POSIX: 原始字节直接构造路径
+        return fs::path(bytes);
+#endif
     }
 
     /**
@@ -398,21 +471,68 @@ public:
      * @param txt 要写入的内容
      * @return 是否写入成功. 失败时会输出确切的系统错误码及可能原因
      */
-    static auto WriteFile(const std::string& filename, std::string& txt) -> bool {
+    // 内容参数统一为 const：若这里写成非 const 引用，在 libc++ 下
+    // fs::path 可隐式转换为 std::string，调用 WriteFile(fs::path, std::string)
+    // 时两个重载会各胜一个参数而判为二义，macOS 编译直接失败。
+    static auto WriteFile(const std::string& filename, const std::string& txt) -> bool {
         return WriteFile(fs::path(filename), txt);
     }
 
     /**
-     * @brief 将内容写入文件（路径按原生宽字符处理）
+     * @brief 将内容写入文件（原子替换）
      * @param filename 目标文件路径
      * @param txt 要写入的内容
      * @return 是否写入成功. 失败时会输出确切的系统错误码及可能原因
+     *
+     * 先写入同目录下的临时文件，成功后再原子替换目标：
+     * 写入过程中目标文件始终保持原有完整内容，进程被中断或写入失败时不会留下半个文件
+     * （原实现直接 CREATE_ALWAYS / ofstream 截断目标，中断即留下残缺内容）。
+     * 临时文件必须与目标同目录，才能保证替换是同一文件系统内的原子 rename。
      *
      * 使用 fs::path 而不是 fs::path::string()：在 Windows 上 string() 返回的是
      * 本地代码页(GBK 等)窄字节，若再按 UTF-8 转宽字符会在中文等非 ASCII 安装
      * 路径下抛 std::range_error。
      */
     static auto WriteFile(const fs::path& filename, const std::string& txt) -> bool {
+        // 临时文件名带进程号与自增序号，避免并发/多进程写同一目标时互相覆盖
+        static std::atomic<unsigned long> seq{ 0 };
+#if defined(_WIN32) || defined(_WIN64)
+        const auto pid = static_cast<unsigned long>(::GetCurrentProcessId());
+#else
+        const auto pid = static_cast<unsigned long>(::getpid());
+#endif
+        fs::path tmp = filename;
+        tmp += ".tmp-" + std::to_string(pid) + "-" + std::to_string(seq.fetch_add(1));
+
+        if(!WriteFileRaw(tmp, txt)) {
+            // 写入失败：清掉半成品临时文件，目标文件保持原样
+            std::error_code rmec;
+            fs::remove(tmp, rmec);
+            return false;
+        }
+
+        // 目标已存在时把原有权限带到临时文件上，替换后权限不变
+        std::error_code ec;
+        if(fs::exists(filename, ec)) {
+            const auto st = fs::status(filename, ec);
+            if(!ec) {
+                std::error_code pec;
+                fs::permissions(tmp, st.permissions(), fs::perm_options::replace, pec);
+            }
+        }
+
+        if(!ReplaceFileAtomic(tmp, filename)) {
+            std::error_code rmec;
+            fs::remove(tmp, rmec);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @brief 实际写入内容（不负责原子替换，供 WriteFile 内部使用）
+     */
+    static auto WriteFileRaw(const fs::path& filename, const std::string& txt) -> bool {
 #if defined(_WIN32) || defined(_WIN64)
         // 直接使用 Win32 API: 写入失败时才拿得到确切的错误码, 而不是笼统的一句"失败"
         HANDLE hFile = ::CreateFileW(
@@ -454,6 +574,34 @@ public:
     }
 
     /**
+     * @brief 用 from 原子替换 to（同一文件系统内）
+     * @return 替换是否成功
+     *
+     * Windows 的 std::filesystem::rename 在目标已存在时会失败，因此改用
+     * MoveFileExW + MOVEFILE_REPLACE_EXISTING；MOVEFILE_WRITE_THROUGH 保证
+     * 替换在落盘后才返回。
+     * POSIX 的 rename(2) 本身就是原子替换，直接使用。
+     */
+    static auto ReplaceFileAtomic(const fs::path& from, const fs::path& to) -> bool {
+#if defined(_WIN32) || defined(_WIN64)
+        if(::MoveFileExW(from.c_str(), to.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+            return true;
+        }
+        const DWORD err = ::GetLastError();
+        spdlog::error("替换目标文件:{} 时失败 - 错误码 {} ({})", to.string(), err, SysErrorText(err));
+        return false;
+#else
+        std::error_code ec;
+        fs::rename(from, to, ec);
+        if(ec) {
+            spdlog::error("替换目标文件:{} 时失败 - {}", to.string(), ec.message());
+            return false;
+        }
+        return true;
+#endif
+    }
+
+    /**
      * @brief 从网络上读取数据
      * @param url_host 网络主机
      * @param params 请求链接后缀
@@ -465,7 +613,7 @@ public:
         if(proxy.second) {
             cli.set_proxy(proxy.first, proxy.second);
         }
-        // 证书校验默认开启；仅 --insecure-tls 显式关闭（见 tls_verification_enabled）
+        // 证书校验已按需求取消（见 tls_verification_enabled 的说明）
         cli.enable_server_certificate_verification(tls_verification_enabled());
         // 显式设置超时：httplib 默认连接/读取超时是 300 秒，断网时界面会像卡死
         cli.set_connection_timeout(10, 0);
@@ -480,7 +628,6 @@ public:
         }
         if (!res) {
             spdlog::debug("请求 {} 失败: {}", params, httplib::to_string(res.error()));
-            hint_if_certificate_failed(res.error());
             return false;
         }
         if (res->status == httplib::StatusCode::OK_200) {
@@ -492,7 +639,30 @@ public:
     }
 
     //static auto DownloadHttpResource(std::string url_host, std::string params);
-    static auto UpdateProgram(std::string url_host, std::string params, fs::path Self, int64_t max_size, std::pair<std::string, int> proxy) ->bool{
+    /**
+     * @brief 计算文件的 SHA-256（小写十六进制）
+     * @param path 文件路径
+     * @param out 成功后输出摘要
+     * @return 是否计算成功
+     */
+    static auto sha256_file_hex(const fs::path& path, std::string& out) -> bool {
+        std::ifstream in(path, std::ios::binary);
+        if(!in) return false;
+        sha256::Sha256 h;
+        std::vector<char> buf(64 * 1024);
+        while(in) {
+            in.read(buf.data(), static_cast<std::streamsize>(buf.size()));
+            const std::streamsize got = in.gcount();
+            if(got > 0) {
+                h.update(reinterpret_cast<const unsigned char*>(buf.data()), static_cast<std::size_t>(got));
+            }
+        }
+        if(in.bad()) return false;
+        out = h.final_hex();
+        return true;
+    }
+
+    static auto UpdateProgram(std::string url_host, std::string params, fs::path Self, int64_t max_size, std::pair<std::string, int> proxy, const std::string& expected_sha256 = "") ->bool{
         fs::path parent_dir = Self.parent_path();   // 文件所在目录
         fs::path exe_name = Self.filename();                // 文件名 包含扩展名,但不包含路径
 
@@ -555,7 +725,6 @@ public:
 
             if(!res) {
                 spdlog::error("网络请求失败:{}", httplib::to_string(res.error()));
-                hint_if_certificate_failed(res.error());
                 return false;
             }
             // 请求了断点续传却收到 200（服务器不支持 Range）：此时文件已被追加了整份内容，
@@ -583,6 +752,27 @@ public:
                 fs::remove(tmp_file, rm_ec);
                 return false;
             }
+        }
+
+        // 下载完整性校验：SHA-256 不符时绝不执行，避免运行被替换/损坏的二进制。
+        // 期望值取自 Release 中与产物同名的 "<产物名>.sha256" 附属文件；
+        // 该附属文件不存在时（发布端尚未提供）跳过此校验，保持与旧版一致的更新行为。
+        if(!expected_sha256.empty()) {
+            std::string actual_sha256;
+            if(!sha256_file_hex(tmp_file, actual_sha256)) {
+                spdlog::error("更新文件 SHA-256 计算失败, 已删除临时文件");
+                std::error_code rm_ec;
+                fs::remove(tmp_file, rm_ec);
+                return false;
+            }
+            if(actual_sha256 != expected_sha256) {
+                spdlog::error("更新文件 SHA-256 校验失败: 期望 {}, 实际 {}, 已删除临时文件, 不会执行该文件",
+                              expected_sha256, actual_sha256);
+                std::error_code rm_ec;
+                fs::remove(tmp_file, rm_ec);
+                return false;
+            }
+            spdlog::info("更新文件 SHA-256 校验通过: {}", actual_sha256);
         }
 
 
@@ -702,7 +892,9 @@ public:
 
     static auto ReadUserInput_bool(std::vector<std::string> input = {"false", "true"}, int defaultval = -1) -> bool {
         if (input.size() != 2) throw std::runtime_error("读取 bool 类型值时 input 数组长度必须为两个");
-        if (defaultval > (int)input.size() - 1 || defaultval < -1) throw std::runtime_error(std::format("defaultval 必须能够指向 input数组，或者为 -1, defaultval:{}" , defaultval));
+        // 不用 std::format：部分 macOS runner 的 libc++ 尚未提供 <format>，
+        // 这里只拼一个错误码字符串，保持错误信息内容不变。
+        if (defaultval > (int)input.size() - 1 || defaultval < -1) throw std::runtime_error(std::string("defaultval 必须能够指向 input数组，或者为 -1, defaultval:") + std::to_string(defaultval));
         while (true)
         {
             // 输出提示
