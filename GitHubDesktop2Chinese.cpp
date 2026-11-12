@@ -83,7 +83,7 @@ std::optional<std::string> formatTime(std::string time_str);
 namespace {
 
 // 自更新时当前构建对应的 Release 产物名。
-// v1.3.0 起一次 Release 会同时附带 5 个平台的可执行文件与映射文件，
+// v1.3.0 起一次 Release 会同时附带 6 个平台的可执行文件与映射文件，
 // assets[0] 不再保证是当前平台产物；必须按名称挑选，找不到就跳过更新，
 // 否则会把其它平台的二进制下载回来替换自身。
 #if defined(PLATFORM_WINDOWS)
