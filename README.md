@@ -140,7 +140,7 @@ cmake --build build
 | `openssl-proj/include/`、`openssl-proj/lib/` | Windows 预编译 OpenSSL 头文件与静态库；`lib/` 由 CMake 按需下载（下载后校验 SHA256），已被 `.gitignore` 忽略 |
 | `json/` | 翻译映射 `localization.json` 与编写注意事项 `localization_notes.md` |
 | `tests/` | 平台无关回归测试（C++ / CTest）与映射失效项复核脚本（Node.js） |
-| `dist/` | 随仓库发布的 5 个平台二进制：Windows x64 / x86、Linux x64 / arm64、macOS x64 / arm64 |
+| `dist/` | 随仓库发布的 6 个平台二进制：Windows x64 / x86、Linux x64 / arm64、macOS x64 / arm64 |
 | `.github/workflows/` | `build.yml`（打 tag 构建全平台并发布）、`check.yml`（PR 与映射变更校验）、`build-unix.yml`（手动触发，交叉验证 Linux/macOS 构建） |
 | `CMakeLists.txt`、`CMakePresets.json` | 构建定义与 Windows/macOS/Linux 预设 |
 | `README.md`、`ReleaseBody.md`、`LICENSE.txt` | 使用文档、Release 说明、许可证 |
@@ -251,7 +251,8 @@ node tests/check_localization.js json/localization.json <解压出的 app 目录
 | `GitHubDesktop2Chinese_x86.exe` | Windows x86 | 同上（`-A Win32`） |
 | `GitHubDesktop2Chinese_macos_arm64` | macOS Apple Silicon | `build.yml` 的 `build-macos`（macos-latest 原生构建） |
 | `GitHubDesktop2Chinese_macos_x64` | macOS Intel | `build.yml` 的 `build-macos`（macos-latest 上交叉编译，见下文说明） |
-| `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux` |
+| `GitHubDesktop2Chinese_linux_x64` | Linux x86_64 | `build.yml` 的 `build-linux`（ubuntu-latest） |
+| `GitHubDesktop2Chinese_linux_arm64` | Linux AArch64 | `build.yml` 的 `build-linux`（ubuntu-24.04-arm 原生构建） |
 | `json/localization.json` | 映射文件 | 随 Release 一并发布 |
 
 ### 方式一：打 tag 触发 CI（推荐，出全平台）
@@ -271,7 +272,7 @@ CI 流程（`build.yml`）会依次完成：
    `CMAKE_OSX_ARCHITECTURES=x86_64` 在同一 runner 上交叉编译（Intel 版 OpenSSL 3.0.22
    亦从源码交叉编译，因 runner 镜像无 Intel Homebrew 前缀）。跑 `platform_logic_tests`
    （仅原生构建，交叉编译产物无法在本机执行），按架构加 `_macos_arm64` / `_macos_x64` 后缀
-3. **Linux**：ubuntu-latest + 系统 `libssl-dev` 构建，跑 `platform_logic_tests`，加 `_linux_x64` 后缀
+3. **Linux**：矩阵 `ubuntu-latest`（x64）/ `ubuntu-24.04-arm`（arm64）+ 系统 `libssl-dev` 构建，跑 `platform_logic_tests`，分别加 `_linux_x64` / `_linux_arm64` 后缀
 4. **发布**：`publish_release` 任务汇总全部产物 + `json/localization.json`，用 `ReleaseBody.md` 作为 Release 说明创建 GitHub Release（tag 含 `beta` 时自动标记为预发布）
 
 > [!note]

@@ -2,7 +2,7 @@
 ### 1.3.0 更新内容
 
 #### 新增功能
-- 新增 macOS（Apple Silicon arm64 / Intel x64）与 Linux x86_64 支持，Release 产物由 2 个 Windows 二进制扩展为 5 个平台二进制
+- 新增 macOS（Apple Silicon arm64 / Intel x64）与 Linux x86_64 / arm64 支持，Release 产物由 2 个 Windows 二进制扩展为 6 个平台二进制
 - 新增跨平台安装发现（macOS `/Applications`、Linux deb/rpm 等）与系统代理读取（`scutil --proxy` / `gsettings`）
 - 新增 `--insecure-tls` 参数：仅在企业中间人代理等确无法通过证书校验时显式关闭 HTTPS 校验
 - 新增平台无关逻辑回归测试（`platform_logic_tests`）与映射文件失效项独立复核（`tests/check_localization.js`）
@@ -23,10 +23,10 @@
 - 自更新下载完成后校验 SHA-256：发布端在 Release 中提供与产物同名的 `<产物名>.sha256` 附属文件时自动比对，不符即删除临时文件且不执行；未提供时保持原有「仅大小校验」行为
 - `std::Version` 迁出 `namespace std`（向标准命名空间注入自定义类型属未定义行为），改为 `version_parse::Version`；命令行与外部行为不变
 - 映射文件清理 6 条永不生效的重复条目（同模式重复，排在前面的一条已全局替换，后面那条永远匹配不到），汉化输出逐字节不变
-- 新增 Linux arm64（aarch64）CI 产物，`dist/` 现有 5 个平台二进制；`build-unix.yml` 常驻 main，可手动触发交叉验证 Linux/macOS 构建
+- 新增 Linux arm64（aarch64）CI 产物，`dist/` 现有 6 个平台二进制；`build-unix.yml` 常驻 main，可手动触发交叉验证 Linux/macOS 构建
 - CI 工作流将第三方 action 固定到完整 commit SHA；`.gitattributes` 精简并显式声明二进制产物，`.gitignore` 补齐 CI 构建目录与自更新临时文件
 - 文档与目录整理：`json/关于一些注意事项.txt` 转为 `json/localization_notes.md`，README 增加「项目目录结构」章节，校验脚本支持可选的 `--dev` 段检查
-- `dist/` 中的 5 个平台二进制均已用本次源码重新编译（v1.3.0 Release）：Windows x64 / x86、Linux x64 / arm64、macOS x64 / arm64
+- `dist/` 中的 6 个平台二进制均已用本次源码重新编译（v1.3.0 Release）：Windows x64 / x86、Linux x64 / arm64、macOS x64 / arm64
 
 #### ⚠️ 升级前必读（行为变更）
 - **默认开启 HTTPS 证书校验**：企业代理或自签证书环境若报证书错误，请先检查系统时间与代理设置，确无法通过时再加 `--insecure-tls`。程序自更新会下载并执行二进制，请勿随意关闭校验。
@@ -35,7 +35,7 @@
 - **`--rollback` 不再依赖 `localization.json` 与更新检查**：可离线从 `.bak` 备份还原汉化前文件。
 - **Linux 无法检测 Shift 按键**：进入开发者选项请用 `./GitHubDesktop2Chinese_linux_x64 dev -d`。
 - **汉化结果改为原子替换**：写文件先落到同目录临时文件再原子替换目标。目标文件若被其它程序占用或设为只读，写入会失败并保留原文件不变（错误提示「该文件保持原样」），需关闭占用或去掉只读属性后重试。
-- **自更新摘要校验**：若 Release 资产中提供了 `<产物名>.sha256`，更新时会自动校验；校验不通过将删除临时文件并终止更新。发布端未提供该文件时行为与旧版一致（仅校验文件大小）。
+- **自更新摘要校验**：v1.3.0 起每个 Release 产物均随附 `<产物名>.sha256`，自更新默认进行 SHA-256 校验；校验不通过将删除临时文件并终止更新。发布端未提供该文件时行为与旧版一致（仅校验文件大小）。
 - 原有命令行参数全部保留，本次未移除任何参数。
 
 ### 1.2.x 程序修复的bug和更新内容
