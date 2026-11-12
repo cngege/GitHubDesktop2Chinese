@@ -12,3 +12,10 @@ _deps
 /.vs
 /out
 /openssl-proj/lib
+/build/
+/build32/
+# 自更新流程产生的临时文件
+*.new
+*.update.sh
+.DS_Store
+Thumbs.db

@@ -4,8 +4,11 @@
 
 #pragma once
 #include <string>
+#include <cctype>       // std::isdigit
 
-namespace std {
+// 类原本定义在 namespace std 中（标准未定义行为：向 std 注入自定义类型）。
+// 现迁入 version_parse 命名空间；调用点同步改为 version_parse::Version。
+namespace version_parse {
 
 class Version {
 public:
@@ -35,7 +38,8 @@ public:
 	}
 
     Version(int major, int minor, int revision, Status status = Status::Release, int betaversion = 0)
-    : major(major), minor(minor), revision(revision), status(status), betaversion(betaversion)
+    // 初始化列表顺序必须与成员声明顺序一致，否则 -Wreorder 且实际初始化次序被误读
+    : major(major), minor(minor), revision(revision), betaversion(betaversion), status(status)
     {
         vaild = true;
     }
@@ -56,6 +60,10 @@ public:
             }
         }
         return false;
+    }
+
+    bool operator!=(const Version& b) const {
+        return !(*this == b);
     }
 
     bool operator<=(const Version& b) const {
@@ -236,7 +244,7 @@ private:
                     v++;
                     continue;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     major = major * 10 + (*v - '0');
                     v++;
                     continue;
@@ -257,7 +265,7 @@ private:
                     v++;
                     continue;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     minor = minor * 10 + (*v - '0');
                     v++;
                     ret = true;
@@ -267,25 +275,25 @@ private:
                     v++;
 
                     // 检查是否是 alpha 或者 dev
-                    int ret = CheckIsAlphaOrBeta(v, "alpha");
-                    if(!ret) ret = CheckIsAlphaOrBeta(v, "dev");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 alpha 内部测试版 -> Dev
+                    int alphaRet = CheckIsAlphaOrBeta(v, "alpha");
+                    if(!alphaRet) alphaRet = CheckIsAlphaOrBeta(v, "dev");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 alpha 内部测试版 -> Dev
                         status = Status::Dev;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
                         continue;
                     }
                     // 检查是否是 beta
-                    ret = CheckIsAlphaOrBeta(v, "beta");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 beta
+                    alphaRet = CheckIsAlphaOrBeta(v, "beta");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 beta
                         status = Status::Beta;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
@@ -302,7 +310,7 @@ private:
                     v++;
                     continue;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     revision = revision * 10 + (*v - '0');
                     v++;
                     continue;
@@ -311,25 +319,25 @@ private:
                     v++;
 
                     // 检查是否是 alpha 或者 dev
-                    int ret = CheckIsAlphaOrBeta(v, "alpha");
-                    if (!ret) ret = CheckIsAlphaOrBeta(v, "dev");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 alpha 内部测试版 -> Dev
+                    int alphaRet = CheckIsAlphaOrBeta(v, "alpha");
+                    if (!alphaRet) alphaRet = CheckIsAlphaOrBeta(v, "dev");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 alpha 内部测试版 -> Dev
                         status = Status::Dev;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
                         continue;
                     }
                     // 检查是否是 beta
-                    ret = CheckIsAlphaOrBeta(v, "beta");
-                    if (ret < 0) break;
-                    if (ret > 0) { // 是 beta
+                    alphaRet = CheckIsAlphaOrBeta(v, "beta");
+                    if (alphaRet < 0) break;
+                    if (alphaRet > 0) { // 是 beta
                         status = Status::Beta;
                         parseCheckPos = ParseCheckPosition::enumbetaversion;
-                        v += ret;
+                        v += alphaRet;
                         if (*v == '.') {
                             v++;
                         }
@@ -345,7 +353,7 @@ private:
                 if (*v == '.') {
                     break;
                 }
-                if (isdigit(*v) != 0) {
+                if (std::isdigit(static_cast<unsigned char>(*v)) != 0) {
                     if (status == Status::Release && ((*v - '0') != 0)) status = Status::Beta;
                     betaversion = betaversion * 10 + (*v - '0');
                     v++;
@@ -360,7 +368,7 @@ private:
     }
 };
 
-}
+} // namespace version_parse
 
 
 #endif // !VERSIONPARSE_VERSION_HPP

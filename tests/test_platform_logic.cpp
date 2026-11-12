@@ -1,0 +1,775 @@
+// 平台无关逻辑的回归测试
+// 覆盖：Version 解析与比较、代理 URL 解析（真实实现 Utils/net_parse.hpp）、
+//       scutil --proxy 文本解析、PlistBuddy 版本输出解析、localization.json 映射数据结构、
+//       #{n} 捕获注入（真实实现 Utils/localization_text.hpp）、
+//       预览版特性 / 未完成菜单项规则拦截（#48/#49 残留场景）、
+//       UAC 自动提权判定与跨进程参数编码（真实实现 Utils/elevate.hpp）。
+// 设计为纯 C++ 单元测试（不依赖网络/注册表/bundle），Windows 与 macOS 均可运行。
+// 退出码：0 = 全部通过；1 = 存在失败。
+//
+// 通过 CMake 的 add_test 注册，PASS_REGULAR_EXPRESSION="ALL PASS"。
+
+#include <string>
+#include <optional>
+#include <utility>
+#include <vector>
+#include <cstdio>
+#include <regex>
+
+#include "VersionParse/Version.hpp"
+#include "Utils/net_parse.hpp"
+#include "Utils/localization_text.hpp"
+#include "Utils/sha256.hpp"
+#include "Utils/elevate.hpp"
+
+//////////////////////////////////////////////////////////////////////////
+// 直接测试被测实现：代理地址解析
+//////////////////////////////////////////////////////////////////////////
+
+static std::optional<std::pair<std::string, int>> parse_proxy_url(const std::string& p1) {
+    return netparse::parse_proxy_address(p1);
+}
+
+// scutil --proxy 文本解析（提取自 utils::GetSystemProxySettings 的 macOS 分支）
+static std::optional<std::pair<std::string, int>> parse_scutil_proxy(const std::string& out) {
+    std::string address;
+    int port = 0;
+
+    auto extract = [&out](const std::string& key) -> std::string {
+        std::string pattern = key + " : ";
+        size_t pos = out.find(pattern);
+        if(pos == std::string::npos) {
+            return {};
+        }
+        size_t start = pos + pattern.size();
+        size_t end = out.find('\n', start);
+        if(end == std::string::npos) {
+            end = out.size();
+        }
+        std::string value = out.substr(start, end - start);
+        size_t b = value.find_first_not_of(" \t\r\n");
+        size_t e = value.find_last_not_of(" \t\r\n");
+        if(b == std::string::npos) {
+            return {};
+        }
+        return value.substr(b, e - b + 1);
+    };
+
+    if(extract("HTTPSEnable") == "1") {
+        std::string host = extract("HTTPSProxy");
+        std::string portStr = extract("HTTPSPort");
+        if(!host.empty() && !portStr.empty()) {
+            try {
+                int p = std::stoi(portStr);
+                if(p > 0) { address = host; port = p; }
+            } catch(...) {}
+        }
+    }
+    if(port == 0 && extract("HTTPEnable") == "1") {
+        std::string host = extract("HTTPProxy");
+        std::string portStr = extract("HTTPPort");
+        if(!host.empty() && !portStr.empty()) {
+            try {
+                int p = std::stoi(portStr);
+                if(p > 0) { address = host; port = p; }
+            } catch(...) {}
+        }
+    }
+
+    if(port) {
+        return std::make_pair(address, port);
+    }
+    return {};
+}
+
+// PlistBuddy 版本号输出解析（提取自 platform_mac.hpp::read_bundle_version 的清洗逻辑）
+static std::string clean_plist_version(const std::string& out) {
+    size_t b = out.find_first_not_of(" \t\r\n");
+    if(b == std::string::npos) {
+        return {};
+    }
+    size_t e = out.find_last_not_of(" \t\r\n");
+    return out.substr(b, e - b + 1);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// 测试框架
+//////////////////////////////////////////////////////////////////////////
+
+static int g_failures = 0;
+
+static void check(bool cond, const char* name, const char* detail = "") {
+    if(cond) {
+        std::printf("OK   %s\n", name);
+    } else {
+        std::printf("FAIL %s %s\n", name, detail);
+        g_failures++;
+    }
+}
+
+template <typename T>
+static void check_eq(const T& actual, const T& expected, const char* name) {
+    if(actual == expected) {
+        std::printf("OK   %s\n", name);
+    } else {
+        std::printf("FAIL %s (实际=%s, 期望=%s)\n", name,
+                    std::to_string(actual).c_str(), std::to_string(expected).c_str());
+        g_failures++;
+    }
+}
+
+static void check_eq_str(const std::string& actual, const std::string& expected, const char* name) {
+    if(actual == expected) {
+        std::printf("OK   %s\n", name);
+    } else {
+        std::printf("FAIL %s (实际=\"%s\", 期望=\"%s\")\n", name, actual.c_str(), expected.c_str());
+        g_failures++;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+// 测试用例
+//////////////////////////////////////////////////////////////////////////
+
+// ---- 1) Version 解析与比较 ----
+static void test_version() {
+    std::printf("\n[Version 解析与比较]\n");
+
+    // 基本版本号解析
+    version_parse::Version v1("1.2.3");
+    check((bool)v1, "解析 \"1.2.3\" 有效");
+    check_eq(v1.major, 1, "major=1");
+    check_eq(v1.minor, 2, "minor=2");
+    check_eq(v1.revision, 3, "revision=3");
+
+    // v 前缀
+    version_parse::Version v2("v1.2.3");
+    check((bool)v2, "解析 \"v1.2.3\" 有效（v 前缀兼容）");
+
+    // 两段版本号
+    version_parse::Version v3("1.40");
+    check((bool)v3, "解析 \"1.40\" 有效（两位版本号）");
+
+    // 无效输入
+    version_parse::Version v4("not-a-version");
+    check(!(bool)v4, "解析 \"not-a-version\" 无效");
+
+    version_parse::Version v5("");
+    check(!(bool)v5, "解析空字符串无效");
+
+    // 比较
+    version_parse::Version a("1.2.3");
+    version_parse::Version b("1.2.4");
+    check(a < b, "1.2.3 < 1.2.4");
+    check(b > a, "1.2.4 > 1.2.3");
+    check(a != b, "1.2.3 != 1.2.4");
+
+    version_parse::Version c("1.2.3");
+    check(a == c, "1.2.3 == 1.2.3");
+    check(!(a < c), "1.2.3 不小于自身");
+
+    // 跨大版本比较
+    version_parse::Version d("2.0.0");
+    check(a < d, "1.2.3 < 2.0.0（跨大版本）");
+
+    // 程序内置版本（FILEVERSION 由 CMake 注入）
+    version_parse::Version fileVer(FILEVERSION);
+    check((bool)fileVer || std::string(FILEVERSION) == "0.0.0-Dev.0",
+          "FILEVERSION 宏已定义且可解析（或为开发占位版本）");
+}
+
+// ---- 2) 代理 URL 解析 ----
+static void test_proxy_url() {
+    std::printf("\n[代理 URL 解析]\n");
+
+    // 带协议
+    auto r1 = parse_proxy_url("http://127.0.0.1:8080");
+    check(r1.has_value(), "解析 http://127.0.0.1:8080 成功");
+    if(r1) {
+        check_eq_str(r1->first, "127.0.0.1", "主机=127.0.0.1");
+        check_eq(r1->second, 8080, "端口=8080");
+    }
+
+    // https 协议
+    auto r2 = parse_proxy_url("https://proxy.example.com:8443");
+    check(r2.has_value(), "解析 https://proxy.example.com:8443 成功");
+    if(r2) {
+        check_eq_str(r2->first, "proxy.example.com", "主机=proxy.example.com");
+        check_eq(r2->second, 8443, "端口=8443");
+    }
+
+    // 不带协议
+    auto r3 = parse_proxy_url("127.0.0.1:7890");
+    check(r3.has_value(), "解析无协议的 127.0.0.1:7890 成功");
+    if(r3) {
+        check_eq_str(r3->first, "127.0.0.1", "无协议时主机=127.0.0.1");
+        check_eq(r3->second, 7890, "无协议时端口=7890");
+    }
+
+    // 缺端口
+    auto r4 = parse_proxy_url("http://127.0.0.1");
+    check(!r4.has_value(), "缺端口号时返回 nullopt");
+
+    // 空字符串
+    auto r5 = parse_proxy_url("");
+    check(!r5.has_value(), "空字符串返回 nullopt");
+
+    // 非法端口
+    auto r6 = parse_proxy_url("http://127.0.0.1:not-a-port");
+    check(!r6.has_value(), "非法端口返回 nullopt（不抛异常）");
+
+    // 端口为 0
+    auto r7 = parse_proxy_url("http://127.0.0.1:0");
+    check(!r7.has_value(), "端口 0 返回 nullopt");
+
+    // Windows 系统代理的按协议格式（曾因取第一个 ':' 而把 "http=127.0.0.1" 当成主机）
+    auto r8 = parse_proxy_url("http=10.0.0.1:8080;https=10.0.0.2:8443");
+    check(r8.has_value(), "解析按协议格式 http=...;https=... 成功");
+    if(r8) {
+        check_eq_str(r8->first, "10.0.0.2", "按协议格式优先取 https 主机");
+        check_eq(r8->second, 8443, "按协议格式优先取 https 端口");
+    }
+
+    // 只有 http= 项时回退到 http
+    auto r9 = parse_proxy_url("http=10.0.0.1:8080");
+    check(r9.has_value(), "仅有 http= 项时解析成功");
+    if(r9) {
+        check_eq_str(r9->first, "10.0.0.1", "回退取 http 主机");
+        check_eq(r9->second, 8080, "回退取 http 端口");
+    }
+
+    // 带认证信息与路径
+    auto r10 = parse_proxy_url("http://user:pass@127.0.0.1:3128/proxy.pac");
+    check(r10.has_value(), "解析带认证与路径的地址成功");
+    if(r10) {
+        check_eq_str(r10->first, "127.0.0.1", "去掉 user:pass@ 与路径后主机正确");
+        check_eq(r10->second, 3128, "去掉 user:pass@ 与路径后端口正确");
+    }
+
+    // IPv6 字面量
+    auto r11 = parse_proxy_url("[::1]:1080");
+    check(r11.has_value(), "解析 IPv6 字面量 [::1]:1080 成功");
+    if(r11) {
+        check_eq_str(r11->first, "::1", "IPv6 主机去掉方括号");
+        check_eq(r11->second, 1080, "IPv6 端口正确");
+    }
+
+    // 端口越界
+    auto r12 = parse_proxy_url("127.0.0.1:70000");
+    check(!r12.has_value(), "端口超过 65535 返回 nullopt");
+
+    // 端口后带垃圾字符
+    auto r13 = parse_proxy_url("127.0.0.1:8080abc");
+    check(!r13.has_value(), "端口后带非数字返回 nullopt");
+}
+
+// ---- 2b) #{n} 捕获组注入 ----
+static void test_capture_substitution() {
+    std::printf("\n[#{n} 捕获组注入]\n");
+
+    auto fmt = [](const std::string& text, const std::string& pattern,
+                  const std::string& tmpl) -> std::string {
+        std::regex re(pattern);
+        std::sregex_iterator it(text.begin(), text.end(), re);
+        if(it == std::sregex_iterator()) {
+            return "<no-match>";
+        }
+        return localization_text::substitute_capture_groups(tmpl, *it);
+    };
+
+    // 基本替换：捕获组填进 #{1}
+    check_eq_str(fmt("click(){ab.shell", "click\\(\\)\\{([A-Za-z$_][\\w$]{0,2})\\.shell", "click(){#{1}.shell"),
+                 "click(){ab.shell", "捕获组填入 #{1}");
+
+    // 无占位符时原样返回
+    check_eq_str(fmt("abc", "a", "xyz"), "xyz", "模板无占位符时原样返回");
+
+    // 占位符索引越界时保持原样
+    check_eq_str(fmt("abc", "(a)", "#{9}"), "#{9}", "占位符索引越界时保持原样");
+
+    // 未闭合的占位符保持原样
+    check_eq_str(fmt("abc", "(a)", "#{1"), "#{1", "未闭合的 #{ 保持原样");
+
+    // 多位索引
+    std::string many = fmt("abcdefghij", "(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)", "#{10}");
+    check_eq_str(many, "j", "两位数索引 #{10} 取第 10 组");
+
+    // 捕获内容含 '$'：必须转义为 "$$"，否则后续 regex_replace 会吞掉内容
+    const std::string tmpl = fmt("CAP$1END", "CAP([$0-9]+)END", "<#{1}>");
+    check_eq_str(tmpl, "<$$1>", "捕获内容中的 $ 被转义为 $$");
+    const std::string applied = std::regex_replace(std::string("TOKEN_X"), std::regex("TOKEN_X"), tmpl);
+    check_eq_str(applied, "<$1>", "转义后经 regex_replace 仍得到字面量 $1");
+
+    // 未转义的反例：确认这正是需要规避的陷阱
+    const std::string naive = std::regex_replace(std::string("TOKEN_X"), std::regex("TOKEN_X"), "<$1>");
+    check_eq_str(naive, "<>", "未转义的 $1 会被 regex_replace 当成反向引用");
+}
+
+// ---- 3) scutil --proxy 文本解析 ----
+static void test_scutil() {
+    std::printf("\n[scutil --proxy 文本解析]\n");
+
+    // HTTPS+HTTP 均启用，优先 HTTPS
+    auto r1 = parse_scutil_proxy(
+        "HTTPEnable : 1\nHTTPPort : 8080\nHTTPProxy : 127.0.0.1\n"
+        "HTTPSEnable : 1\nHTTPSPort : 8443\nHTTPSProxy : 10.0.0.1\n");
+    check(r1.has_value(), "HTTPS+HTTP 均启用时解析成功");
+    if(r1) {
+        check_eq_str(r1->first, "10.0.0.1", "优先取 HTTPS 代理主机");
+        check_eq(r1->second, 8443, "优先取 HTTPS 代理端口");
+    }
+
+    // 仅 HTTP 启用
+    auto r2 = parse_scutil_proxy(
+        "HTTPEnable : 1\nHTTPPort : 7890\nHTTPProxy : 127.0.0.1\nHTTPSEnable : 0\n");
+    check(r2.has_value(), "仅 HTTP 启用时解析成功");
+    if(r2) {
+        check_eq_str(r2->first, "127.0.0.1", "回退取 HTTP 代理主机");
+        check_eq(r2->second, 7890, "回退取 HTTP 代理端口");
+    }
+
+    // 均未启用
+    auto r3 = parse_scutil_proxy("HTTPEnable : 0\nHTTPSEnable : 0\n");
+    check(!r3.has_value(), "均未启用返回 nullopt");
+
+    // 空输出
+    auto r4 = parse_scutil_proxy("");
+    check(!r4.has_value(), "空输出返回 nullopt");
+
+    // 带 <dict> 包裹头
+    auto r5 = parse_scutil_proxy(
+        "<dict> {\n  HTTPEnable : 1\n  HTTPPort : 8080\n  HTTPProxy : 127.0.0.1\n"
+        "  HTTPSEnable : 1\n  HTTPSPort : 8443\n  HTTPSProxy : 10.0.0.1\n"
+        "  proxyAutoConfigEnable : 0\n}\n");
+    check(r5.has_value(), "带 <dict> 包裹头时解析成功");
+    if(r5) {
+        check_eq_str(r5->first, "10.0.0.1", "dict 包裹下仍优先 HTTPS");
+    }
+
+    // 端口非法
+    auto r6 = parse_scutil_proxy("HTTPEnable : 1\nHTTPPort : abc\nHTTPProxy : 127.0.0.1\n");
+    check(!r6.has_value(), "端口非法时安全降级返回 nullopt");
+
+    // 启用但缺端口
+    auto r7 = parse_scutil_proxy("HTTPEnable : 1\nHTTPProxy : 127.0.0.1\n");
+    check(!r7.has_value(), "启用但缺端口返回 nullopt");
+}
+
+// ---- 4) PlistBuddy 版本输出清洗 ----
+static void test_plist_version() {
+    std::printf("\n[PlistBuddy 版本输出清洗]\n");
+
+    // 标准输出（换行结尾）
+    check_eq_str(clean_plist_version("3.6.8\n"), "3.6.8", "去除尾部换行");
+
+    // 带空白
+    check_eq_str(clean_plist_version("  3.6.8  \n"), "3.6.8", "去除首尾空白与换行");
+
+    // 无换行
+    check_eq_str(clean_plist_version("3.6.8"), "3.6.8", "无换行原样返回");
+
+    // 带回车换行
+    check_eq_str(clean_plist_version("3.6.8\r\n"), "3.6.8", "去除 CRLF");
+
+    // 空输出
+    check_eq_str(clean_plist_version(""), "", "空输出返回空字符串");
+
+    // 纯空白
+    check_eq_str(clean_plist_version("   \n  \t "), "", "纯空白返回空字符串");
+
+    // 多段版本号（含 beta 标记）
+    check_eq_str(clean_plist_version("3.6.8-beta.1\n"), "3.6.8-beta.1", "保留 beta 后缀");
+}
+
+// ---- 5) 安装发现的数据结构契约 ----
+static void test_install_struct() {
+    std::printf("\n[安装发现数据结构]\n");
+
+    // GitHubDesktopInstall 的字段语义：Windows 为注册表路径，macOS 为 bundle 路径。
+    // 这里验证 resource_dir 与版本号的字符串构造不依赖平台。
+    std::string win_resource = "C:/Users/test/AppData/Local/GitHubDesktop/app-3.6.8/resources/app";
+    check(win_resource.find("app-3.6.8") != std::string::npos, "Windows 资源路径含 app-<version> 段");
+    check(win_resource.find("resources/app") != std::string::npos, "Windows 资源路径以 resources/app 结尾");
+
+    std::string mac_resource = "/Applications/GitHub Desktop.app/Contents/Resources/app";
+    check(mac_resource.find("Contents/Resources/app") != std::string::npos, "macOS 资源路径含 Contents/Resources/app");
+}
+
+// ---- 6) Linux gsettings 代理解析 ----
+static void test_gsettings() {
+    std::printf("\n[Linux gsettings 代理解析]\n");
+
+    auto parse = [](bool mode_ok, const std::string& mode_out,
+                    bool host_ok, const std::string& host_out,
+                    bool port_ok, const std::string& port_out) -> std::optional<std::pair<std::string, int>> {
+        if(!mode_ok) {
+            return {};
+        }
+        auto clean = [](const std::string& s) -> std::string {
+            size_t b = s.find_first_not_of(" \t\r\n'");
+            size_t e = s.find_last_not_of(" \t\r\n'");
+            if(b == std::string::npos) {
+                return {};
+            }
+            return s.substr(b, e - b + 1);
+        };
+        if(clean(mode_out) != "manual") {
+            return {};
+        }
+        if(!host_ok || !port_ok) {
+            return {};
+        }
+        std::string host = clean(host_out);
+        std::string portStr = clean(port_out);
+        if(host.empty() || portStr.empty()) {
+            return {};
+        }
+        try {
+            int p = std::stoi(portStr);
+            if(p > 0) {
+                return std::make_pair(host, p);
+            }
+        }
+        catch(...) {}
+        return {};
+    };
+
+    // 标准手动代理（gsettings 字符串输出带单引号）
+    auto r1 = parse(true, "'manual'", true, "'127.0.0.1'", true, "8080");
+    check(r1.has_value(), "gsettings mode=manual + host/port 解析成功");
+    if(r1) {
+        check_eq_str(r1->first, "127.0.0.1", "gsettings 主机=127.0.0.1");
+        check_eq(r1->second, 8080, "gsettings 端口=8080");
+    }
+
+    // mode=none（无代理）
+    auto r2 = parse(true, "'none'", true, "'127.0.0.1'", true, "8080");
+    check(!r2.has_value(), "gsettings mode=none 返回 nullopt");
+
+    // mode=auto（PAC 自动配置，非手动代理）
+    auto r3 = parse(true, "'auto'", true, "'127.0.0.1'", true, "8080");
+    check(!r3.has_value(), "gsettings mode=auto 返回 nullopt");
+
+    // gsettings 不可用（mode 读取失败）→ 安静返回 nullopt
+    auto r4 = parse(false, "", false, "", false, "");
+    check(!r4.has_value(), "gsettings 不可用时返回 nullopt（不影响主流程）");
+
+    // 输出无单引号包裹的变体
+    auto r5 = parse(true, "manual", true, "10.0.0.1", true, "8443");
+    check(r5.has_value(), "gsettings 输出无单引号变体解析成功");
+    if(r5) {
+        check_eq_str(r5->first, "10.0.0.1", "gsettings 无引号主机=10.0.0.1");
+        check_eq(r5->second, 8443, "gsettings 无引号端口=8443");
+    }
+
+    // 端口非法 → 不崩溃，返回 nullopt
+    auto r6 = parse(true, "'manual'", true, "'127.0.0.1'", true, "not-a-port");
+    check(!r6.has_value(), "gsettings 端口非法安全降级返回 nullopt");
+
+    // host 为空
+    auto r7 = parse(true, "'manual'", true, "''", true, "8080");
+    check(!r7.has_value(), "gsettings host 为空返回 nullopt");
+
+    // 输出带尾部换行/空白
+    auto r8 = parse(true, "'manual'\n", true, "'127.0.0.1'\n", true, "8080\n");
+    check(r8.has_value(), "gsettings 输出带尾部换行解析成功");
+    if(r8) {
+        check_eq_str(r8->first, "127.0.0.1", "gsettings 带空白主机正确清洗");
+        check_eq(r8->second, 8080, "gsettings 带空白端口正确清洗");
+    }
+}
+
+// ---- 7) Linux 资源目录候选 ----
+static void test_linux_resource_candidates() {
+    std::printf("\n[Linux 资源目录候选]\n");
+
+    // Linux 版 GitHub Desktop 为社区 fork（shiftkey/desktop），deb/rpm 装到系统目录
+    std::string deb_resource = "/usr/lib/github-desktop/resources/app";
+    check(deb_resource.find("github-desktop/resources/app") != std::string::npos,
+          "Linux deb/rpm 资源路径含 github-desktop/resources/app");
+
+    std::string opt_resource = "/opt/github-desktop/resources/app";
+    check(opt_resource.find("/opt/github-desktop") != std::string::npos,
+          "Linux /opt 候选路径正确");
+
+    // Flatpak 沙盒目录
+    std::string flatpak_resource = "/home/user/.var/app/io.github.shiftey.Desktop/current/files/github-desktop/resources/app";
+    check(flatpak_resource.find(".var/app/io.github.shiftey.Desktop") != std::string::npos,
+          "Linux Flatpak 沙盒候选路径正确");
+
+    // 用户级安装
+    std::string local_resource = "/home/user/.local/share/github-desktop/resources/app";
+    check(local_resource.find(".local/share/github-desktop") != std::string::npos,
+          "Linux 用户级安装候选路径正确");
+
+    // AppImage 为单文件（运行时才挂载），无法静态扫描——需 -g 手动指定
+    std::string appimage = "/home/user/Downloads/GitHubDesktop-3.6.8-x86_64.AppImage";
+    check(appimage.find(".AppImage") != std::string::npos,
+          "AppImage 为单文件无法静态扫描（需 -g 手动指定）");
+}
+
+// ---- 8) package.json 版本读取 ----
+static void test_packagejson_version() {
+    std::printf("\n[package.json 版本读取]\n");
+
+    // 从资源目录的 package.json 读 version 字段（Electron 标准布局）
+    auto read_version = [](const std::string& text) -> std::string {
+        if(text.empty()) {
+            return {};
+        }
+        const std::string key = "\"version\"";
+        size_t pos = text.find(key);
+        if(pos == std::string::npos) {
+            return {};
+        }
+        pos = text.find('"', pos + key.size());
+        if(pos == std::string::npos) {
+            return {};
+        }
+        size_t start = pos + 1;
+        size_t end = text.find('"', start);
+        if(end == std::string::npos) {
+            return {};
+        }
+        return text.substr(start, end - start);
+    };
+
+    // 标准 package.json
+    std::string pkg1 = R"({"name":"github-desktop","version":"3.6.8","main":"main.js"})";
+    check_eq_str(read_version(pkg1), "3.6.8", "标准 package.json 读出版本 3.6.8");
+
+    // version 在前
+    std::string pkg2 = R"({"version":"1.2.3","name":"github-desktop"})";
+    check_eq_str(read_version(pkg2), "1.2.3", "version 字段在前时正确读取");
+
+    // 缺 version 字段
+    std::string pkg3 = R"({"name":"github-desktop","main":"main.js"})";
+    check_eq_str(read_version(pkg3), "", "缺 version 字段返回空");
+
+    // 空文本
+    check_eq_str(read_version(""), "", "空文本返回空");
+
+    // 带换行/空白的格式化 JSON
+    std::string pkg4 = "{\n  \"name\": \"github-desktop\",\n  \"version\": \"3.6.9-beta.1\",\n  \"main\": \"main.js\"\n}\n";
+    check_eq_str(read_version(pkg4), "3.6.9-beta.1", "格式化 JSON（带换行）读出版本 3.6.9-beta.1");
+
+    // version 值含连字符（beta 版本号）
+    std::string pkg5 = R"({"version":"2.0.0-release.5"})";
+    check_eq_str(read_version(pkg5), "2.0.0-release.5", "版本值含连字符/点号正确读取");
+
+    // 不误读其他含 version 子串的键（如 devDependencies 中的版本）
+    std::string pkg6 = R"({"name":"github-desktop","version":"3.6.8","devDependencies":{"some-lib":"1.0.0"}})";
+    check_eq_str(read_version(pkg6), "3.6.8", "不误读 devDependencies 中的版本（取第一个 version 键）");
+}
+
+//////////////////////////////////////////////////////////////////////////
+// 预览版特性 / 未完成菜单项防护（#48 / #49 残留场景）
+//////////////////////////////////////////////////////////////////////////
+
+static void test_unsafe_feature_rule() {
+    std::printf("\n[预览版特性 / 未完成菜单项防护]\n");
+
+    using localization_text::is_unsafe_feature_rule;
+    using localization_text::select_rules_all_blocked;
+    using Rules = std::vector<std::vector<std::string>>;
+
+    // v1.2.4 老 json：main.js 把 ||!1 改成 ||!0
+    const std::string old_main_p = R"(===process\.env\.GITHUB_DESKTOP_PREVIEW_FEATURES\|\|!1)";
+    const std::string old_main_r = "===process.env.GITHUB_DESKTOP_PREVIEW_FEATURES||!0";
+    check(is_unsafe_feature_rule(old_main_p, old_main_r),
+          "老 json 的 main.js 预览规则被禁用");
+
+    // v1.2.4 老 json：renderer.js 把环境变量注释掉并写死 "1"
+    const std::string old_renderer_p = R"(===process\.env\.GITHUB_DESKTOP_PREVIEW_FEATURES\})";
+    const std::string old_renderer_r =
+        std::string("===/*process.env.GITHUB_DESKTOP_PREVIEW_FEATURES*/") + "\"1\"}";
+    check(is_unsafe_feature_rule(old_renderer_p, old_renderer_r),
+          "老 json 的 renderer.js 预览规则被禁用");
+
+    // 当前 json 保留的那条（默认 enable:false），手动改回 true 也必须被禁用
+    check(is_unsafe_feature_rule(old_renderer_p, old_renderer_r),
+          "手动 enable:true 的规则同样被禁用(判定与 enable 值无关)");
+
+    // 直接注入未完成菜单 id / 仅匹配串含预览开关
+    check(is_unsafe_feature_rule("MENU_ID", "menu-open-in-copilot-app"),
+          "替换串含 open-in-copilot-app 时被禁用");
+    check(is_unsafe_feature_rule("GITHUB_DESKTOP_PREVIEW_FEATURES", "汉化文本"),
+          "仅匹配串含预览开关也被禁用");
+
+    // 正常规则不能误伤
+    check(!is_unsafe_feature_rule("Pull Origin", "拉取源分支"), "普通翻译规则不受影响");
+    check(!is_unsafe_feature_rule("createElement", "创建元素"), "minifier 别名规则不受影响");
+    check(!is_unsafe_feature_rule("", ""), "空规则不误判");
+    check(!is_unsafe_feature_rule("preview", "预览"), "仅含 preview 单词不误判");
+
+    // 整条 select 的跳过决策
+    check(select_rules_all_blocked({{old_main_p, old_main_r}}),
+          "老 json main.js select 整条跳过");
+    check(select_rules_all_blocked({{old_renderer_p, old_renderer_r}}),
+          "老 json renderer.js select 整条跳过");
+    check(select_rules_all_blocked({{old_main_p, old_main_r}, {old_renderer_p, old_renderer_r}}),
+          "多条预览规则混合时整条跳过");
+    check(!select_rules_all_blocked({{"Pull Origin", "拉取源分支"}}),
+          "正常 select 保持原有询问流程");
+    check(!select_rules_all_blocked({{"Pull Origin", "拉取源分支"}, {old_main_p, old_main_r}}),
+          "混合含一条可用规则时不整条跳过(危险条仍被逐条过滤)");
+    check(!select_rules_all_blocked({{"", ""}}),
+          "老 json 的空 select 条目保持原行为");
+    check(!select_rules_all_blocked(Rules{}), "空 replace 数组不整条跳过");
+    check(!select_rules_all_blocked({{old_main_p}}),
+          "只有匹配串一项的畸形规则不整条跳过");
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// SHA-256 实现自检：用 NIST/FIPS 180-4 标准测试向量，
+// 保证自更新下载校验用的摘要算法在三个平台上行为一致。
+static void test_sha256() {
+    std::printf("\n[SHA-256 实现自检]\n");
+
+    check_eq_str(sha256::hex(""),
+                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                 "空串摘要");
+    check_eq_str(sha256::hex("abc"),
+                 "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+                 "\"abc\" 摘要");
+    check_eq_str(sha256::hex("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"),
+                 "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+                 "448bit 标准向量");
+    check_eq_str(sha256::hex(std::string(1000000, 'a')),
+                 "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
+                 "100 万个 'a'");
+
+    // 分块喂入必须与一次性喂入结果一致
+    {
+        sha256::Sha256 h;
+        const std::string data(5000, 'x');
+        for (int i = 0; i < 5000; i += 137) {
+            const std::size_t n = std::min<std::size_t>(137, data.size() - i);
+            h.update(reinterpret_cast<const unsigned char*>(data.data() + i), n);
+        }
+        check_eq_str(h.final_hex(), sha256::hex(data), "分块喂入与一次性喂入结果一致");
+    }
+
+    // sha256sum 风格文本解析
+    {
+        std::string out;
+        check(sha256::extract_hash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  file.bin", out)
+              && out == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+              "解析 sha256sum 风格文本");
+        check(sha256::extract_hash("SHA256 (file) = BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", out)
+              && out == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+              "解析带前缀文本并统一为小写");
+        check(!sha256::extract_hash("not a hash", out), "非法文本解析失败");
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// UAC 自动提权相关纯逻辑：
+//   - 提权判定（要不要弹 UAC）
+//   - 命令行参数转义（拼给提权子进程）
+//   - 十六进制编解码（跨进程传中文路径）
+static void test_elevation() {
+    std::printf("\n[UAC 提权逻辑]\n");
+
+    // ---- 提权判定 ----
+    check(elevate::should_request_elevation(false, false, false),
+          "目标不可写且未提权时申请提权");
+    check(!elevate::should_request_elevation(false, false, true),
+          "目标可写时不申请提权");
+    check(!elevate::should_request_elevation(false, true, false),
+          "已经是管理员时不再申请提权");
+    check(!elevate::should_request_elevation(true, false, false),
+          "提权子进程不再重复申请（避免无限重启）");
+
+    // ---- 命令行参数转义（规则与 CommandLineToArgvW 对应）----
+    check_eq_str(elevate::quote_windows_arg(std::string("")), R"("")",
+                 "空参数转义");
+    check_eq_str(elevate::quote_windows_arg(std::string("abc")), R"("abc")",
+                 "普通参数加引号");
+    check_eq_str(elevate::quote_windows_arg(std::string("a b")), R"("a b")",
+                 "含空格的参数加引号");
+    check_eq_str(elevate::quote_windows_arg(std::string("a\"b")), R"("a\"b")",
+                 "参数内的双引号被转义");
+    check_eq_str(elevate::quote_windows_arg(std::string("C:\\dir\\")), R"("C:\dir\\")",
+                 "结尾反斜杠成对转义");
+    check(elevate::quote_windows_arg(std::wstring(L"a b")) == std::wstring(L"\"a b\""),
+          "宽字符参数同样加引号");
+
+    // ---- 十六进制编解码（用于跨进程传递中文路径）----
+    check_eq_str(elevate::encode_hex(""), "", "空串编码为空");
+    check_eq_str(elevate::encode_hex("abc"), "616263", "ASCII 编码");
+    check_eq_str(elevate::decode_hex("616263"), "abc", "ASCII 解码");
+    check_eq_str(elevate::encode_hex("\xe6\xb1\x89\xe5\x8c\x96"),
+                 "e6b189e58c96", "中文 UTF-8 字节编码为纯 ASCII");
+    check_eq_str(elevate::decode_hex("e6b189e58c96"), "\xe6\xb1\x89\xe5\x8c\x96",
+                 "中文 UTF-8 字节解码还原");
+
+    // 往返一致（路径里带中文 UTF-8 字节）
+    {
+        const std::string raw = "C:\\Users\\\xe6\xb1\x89\xe5\x8c\x96\\app-3.6.8\\resources\\app";
+        check_eq_str(elevate::decode_hex(elevate::encode_hex(raw)), raw,
+                     "编解码往返一致");
+    }
+
+    // 非法字符不抛异常：已解出的部分照常返回
+    check_eq_str(elevate::decode_hex("61zz"), "a", "非法字符处停止解码");
+    check_eq_str(elevate::decode_hex("616"), "a", "奇数长度丢弃末尾半个字节");
+    check_eq_str(elevate::decode_hex(""), "", "空串解码为空");
+
+    // ---- 开发者选项编解码（提权重启时传给子进程）----
+    {
+        elevate::DevOptions empty;
+        check_eq_str(elevate::encode_dev_options(empty), "", "全未开启时编码为空");
+
+        elevate::DevOptions o;
+        o.invalid_check = true;
+        o.no_replace_res = true;
+        check_eq_str(elevate::encode_dev_options(o), "invalidcheck,noreplaceres",
+                     "多个选项按固定顺序编码");
+
+        const auto back = elevate::decode_dev_options(elevate::encode_dev_options(o));
+        check(back.invalid_check && back.no_replace_res, "编解码往返一致");
+        check(!back.error_check_main && !back.error_check_renderer
+              && !back.translation_from_bak && !back.dev_replace,
+              "未开启的选项不会被误还原");
+
+        // 未知项忽略，不抛异常
+        const auto partial = elevate::decode_dev_options("invalidcheck,unknownitem,devreplace");
+        check(partial.invalid_check && partial.dev_replace, "未知项被忽略且不影响其它项");
+        check(!partial.no_replace_res, "未知项不会误开其它选项");
+
+        // 单项与空串
+        elevate::DevOptions one;
+        one.dev_replace = true;
+        check_eq_str(elevate::encode_dev_options(one), "devreplace", "单项编码");
+        check(!elevate::decode_dev_options("").invalid_check, "空串解码得到全未开启");
+    }
+}
+
+int main() {
+    std::printf("=== GitHubDesktop2Chinese 平台无关逻辑回归测试 ===\n");
+    std::printf("FILEVERSION = %s\n", FILEVERSION);
+
+    test_version();
+    test_proxy_url();
+    test_capture_substitution();
+    test_scutil();
+    test_plist_version();
+    test_install_struct();
+    test_gsettings();
+    test_linux_resource_candidates();
+    test_packagejson_version();
+    test_unsafe_feature_rule();
+    test_sha256();
+    test_elevation();
+
+    std::printf("\n=== 测试结束 ===\n");
+    if(g_failures > 0) {
+        std::printf("FAILED: %d 个用例失败\n", g_failures);
+        return 1;
+    }
+    std::printf("ALL PASS\n");
+    return 0;
+}

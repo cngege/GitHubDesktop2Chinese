@@ -7,4 +7,7 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <openssl/ec.h>
+/* OpenSSL 3.x 中 ecdsa.h 与 ecdh.h 均为仅包含 <openssl/ec.h> 的兼容头，
+ * 两者原本内容完全相同。此处统一转发到 ecdh.h 以消除重复维护，
+ * 同时保留本文件路径，避免依赖 <openssl/ecdsa.h> 的代码失效。 */
+#include <openssl/ecdh.h>
