@@ -1,17 +1,18 @@
 # Linux / macOS 构建验证工作流（常驻 main）：不构建 Windows、不创建 Release。
-# 通过手动 workflow_dispatch 触发；产物以 artifact 形式上传，可在 Actions 页面下载。
+# 通过手动 workflow_dispatch 触发；构建成功后把产物回写到 ci-bin-* 分支，
+# 便于在本机用 git fetch 取回（无需下载 artifact 的额外 token）。
 name: Build Linux and macOS
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   actions: write
 
 env:
   BUILD_TYPE: Release
-  FILE_VERSION: 1.3.0
+  FILE_VERSION: v1.3.0
 
 jobs:
   build-linux:
@@ -75,6 +76,26 @@ jobs:
         with:
           name: GitHubDesktop2Chinese_linux_${{ matrix.arch }}
           path: ${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+
+      - name: Publish binary to ci-bin branch (Linux ${{ matrix.arch }})
+        shell: bash
+        env:
+          BIN: ${{ github.workspace }}/build/GitHubDesktop2Chinese_linux_${{ matrix.arch }}
+          BRANCH: ci-bin-linux-${{ matrix.arch }}
+        run: |
+          set -e
+          cd "${{ github.workspace }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          IDX=$(mktemp)
+          export GIT_INDEX_FILE="$IDX"
+          git read-tree --empty
+          git add -f "$BIN"
+          tree=$(git write-tree)
+          if git rev-parse -q --verify "origin/$BRANCH" >/dev/null; then parent="-p origin/$BRANCH"; else parent=""; fi
+          commit=$(git commit-tree "$tree" $parent -m "ci: $BRANCH @ ${{ github.sha }}")
+          git push origin "$commit:refs/heads/$BRANCH" --force
+          unset GIT_INDEX_FILE
 
   build-macos:
     name: macOS ${{ matrix.arch }}
@@ -159,3 +180,23 @@ jobs:
         with:
           name: GitHubDesktop2Chinese_macos_${{ matrix.arch }}
           path: ${{ github.workspace }}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+
+      - name: Publish binary to ci-bin branch (macOS ${{ matrix.arch }})
+        shell: bash
+        env:
+          BIN: ${{ github.workspace }}/build/GitHubDesktop2Chinese_macos_${{ matrix.arch }}
+          BRANCH: ci-bin-macos-${{ matrix.arch }}
+        run: |
+          set -e
+          cd "${{ github.workspace }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          IDX=$(mktemp)
+          export GIT_INDEX_FILE="$IDX"
+          git read-tree --empty
+          git add -f "$BIN"
+          tree=$(git write-tree)
+          if git rev-parse -q --verify "origin/$BRANCH" >/dev/null; then parent="-p origin/$BRANCH"; else parent=""; fi
+          commit=$(git commit-tree "$tree" $parent -m "ci: $BRANCH @ ${{ github.sha }}")
+          git push origin "$commit:refs/heads/$BRANCH" --force
+          unset GIT_INDEX_FILE
