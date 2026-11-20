@@ -1120,6 +1120,8 @@
 		["\"downloading GitHub Copilot\"\\),\".\"","\"下载 GitHub Copilot\"),\"。\""],
 		["\"Already installed it\\? Let us know where in\"","\"已经安装了？请在\""],
 		["\"Preferences\"\\),\".\"","\"偏好设置\"),\" 中告诉我们它的位置。\""],
+		["\"Retry push\"","\"重试推送\""],
+		["`Pushing to \\$\\{(.).name\\}`","`推送到远程仓库($${$1.name})`"],
 		["\"\"","\"\""]
 	],
 	"renderer_dev": [
